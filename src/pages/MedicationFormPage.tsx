@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -12,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Medication } from "@/types";
 import { medicationService } from "@/lib/mock-data";
 import { daysOfWeekOptions, timeOfDayOptions } from "@/lib/constants";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Pill } from "lucide-react";
 
 const MedicationFormPage = () => {
   const { id } = useParams<{ id: string }>();
