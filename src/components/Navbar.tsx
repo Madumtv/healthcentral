@@ -1,15 +1,42 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Pill, User, LogIn } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Pour simuler l'authentification
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    navigate("/");
+    setIsMenuOpen(false);
   };
 
   return (
@@ -34,7 +61,7 @@ export function Navbar() {
               À propos
             </Link>
             
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link to="/dashboard" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
                   Tableau de bord
@@ -42,18 +69,24 @@ export function Navbar() {
                 <Link to="/medications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
                   Mes médicaments
                 </Link>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setIsLoggedIn(false)}
-                  className="flex items-center text-sm font-medium text-gray-700 hover:text-medBlue"
+                <Link 
+                  to="/profile" 
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center"
                 >
                   <User className="h-4 w-4 mr-2" />
+                  Profil
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleLogout}
+                  className="flex items-center text-sm font-medium text-gray-700 hover:text-medBlue"
+                >
                   Déconnexion
                 </Button>
               </>
             ) : (
               <Button 
-                onClick={() => setIsLoggedIn(true)} 
+                onClick={() => navigate("/auth")} 
                 className="flex items-center bg-medBlue hover:bg-blue-600"
               >
                 <LogIn className="h-4 w-4 mr-2" />
@@ -98,7 +131,7 @@ export function Navbar() {
               À propos
             </Link>
 
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link
                   to="/dashboard"
@@ -114,22 +147,26 @@ export function Navbar() {
                 >
                   Mes médicaments
                 </Link>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setIsLoggedIn(false);
-                    toggleMenu();
-                  }}
-                  className="w-full justify-start px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                <Link
+                  to="/profile"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
+                  onClick={toggleMenu}
                 >
                   <User className="h-4 w-4 mr-2" />
+                  Profil
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="w-full justify-start px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                >
                   Déconnexion
                 </Button>
               </>
             ) : (
               <Button
                 onClick={() => {
-                  setIsLoggedIn(true);
+                  navigate("/auth");
                   toggleMenu();
                 }}
                 className="w-full mt-2 flex items-center justify-center bg-medBlue hover:bg-blue-600"
