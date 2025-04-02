@@ -1,17 +1,14 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Pill, Plus, Clock, Calendar } from "lucide-react";
+import { Pill } from "lucide-react";
 import { Medication } from "@/types";
 import { medicationService } from "@/lib/mock-data";
-import MedicationCard from "@/components/MedicationCard";
-import { daysOfWeekLabels, timeOfDayLabels } from "@/lib/constants";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { DashboardGreeting } from "@/components/dashboard/DashboardGreeting";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 
 const DashboardPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -85,13 +82,6 @@ const DashboardPage = () => {
     }
   };
 
-  const getGreetingByTime = (): string => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Bonjour";
-    if (hour >= 12 && hour < 18) return "Bon après-midi";
-    return "Bonsoir";
-  };
-
   // Créer des groupes par moment de prise
   const todayMedications = medications.filter(med => {
     const today = new Date().getDay();
@@ -121,100 +111,15 @@ const DashboardPage = () => {
       
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-medBlue">
-                {getGreetingByTime()}{userName ? `, ${userName}` : ''}
-              </h1>
-              <p className="text-gray-600">Gérez vos médicaments et consultez votre programme</p>
-            </div>
-            <Button 
-              className="mt-4 md:mt-0 bg-medBlue hover:bg-blue-600"
-              onClick={() => navigate("/medications/add")}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter un médicament
-            </Button>
-          </div>
+          <DashboardGreeting userName={userName} />
           
-          <Tabs defaultValue="today" className="mb-8">
-            <TabsList className="mb-4">
-              <TabsTrigger value="today"><Clock className="h-4 w-4 mr-2" /> Aujourd'hui</TabsTrigger>
-              <TabsTrigger value="all"><Calendar className="h-4 w-4 mr-2" /> Tous mes médicaments</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="today">
-              <div className="space-y-8">
-                {Object.entries(medicationsByTime).map(([time, meds]) => 
-                  meds.length > 0 && (
-                    <div key={time}>
-                      <h2 className="text-xl font-semibold mb-4 flex items-center">
-                        <span className="w-2 h-8 bg-medBlue rounded-full mr-3"></span>
-                        {timeOfDayLabels[time as keyof typeof timeOfDayLabels]}
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {meds.map(medication => (
-                          <MedicationCard
-                            key={medication.id}
-                            medication={medication}
-                            onEdit={handleEditMedication}
-                            onDelete={handleDeleteMedication}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )
-                )}
-                
-                {!isLoading && Object.values(medicationsByTime).every(meds => meds.length === 0) && (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Pill className="h-12 w-12 text-gray-300 mb-4" />
-                      <p className="text-xl font-medium text-gray-500 mb-2">Aucun médicament aujourd'hui</p>
-                      <p className="text-gray-400 mb-6">Vous n'avez pas de médicaments à prendre aujourd'hui.</p>
-                      <Button 
-                        onClick={() => navigate("/medications/add")} 
-                        className="bg-medBlue hover:bg-blue-600"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Ajouter un médicament
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="all">
-              {medications.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {medications.map(medication => (
-                    <MedicationCard
-                      key={medication.id}
-                      medication={medication}
-                      onEdit={handleEditMedication}
-                      onDelete={handleDeleteMedication}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Pill className="h-12 w-12 text-gray-300 mb-4" />
-                    <p className="text-xl font-medium text-gray-500 mb-2">Aucun médicament</p>
-                    <p className="text-gray-400 mb-6">Vous n'avez pas encore ajouté de médicaments.</p>
-                    <Button 
-                      onClick={() => navigate("/medications/add")} 
-                      className="bg-medBlue hover:bg-blue-600"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un médicament
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
+          <DashboardTabs
+            medications={medications}
+            medicationsByTime={medicationsByTime}
+            isLoading={isLoading}
+            onEdit={handleEditMedication}
+            onDelete={handleDeleteMedication}
+          />
         </div>
       </main>
       
