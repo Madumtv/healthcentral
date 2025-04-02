@@ -80,7 +80,10 @@ const ProfilePage = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ name: values.name, updated_at: new Date() })
+        .update({ 
+          name: values.name, 
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', user.id);
 
       if (error) throw error;

@@ -11,12 +11,39 @@ import { medicationService } from "@/lib/mock-data";
 import MedicationCard from "@/components/MedicationCard";
 import { daysOfWeekLabels, timeOfDayLabels } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) throw error;
+          setUserName(data?.name || session.user.email?.split('@')[0] || 'utilisateur');
+        } catch (error) {
+          console.error("Erreur lors de la récupération du profil:", error);
+          setUserName(session.user.email?.split('@')[0] || 'utilisateur');
+        }
+      } else {
+        navigate('/auth');
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchMedications = async () => {
@@ -58,6 +85,13 @@ const DashboardPage = () => {
     }
   };
 
+  const getGreetingByTime = (): string => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Bonjour";
+    if (hour >= 12 && hour < 18) return "Bon après-midi";
+    return "Bonsoir";
+  };
+
   // Créer des groupes par moment de prise
   const todayMedications = medications.filter(med => {
     const today = new Date().getDay();
@@ -89,7 +123,9 @@ const DashboardPage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-medBlue">Tableau de bord</h1>
+              <h1 className="text-3xl font-bold text-medBlue">
+                {getGreetingByTime()}{userName ? `, ${userName}` : ''}
+              </h1>
               <p className="text-gray-600">Gérez vos médicaments et consultez votre programme</p>
             </div>
             <Button 
