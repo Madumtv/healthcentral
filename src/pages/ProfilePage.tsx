@@ -22,9 +22,15 @@ const profileFormSchema = z.object({
   }),
 });
 
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+}
+
 const ProfilePage = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -40,13 +46,13 @@ const ProfilePage = () => {
 
       try {
         const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        setProfile(data as Profile);
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
         toast.error("Impossible de charger les informations du profil.");
@@ -73,9 +79,9 @@ const ProfilePage = () => {
 
     try {
       const { error } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ name: values.name, updated_at: new Date() })
-        .eq("id", user.id);
+        .eq('id', user.id);
 
       if (error) throw error;
       
