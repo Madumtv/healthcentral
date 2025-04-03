@@ -9,11 +9,15 @@ interface ProfileInfoTabProps {
     name: string;
     first_name?: string;
     last_name?: string;
+    birth_date?: string;
   } | null;
   onProfileUpdate: (values: ProfileFormValues) => void;
 }
 
 export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTabProps) {
+  // Convertir la date de naissance de string en Date si elle existe
+  const birthDate = profile?.birth_date ? new Date(profile.birth_date) : undefined;
+
   return (
     <Card>
       <CardHeader>
@@ -27,7 +31,8 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
           initialValues={{ 
             name: profile?.name || "",
             firstName: profile?.first_name || "",
-            lastName: profile?.last_name || "" 
+            lastName: profile?.last_name || "",
+            birthDate: birthDate
           }}
           user={user}
           onSuccess={onProfileUpdate}

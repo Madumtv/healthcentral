@@ -9,6 +9,9 @@ import { ProfileFormValues } from "./ProfileForm";
 interface Profile {
   id: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
+  birth_date?: string;
   email: string;
 }
 
@@ -40,7 +43,7 @@ export function ProfileTabs({ user, profile, onProfileUpdate }: ProfileTabsProps
       </TabsContent>
 
       <TabsContent value="settings">
-        <SettingsTab />
+        <SettingsTab user={user} />
       </TabsContent>
     </Tabs>
   );

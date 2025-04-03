@@ -15,6 +15,7 @@ interface Profile {
   name: string;
   first_name?: string;
   last_name?: string;
+  birth_date?: string;
   email: string;
 }
 
@@ -59,7 +60,8 @@ const ProfilePage = () => {
       ...prev, 
       name: values.name,
       first_name: values.firstName || undefined,
-      last_name: values.lastName || undefined
+      last_name: values.lastName || undefined,
+      birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
     } : null);
   };
 

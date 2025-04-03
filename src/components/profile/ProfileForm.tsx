@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -15,6 +21,7 @@ const profileFormSchema = z.object({
   }),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  birthDate: z.date().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -42,6 +49,7 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
           name: values.name, 
           first_name: values.firstName,
           last_name: values.lastName,
+          birth_date: values.birthDate ? values.birthDate.toISOString() : null,
           updated_at: new Date().toISOString() 
         })
         .eq('id', user.id);
@@ -102,6 +110,63 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date de naissance</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "P", { locale: fr })
+                      ) : (
+                        <span>Sélectionnez une date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {user && (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <Input 
+              type="email" 
+              value={user.email || ""} 
+              disabled 
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              L'email est associé à votre compte et ne peut pas être modifié ici.
+            </p>
+          </FormItem>
+        )}
 
         <Button type="submit">Enregistrer les modifications</Button>
       </form>
