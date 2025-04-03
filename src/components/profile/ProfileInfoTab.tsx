@@ -5,7 +5,11 @@ import { User } from "@supabase/supabase-js";
 
 interface ProfileInfoTabProps {
   user: User | null;
-  profile: { name: string } | null;
+  profile: { 
+    name: string;
+    first_name?: string;
+    last_name?: string;
+  } | null;
   onProfileUpdate: (values: ProfileFormValues) => void;
 }
 
@@ -20,7 +24,11 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
       </CardHeader>
       <CardContent>
         <ProfileForm 
-          initialValues={{ name: profile?.name || "" }}
+          initialValues={{ 
+            name: profile?.name || "",
+            firstName: profile?.first_name || "",
+            lastName: profile?.last_name || "" 
+          }}
           user={user}
           onSuccess={onProfileUpdate}
         />

@@ -13,6 +13,8 @@ import { ProfileFormValues } from "@/components/profile/ProfileForm";
 interface Profile {
   id: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
 }
 
@@ -53,7 +55,12 @@ const ProfilePage = () => {
   }, [navigate]);
 
   const handleProfileUpdate = (values: ProfileFormValues) => {
-    setProfile(prev => prev ? { ...prev, name: values.name } : null);
+    setProfile(prev => prev ? { 
+      ...prev, 
+      name: values.name,
+      first_name: values.firstName || undefined,
+      last_name: values.lastName || undefined
+    } : null);
   };
 
   if (loading) {
@@ -74,6 +81,8 @@ const ProfilePage = () => {
       <div className="container flex-grow py-10">
         <ProfileHeader 
           name={profile?.name} 
+          firstName={profile?.first_name}
+          lastName={profile?.last_name}
           email={user?.email || null} 
         />
         

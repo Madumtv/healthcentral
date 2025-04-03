@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -24,6 +23,8 @@ const signupSchema = z.object({
   email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
 });
 
 const AuthPage = () => {
@@ -44,6 +45,8 @@ const AuthPage = () => {
       email: "",
       password: "",
       name: "",
+      firstName: "",
+      lastName: "",
     },
   });
 
@@ -77,6 +80,8 @@ const AuthPage = () => {
         options: {
           data: {
             name: values.name,
+            first_name: values.firstName || null,
+            last_name: values.lastName || null,
           },
         },
       });
@@ -181,12 +186,42 @@ const AuthPage = () => {
                 <CardContent>
                   <Form {...signupForm}>
                     <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                          control={signupForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Prénom</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Votre prénom" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={signupForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nom de famille</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Votre nom de famille" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
                       <FormField
                         control={signupForm.control}
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nom</FormLabel>
+                            <FormLabel>Nom d'affichage</FormLabel>
                             <FormControl>
                               <Input placeholder="Votre nom" {...field} />
                             </FormControl>

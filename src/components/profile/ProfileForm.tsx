@@ -13,6 +13,8 @@ const profileFormSchema = z.object({
   name: z.string().min(2, {
     message: "Le nom doit contenir au moins 2 caractères.",
   }),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -38,6 +40,8 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
         .from('profiles')
         .update({ 
           name: values.name, 
+          first_name: values.firstName,
+          last_name: values.lastName,
           updated_at: new Date().toISOString() 
         })
         .eq('id', user.id);
@@ -55,14 +59,44 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
+                <FormControl>
+                  <Input placeholder="Votre prénom" {...field} value={field.value || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom de famille</FormLabel>
+                <FormControl>
+                  <Input placeholder="Votre nom de famille" {...field} value={field.value || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom</FormLabel>
+              <FormLabel>Nom d'affichage</FormLabel>
               <FormControl>
-                <Input placeholder="Votre nom" {...field} />
+                <Input placeholder="Votre nom d'affichage" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
