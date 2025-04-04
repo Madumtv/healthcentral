@@ -14,7 +14,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Fonction pour obtenir les médicaments à prendre
 export async function getMedicationDoses(date: Date) {
   const { data, error } = await supabase
-    .from('medication_doses')
+    .from('medication_doses' as any)
     .select(`
       *,
       medications (
@@ -62,7 +62,7 @@ export async function createMedicationDosesForDate(date: Date) {
 
   // 3. Vérifier si des doses existent déjà pour cette date
   const { data: existingDoses, error: doseError } = await supabase
-    .from('medication_doses')
+    .from('medication_doses' as any)
     .select('medication_id, time_of_day')
     .eq('scheduled_date', date.toISOString().split('T')[0]);
 
@@ -82,7 +82,7 @@ export async function createMedicationDosesForDate(date: Date) {
     for (const timeOfDay of med.time_of_day) {
       // Vérifier si cette dose existe déjà
       const doseExists = existingDoses?.some(
-        dose => dose.medication_id === med.id && dose.time_of_day === timeOfDay
+        (dose: any) => dose.medication_id === med.id && dose.time_of_day === timeOfDay
       );
 
       if (!doseExists) {
@@ -100,7 +100,7 @@ export async function createMedicationDosesForDate(date: Date) {
   // 5. Insérer les doses si nécessaire
   if (dosesToCreate.length > 0) {
     const { data: newDoses, error: insertError } = await supabase
-      .from('medication_doses')
+      .from('medication_doses' as any)
       .insert(dosesToCreate)
       .select(`
         *,
@@ -139,7 +139,7 @@ export async function markDoseAsTaken(doseId: string, isTaken: boolean) {
   }
 
   const { data, error } = await supabase
-    .from('medication_doses')
+    .from('medication_doses' as any)
     .update(updateData)
     .eq('id', doseId)
     .select();
