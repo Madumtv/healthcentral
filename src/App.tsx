@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import MedicationsPage from "./pages/MedicationsPage";
 import MedicationFormPage from "./pages/MedicationFormPage";
 import ProfilePage from "./pages/ProfilePage";
+import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/medications/add" element={<MedicationFormPage />} />
           <Route path="/medications/edit/:id" element={<MedicationFormPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
