@@ -88,6 +88,52 @@ const CalendarPage = () => {
     }
   };
 
+  // Fonction pour marquer toutes les doses d'une période comme prises ou non
+  const handleMarkAllForPeriod = async (timeOfDay: string, markAsTaken: boolean) => {
+    try {
+      // Filtrer les doses pour cette période
+      const dosesForPeriod = medicationDoses.filter(dose => dose.time_of_day === timeOfDay);
+      
+      // Si aucune dose, ne rien faire
+      if (dosesForPeriod.length === 0) return;
+      
+      // Mettre à jour chaque dose
+      const updatePromises = dosesForPeriod.map(dose => 
+        markDoseAsTaken(dose.id, markAsTaken)
+      );
+      
+      await Promise.all(updatePromises);
+      
+      // Mettre à jour l'état local
+      setMedicationDoses(prevDoses => 
+        prevDoses.map(dose => 
+          dose.time_of_day === timeOfDay
+            ? { 
+                ...dose, 
+                is_taken: markAsTaken, 
+                taken_at: markAsTaken ? new Date().toISOString() : null 
+              } 
+            : dose
+        )
+      );
+      
+      // Notification
+      toast({
+        title: markAsTaken ? "Médicaments pris" : "Médicaments non pris",
+        description: markAsTaken 
+          ? `Tous les médicaments du ${timeOfDay.toLowerCase()} ont été marqués comme pris.` 
+          : `Tous les médicaments du ${timeOfDay.toLowerCase()} ont été marqués comme non pris.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des statuts:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut des médicaments.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Navigation entre les jours
   const goToNextDay = () => setSelectedDate(addDays(selectedDate, 1));
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1));
@@ -159,6 +205,7 @@ const CalendarPage = () => {
                   <DayView 
                     medicationDoses={medicationDoses} 
                     onToggleDose={handleToggleDose}
+                    onMarkAllForPeriod={handleMarkAllForPeriod}
                     isToday={isToday(selectedDate)}
                   />
                 )}

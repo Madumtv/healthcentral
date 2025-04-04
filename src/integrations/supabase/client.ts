@@ -150,3 +150,32 @@ export async function markDoseAsTaken(doseId: string, isTaken: boolean) {
 
   return data;
 }
+
+// Fonction pour marquer plusieurs doses comme prises en une seule fois
+export async function markMultipleDosesAsTaken(doseIds: string[], isTaken: boolean) {
+  if (doseIds.length === 0) return [];
+
+  const updateData: any = {
+    is_taken: isTaken,
+    updated_at: new Date().toISOString()
+  };
+
+  // Ajouter l'horodatage uniquement si les doses sont marquées comme prises
+  if (isTaken) {
+    updateData.taken_at = new Date().toISOString();
+  } else {
+    updateData.taken_at = null;
+  }
+
+  const { data, error } = await supabase
+    .from('medication_doses' as any)
+    .update(updateData)
+    .in('id', doseIds)
+    .select();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
