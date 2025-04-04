@@ -10,13 +10,15 @@ interface DayViewProps {
   onToggleDose: (doseId: string, isTaken: boolean) => void;
   isToday: boolean;
   onMarkAllForPeriod: (timeOfDay: string, isTaken: boolean) => void;
+  onMarkAllDoses: (isTaken: boolean) => void;
 }
 
 export const DayView = ({ 
   medicationDoses, 
   onToggleDose, 
   isToday,
-  onMarkAllForPeriod 
+  onMarkAllForPeriod,
+  onMarkAllDoses
 }: DayViewProps) => {
   // Regrouper les doses par moment de la journée
   const dosesByTimeOfDay: Record<string, any[]> = {
@@ -44,6 +46,9 @@ export const DayView = ({
     return doses.length > 0 && doses.every(dose => dose.is_taken);
   };
 
+  // Vérifier si tous les médicaments de la journée sont pris
+  const areAllDosesTaken = medicationDoses.length > 0 && medicationDoses.every(dose => dose.is_taken);
+
   if (isEmpty) {
     return (
       <EmptyDosesState 
@@ -58,6 +63,29 @@ export const DayView = ({
 
   return (
     <div className="space-y-8">
+      {/* Bouton global pour marquer tous les médicaments de la journée */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => onMarkAllDoses(!areAllDosesTaken)}
+          variant={areAllDosesTaken ? "outline" : "default"}
+          className={areAllDosesTaken 
+            ? "border-green-500 text-green-600 hover:bg-green-50" 
+            : "bg-medBlue hover:bg-medBlue/90"
+          }
+          size="lg"
+        >
+          {areAllDosesTaken ? (
+            <>
+              <Check className="h-4 w-4 mr-2" />
+              Tous médicaments pris
+            </>
+          ) : (
+            "Tout prendre"
+          )}
+        </Button>
+      </div>
+
+      {/* Afficher les doses par période */}
       {Object.entries(dosesByTimeOfDay).map(([timeOfDay, doses]) => 
         doses.length > 0 && (
           <div key={timeOfDay} className="mb-6">

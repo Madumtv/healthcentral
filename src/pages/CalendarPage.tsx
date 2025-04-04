@@ -6,7 +6,12 @@ import { fr } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase, createMedicationDosesForDate, markDoseAsTaken } from "@/integrations/supabase/client";
+import { 
+  supabase, 
+  createMedicationDosesForDate, 
+  markDoseAsTaken, 
+  markMultipleDosesAsTaken 
+} from "@/integrations/supabase/client";
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { DayView } from "@/components/calendar/DayView";
 import { Calendar } from "@/components/ui/calendar";
@@ -97,12 +102,11 @@ const CalendarPage = () => {
       // Si aucune dose, ne rien faire
       if (dosesForPeriod.length === 0) return;
       
-      // Mettre à jour chaque dose
-      const updatePromises = dosesForPeriod.map(dose => 
-        markDoseAsTaken(dose.id, markAsTaken)
-      );
+      // Récupérer les IDs des doses
+      const doseIds = dosesForPeriod.map(dose => dose.id);
       
-      await Promise.all(updatePromises);
+      // Mettre à jour toutes les doses en une seule requête
+      await markMultipleDosesAsTaken(doseIds, markAsTaken);
       
       // Mettre à jour l'état local
       setMedicationDoses(prevDoses => 
@@ -123,6 +127,44 @@ const CalendarPage = () => {
         description: markAsTaken 
           ? `Tous les médicaments du ${timeOfDay.toLowerCase()} ont été marqués comme pris.` 
           : `Tous les médicaments du ${timeOfDay.toLowerCase()} ont été marqués comme non pris.`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des statuts:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut des médicaments.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fonction pour marquer toutes les doses de la journée comme prises ou non
+  const handleMarkAllDoses = async (markAsTaken: boolean) => {
+    try {
+      // Si aucune dose, ne rien faire
+      if (medicationDoses.length === 0) return;
+      
+      // Récupérer les IDs de toutes les doses
+      const allDoseIds = medicationDoses.map(dose => dose.id);
+      
+      // Mettre à jour toutes les doses en une seule requête
+      await markMultipleDosesAsTaken(allDoseIds, markAsTaken);
+      
+      // Mettre à jour l'état local
+      setMedicationDoses(prevDoses => 
+        prevDoses.map(dose => ({ 
+          ...dose, 
+          is_taken: markAsTaken, 
+          taken_at: markAsTaken ? new Date().toISOString() : null 
+        }))
+      );
+      
+      // Notification
+      toast({
+        title: markAsTaken ? "Tous les médicaments pris" : "Médicaments non pris",
+        description: markAsTaken 
+          ? "Tous les médicaments de la journée ont été marqués comme pris." 
+          : "Tous les médicaments de la journée ont été marqués comme non pris.",
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour des statuts:", error);
@@ -206,6 +248,7 @@ const CalendarPage = () => {
                     medicationDoses={medicationDoses} 
                     onToggleDose={handleToggleDose}
                     onMarkAllForPeriod={handleMarkAllForPeriod}
+                    onMarkAllDoses={handleMarkAllDoses}
                     isToday={isToday(selectedDate)}
                   />
                 )}
