@@ -23,7 +23,7 @@ export const MedicationPeriodGroup = ({
   const areAllTakenInPeriod = doses.length > 0 && doses.every(dose => dose.is_taken);
   
   // Get the label for this time of day
-  const periodTitle = timeOfDayLabels[timeOfDay as keyof typeof timeOfDayLabels];
+  const periodTitle = timeOfDayLabels[timeOfDay as keyof typeof timeOfDayLabels] || timeOfDay;
 
   return (
     <div className="mb-6">

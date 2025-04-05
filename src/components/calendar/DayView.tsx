@@ -2,6 +2,7 @@
 import { EmptyDosesState } from "./EmptyDosesState";
 import { MedicationPeriodGroup } from "./MedicationPeriodGroup";
 import { GlobalActionButton } from "./GlobalActionButton";
+import { timeOfDayLabels } from "@/lib/constants";
 
 interface DayViewProps {
   medicationDoses: any[];
@@ -18,22 +19,24 @@ export const DayView = ({
   onMarkAllForPeriod,
   onMarkAllDoses
 }: DayViewProps) => {
-  // Group doses by time of day
-  const dosesByTimeOfDay: Record<string, any[]> = {
-    morning: [],
-    noon: [],
-    evening: [],
-    night: [],
-    custom: []
-  };
+  // Create an object to hold all possible time of day groups
+  const dosesByTimeOfDay: Record<string, any[]> = {};
+  
+  // Initialize standard time periods
+  Object.keys(timeOfDayLabels).forEach(key => {
+    dosesByTimeOfDay[key] = [];
+  });
 
   // Distribute doses into their respective time periods
   medicationDoses.forEach(dose => {
-    if (dosesByTimeOfDay[dose.time_of_day]) {
-      dosesByTimeOfDay[dose.time_of_day].push(dose);
-    } else {
-      dosesByTimeOfDay.custom.push(dose);
+    const timeOfDay = dose.time_of_day;
+    
+    // If this is a new time period we haven't seen before, initialize its array
+    if (!dosesByTimeOfDay[timeOfDay]) {
+      dosesByTimeOfDay[timeOfDay] = [];
     }
+    
+    dosesByTimeOfDay[timeOfDay].push(dose);
   });
 
   // Check if there are any doses to display
@@ -64,15 +67,34 @@ export const DayView = ({
       />
 
       {/* Display medication groups by period */}
-      {Object.entries(dosesByTimeOfDay).map(([timeOfDay, doses]) => (
-        <MedicationPeriodGroup
-          key={timeOfDay}
-          timeOfDay={timeOfDay}
-          doses={doses}
-          onToggleDose={onToggleDose}
-          onMarkAllForPeriod={onMarkAllForPeriod}
-        />
-      ))}
+      {Object.entries(dosesByTimeOfDay)
+        .filter(([_, doses]) => doses.length > 0)  // Only show periods with medications
+        .sort(([a], [b]) => {
+          // Custom sorting function to prioritize standard periods and then sort others alphabetically
+          const standardOrder = ['morning', 'noon', 'repas', 'avant_repas', 'apres_repas', 'evening', 'night', 'custom'];
+          const aIndex = standardOrder.indexOf(a);
+          const bIndex = standardOrder.indexOf(b);
+          
+          if (aIndex >= 0 && bIndex >= 0) {
+            return aIndex - bIndex;
+          } else if (aIndex >= 0) {
+            return -1;
+          } else if (bIndex >= 0) {
+            return 1;
+          } else {
+            return a.localeCompare(b);
+          }
+        })
+        .map(([timeOfDay, doses]) => (
+          <MedicationPeriodGroup
+            key={timeOfDay}
+            timeOfDay={timeOfDay}
+            doses={doses}
+            onToggleDose={onToggleDose}
+            onMarkAllForPeriod={onMarkAllForPeriod}
+          />
+        ))
+      }
     </div>
   );
 };

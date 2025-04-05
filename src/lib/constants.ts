@@ -16,6 +16,9 @@ export const timeOfDayLabels: Record<TimeOfDay, string> = {
   noon: "Midi",
   evening: "Soir",
   night: "Nuit",
+  repas: "Repas",
+  avant_repas: "Avant repas",
+  apres_repas: "Après repas",
   custom: "Personnalisé",
 };
 
