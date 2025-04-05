@@ -5,18 +5,28 @@ import { Save } from "lucide-react";
 
 interface SubmitButtonProps {
   isSaving: boolean;
+  className?: string;
+  icon?: React.ReactNode;
+  text?: string;
+  loadingText?: string;
 }
 
-export const SubmitButton = ({ isSaving }: SubmitButtonProps) => {
+export const SubmitButton = ({ 
+  isSaving, 
+  className = "",
+  icon = <Save className="mr-2 h-4 w-4" />,
+  text = "Enregistrer",
+  loadingText = "Enregistrement..."
+}: SubmitButtonProps) => {
   return (
-    <div className="flex justify-end pt-4">
+    <div className={`flex justify-end pt-4 ${className}`}>
       <Button 
         type="submit" 
-        className="bg-medBlue hover:bg-blue-600"
+        className="bg-medBlue hover:bg-blue-600 transition-colors"
         disabled={isSaving}
       >
-        <Save className="mr-2 h-4 w-4" />
-        {isSaving ? "Enregistrement..." : "Enregistrer"}
+        {isSaving ? null : icon}
+        {isSaving ? loadingText : text}
       </Button>
     </div>
   );

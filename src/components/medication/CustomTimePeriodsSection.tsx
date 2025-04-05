@@ -4,18 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+import { Clock, Plus, Trash2, X } from "lucide-react";
 import { TimeOfDay } from "@/types";
 import { timeOfDayLabels } from "@/lib/constants";
 
 interface CustomTimePeriodsSectionProps {
   selectedPeriods: TimeOfDay[];
   onChange: (periods: TimeOfDay[]) => void;
+  className?: string;
+  title?: string;
+  placeholder?: string;
 }
 
 export const CustomTimePeriodsSection = ({
   selectedPeriods,
-  onChange
+  onChange,
+  className = "",
+  title = "Périodes personnalisées",
+  placeholder = "Exemple: Après déjeuner"
 }: CustomTimePeriodsSectionProps) => {
   const [newPeriod, setNewPeriod] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,51 +60,71 @@ export const CustomTimePeriodsSection = ({
     onChange(selectedPeriods.filter(p => p !== period));
   };
   
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomPeriod();
+    }
+  };
+  
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <div className="space-y-2">
-        <Label htmlFor="customPeriod">Périodes personnalisées</Label>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {selectedPeriods.map(period => (
-            <Badge 
-              key={period} 
-              variant={defaultPeriods.includes(period) ? "secondary" : "outline"}
-              className="flex items-center gap-1 py-1"
-            >
-              {timeOfDayLabels[period] || period}
-              {!defaultPeriods.includes(period) && (
-                <button 
-                  onClick={() => removePeriod(period)}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </Badge>
-          ))}
-        </div>
+        <Label htmlFor="customPeriod" className="flex items-center gap-1.5">
+          <Clock className="h-4 w-4 text-medBlue" />
+          {title}
+        </Label>
+        
+        {selectedPeriods.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {selectedPeriods.map(period => (
+              <Badge 
+                key={period} 
+                variant={defaultPeriods.includes(period) ? "secondary" : "outline"}
+                className="flex items-center gap-1 py-1.5 px-3 text-sm transition-colors hover:bg-muted group"
+              >
+                {timeOfDayLabels[period] || period}
+                {!defaultPeriods.includes(period) && (
+                  <button 
+                    onClick={() => removePeriod(period)}
+                    className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label={`Supprimer ${timeOfDayLabels[period] || period}`}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </Badge>
+            ))}
+          </div>
+        )}
         
         <div className="flex gap-2">
-          <Input
-            id="customPeriod"
-            value={newPeriod}
-            onChange={(e) => {
-              setNewPeriod(e.target.value);
-              setErrorMessage("");
-            }}
-            placeholder="Exemple: Après déjeuner"
-            className="flex-1"
-          />
+          <div className="relative flex-1">
+            <Input
+              id="customPeriod"
+              value={newPeriod}
+              onChange={(e) => {
+                setNewPeriod(e.target.value);
+                setErrorMessage("");
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder={placeholder}
+              className="pr-12 transition-shadow focus-within:shadow-sm"
+              aria-invalid={!!errorMessage}
+              aria-describedby={errorMessage ? "customPeriod-error" : undefined}
+            />
+          </div>
           <Button 
             type="button" 
             onClick={addCustomPeriod}
             size="sm"
+            className="shrink-0 transition-all"
           >
             <Plus className="h-4 w-4 mr-1" /> Ajouter
           </Button>
         </div>
         {errorMessage && (
-          <p className="text-sm text-red-500 mt-1">{errorMessage}</p>
+          <p id="customPeriod-error" className="text-sm text-red-500 mt-1">{errorMessage}</p>
         )}
       </div>
     </div>
