@@ -1,7 +1,7 @@
 
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-export type TimeOfDay = 'morning' | 'noon' | 'evening' | 'night' | 'custom' | 'repas' | 'avant_repas' | 'apres_repas';
+export type TimeOfDay = 'morning' | 'noon' | 'evening' | 'night' | 'custom' | 'repas' | 'avant_repas' | 'apres_repas' | string;
 
 export interface Medication {
   id: string;

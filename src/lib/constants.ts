@@ -11,7 +11,7 @@ export const daysOfWeekLabels: Record<DayOfWeek, string> = {
   sunday: "Dimanche",
 };
 
-export const timeOfDayLabels: Record<TimeOfDay, string> = {
+export const timeOfDayLabels: Record<string, string> = {
   morning: "Matin",
   noon: "Midi",
   evening: "Soir",
@@ -20,6 +20,14 @@ export const timeOfDayLabels: Record<TimeOfDay, string> = {
   avant_repas: "Avant repas",
   apres_repas: "Après repas",
   custom: "Personnalisé",
+};
+
+// Fonction pour ajouter dynamiquement un nouveau label de temps
+export const addTimeOfDayLabel = (key: string, label: string) => {
+  if (!timeOfDayLabels[key]) {
+    timeOfDayLabels[key] = label;
+  }
+  return timeOfDayLabels;
 };
 
 export const daysOfWeekOptions = Object.entries(daysOfWeekLabels).map(([value, label]) => ({
