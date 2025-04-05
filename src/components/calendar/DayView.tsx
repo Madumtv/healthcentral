@@ -1,9 +1,7 @@
 
-import { timeOfDayLabels } from "@/lib/constants";
-import { MedicationDoseCard } from "./MedicationDoseCard";
 import { EmptyDosesState } from "./EmptyDosesState";
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { MedicationPeriodGroup } from "./MedicationPeriodGroup";
+import { GlobalActionButton } from "./GlobalActionButton";
 
 interface DayViewProps {
   medicationDoses: any[];
@@ -20,7 +18,7 @@ export const DayView = ({
   onMarkAllForPeriod,
   onMarkAllDoses
 }: DayViewProps) => {
-  // Regrouper les doses par moment de la journée
+  // Group doses by time of day
   const dosesByTimeOfDay: Record<string, any[]> = {
     morning: [],
     noon: [],
@@ -29,6 +27,7 @@ export const DayView = ({
     custom: []
   };
 
+  // Distribute doses into their respective time periods
   medicationDoses.forEach(dose => {
     if (dosesByTimeOfDay[dose.time_of_day]) {
       dosesByTimeOfDay[dose.time_of_day].push(dose);
@@ -37,18 +36,13 @@ export const DayView = ({
     }
   });
 
-  // Vérifier s'il y a des doses à afficher
+  // Check if there are any doses to display
   const isEmpty = Object.values(dosesByTimeOfDay).every(doses => doses.length === 0);
 
-  // Vérifier si tous les médicaments d'une période sont pris
-  const areAllTakenInPeriod = (timeOfDay: string) => {
-    const doses = dosesByTimeOfDay[timeOfDay];
-    return doses.length > 0 && doses.every(dose => dose.is_taken);
-  };
-
-  // Vérifier si tous les médicaments de la journée sont pris
+  // Check if all doses for the day are taken
   const areAllDosesTaken = medicationDoses.length > 0 && medicationDoses.every(dose => dose.is_taken);
 
+  // If no doses, show empty state
   if (isEmpty) {
     return (
       <EmptyDosesState 
@@ -63,67 +57,22 @@ export const DayView = ({
 
   return (
     <div className="space-y-8">
-      {/* Bouton global pour marquer tous les médicaments de la journée */}
-      <div className="flex justify-end">
-        <Button
-          onClick={() => onMarkAllDoses(!areAllDosesTaken)}
-          variant={areAllDosesTaken ? "outline" : "default"}
-          className={areAllDosesTaken 
-            ? "border-green-500 text-green-600 hover:bg-green-50" 
-            : "bg-medBlue hover:bg-medBlue/90"
-          }
-          size="lg"
-        >
-          {areAllDosesTaken ? (
-            <>
-              <Check className="h-4 w-4 mr-2" />
-              Tous médicaments pris
-            </>
-          ) : (
-            "Tout prendre"
-          )}
-        </Button>
-      </div>
+      {/* Global button to mark all medications for the day */}
+      <GlobalActionButton 
+        isAllTaken={areAllDosesTaken} 
+        onMarkAll={onMarkAllDoses} 
+      />
 
-      {/* Afficher les doses par période */}
-      {Object.entries(dosesByTimeOfDay).map(([timeOfDay, doses]) => 
-        doses.length > 0 && (
-          <div key={timeOfDay} className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold flex items-center">
-                <span className="w-2 h-8 bg-medBlue rounded-full mr-3"></span>
-                {timeOfDayLabels[timeOfDay as keyof typeof timeOfDayLabels]}
-              </h3>
-              <Button
-                onClick={() => onMarkAllForPeriod(timeOfDay, !areAllTakenInPeriod(timeOfDay))}
-                variant={areAllTakenInPeriod(timeOfDay) ? "outline" : "default"}
-                className={areAllTakenInPeriod(timeOfDay) 
-                  ? "border-green-500 text-green-600 hover:bg-green-50" 
-                  : "bg-medBlue hover:bg-medBlue/90"
-                }
-              >
-                {areAllTakenInPeriod(timeOfDay) ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Tous pris
-                  </>
-                ) : (
-                  "Tout prendre"
-                )}
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {doses.map((dose: any) => (
-                <MedicationDoseCard
-                  key={dose.id}
-                  dose={dose}
-                  onToggle={() => onToggleDose(dose.id, dose.is_taken)}
-                />
-              ))}
-            </div>
-          </div>
-        )
-      )}
+      {/* Display medication groups by period */}
+      {Object.entries(dosesByTimeOfDay).map(([timeOfDay, doses]) => (
+        <MedicationPeriodGroup
+          key={timeOfDay}
+          timeOfDay={timeOfDay}
+          doses={doses}
+          onToggleDose={onToggleDose}
+          onMarkAllForPeriod={onMarkAllForPeriod}
+        />
+      ))}
     </div>
   );
 };
