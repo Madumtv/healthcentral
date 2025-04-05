@@ -2,16 +2,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Medication, TimeOfDay } from "@/types";
 import { medicationService } from "@/lib/mock-data";
-import { daysOfWeekOptions, timeOfDayOptions } from "@/lib/constants";
-import { Save } from "lucide-react";
+import BasicInfoFields from "./form-fields/BasicInfoFields";
+import StandardTimePeriods from "./form-fields/StandardTimePeriods";
+import DaysOfWeekField from "./form-fields/DaysOfWeekField";
+import AdditionalInfoFields from "./form-fields/AdditionalInfoFields";
+import SubmitButton from "./form-fields/SubmitButton";
 import { CustomTimePeriodsSection } from "./CustomTimePeriodsSection";
 
 interface MedicationFormProps {
@@ -145,11 +143,6 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
     }
   };
 
-  // Extraire uniquement les périodes standard dans les options de checkbox
-  const standardTimeOptions = timeOfDayOptions.filter(
-    option => ['morning', 'noon', 'evening', 'night'].includes(option.value)
-  );
-
   return (
     <Card className="max-w-3xl mx-auto">
       <CardHeader>
@@ -162,135 +155,37 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom du médicament *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={medication.name || ""}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="dosage">Dosage *</Label>
-                <Input
-                  id="dosage"
-                  name="dosage"
-                  value={medication.dosage || ""}
-                  onChange={handleInputChange}
-                  placeholder="Ex: 500mg, 10ml..."
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                value={medication.description || ""}
-                onChange={handleInputChange}
-                placeholder="Ex: Antidouleur, antibiotique..."
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Moments de prise standards *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                {standardTimeOptions.map(option => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`time-${option.value}`}
-                      checked={medication.timeOfDay?.includes(option.value as any) || false}
-                      onCheckedChange={(checked) => 
-                        handleTimeChange(option.value, checked === true)
-                      }
-                    />
-                    <Label htmlFor={`time-${option.value}`} className="cursor-pointer">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Section pour les périodes personnalisées */}
-            <CustomTimePeriodsSection
-              selectedPeriods={customTimePeriods}
-              onChange={handleCustomPeriodsChange}
-            />
-            
-            <div className="space-y-2">
-              <Label>Jours de prise *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                {daysOfWeekOptions.map(option => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`day-${option.value}`}
-                      checked={medication.daysOfWeek?.includes(option.value as any) || false}
-                      onCheckedChange={(checked) => 
-                        handleDayChange(option.value, checked === true)
-                      }
-                    />
-                    <Label htmlFor={`day-${option.value}`} className="cursor-pointer">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes personnelles</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={medication.notes || ""}
-                onChange={handleInputChange}
-                placeholder="Informations complémentaires, effets secondaires..."
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="prescribingDoctor">Médecin prescripteur</Label>
-              <Input
-                id="prescribingDoctor"
-                name="prescribingDoctor"
-                value={medication.prescribingDoctor || ""}
-                onChange={handleInputChange}
-                placeholder="Dr. Dupont"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="infoLink">Lien vers des informations</Label>
-              <Input
-                id="infoLink"
-                name="infoLink"
-                value={medication.infoLink || ""}
-                onChange={handleInputChange}
-                placeholder="https://..."
-                type="url"
-              />
-            </div>
-          </div>
+          <BasicInfoFields
+            name={medication.name || ""}
+            dosage={medication.dosage || ""}
+            description={medication.description}
+            onChange={handleInputChange}
+          />
           
-          <div className="flex justify-end pt-4">
-            <Button 
-              type="submit" 
-              className="bg-medBlue hover:bg-blue-600"
-              disabled={isSaving}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </div>
+          <StandardTimePeriods
+            selectedTimes={medication.timeOfDay || []}
+            onChange={handleTimeChange}
+          />
+          
+          {/* Section pour les périodes personnalisées */}
+          <CustomTimePeriodsSection
+            selectedPeriods={customTimePeriods}
+            onChange={handleCustomPeriodsChange}
+          />
+          
+          <DaysOfWeekField
+            selectedDays={medication.daysOfWeek || []}
+            onChange={handleDayChange}
+          />
+          
+          <AdditionalInfoFields
+            notes={medication.notes}
+            prescribingDoctor={medication.prescribingDoctor}
+            infoLink={medication.infoLink}
+            onChange={handleInputChange}
+          />
+          
+          <SubmitButton isSaving={isSaving} />
         </form>
       </CardContent>
     </Card>
