@@ -1,7 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Search, Plus } from "lucide-react";
+import { MedicamentSearch } from "../MedicamentSearch";
+import { MedicamentInfo } from "@/lib/medicaments-api";
 
 interface BasicInfoFieldsProps {
   name: string;
@@ -11,21 +17,82 @@ interface BasicInfoFieldsProps {
 }
 
 export const BasicInfoFields = ({ 
-  name,
-  dosage,
-  description,
-  onChange
+  name, 
+  dosage, 
+  description, 
+  onChange 
 }: BasicInfoFieldsProps) => {
+  const [showMedicamentSearch, setShowMedicamentSearch] = useState(false);
+
+  const handleMedicamentSelect = (medicament: MedicamentInfo & { dosage?: string }) => {
+    // Simuler les événements onChange pour mettre à jour le formulaire parent
+    const nameEvent = {
+      target: { name: 'name', value: medicament.denomination }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    const dosageEvent = {
+      target: { name: 'dosage', value: medicament.dosage || medicament.formePharmaceutique }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    const descriptionEvent = {
+      target: { 
+        name: 'description', 
+        value: [
+          medicament.formePharmaceutique,
+          medicament.titulaires.length > 0 ? `Laboratoire: ${medicament.titulaires[0]}` : '',
+          `Code CIS: ${medicament.codeCIS}`
+        ].filter(Boolean).join(' • ')
+      }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    onChange(nameEvent);
+    onChange(dosageEvent);
+    onChange(descriptionEvent);
+    
+    setShowMedicamentSearch(false);
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Informations du médicament</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowMedicamentSearch(!showMedicamentSearch)}
+          className="text-sm"
+        >
+          <Search className="mr-2 h-4 w-4" />
+          {showMedicamentSearch ? "Saisie manuelle" : "Recherche officielle"}
+        </Button>
+      </div>
+
+      {showMedicamentSearch ? (
+        <div className="space-y-4">
+          <MedicamentSearch 
+            onMedicamentSelect={handleMedicamentSelect}
+            className="p-4 border rounded-lg bg-blue-50"
+          />
+          
+          <Separator />
+          
+          <p className="text-sm text-gray-600 flex items-center gap-1">
+            <Plus className="h-4 w-4" />
+            Ou continuez avec la saisie manuelle ci-dessous
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nom du médicament *</Label>
           <Input
             id="name"
             name="name"
-            value={name || ""}
+            value={name}
             onChange={onChange}
+            placeholder="Ex: Doliprane"
             required
           />
         </div>
@@ -35,22 +102,23 @@ export const BasicInfoFields = ({
           <Input
             id="dosage"
             name="dosage"
-            value={dosage || ""}
+            value={dosage}
             onChange={onChange}
-            placeholder="Ex: 500mg, 10ml..."
+            placeholder="Ex: 500mg"
             required
           />
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Input
+        <Label htmlFor="description">Description (optionnel)</Label>
+        <Textarea
           id="description"
           name="description"
           value={description || ""}
           onChange={onChange}
-          placeholder="Ex: Antidouleur, antibiotique..."
+          placeholder="Informations complémentaires sur le médicament..."
+          rows={3}
         />
       </div>
     </div>
