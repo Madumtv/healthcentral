@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -89,6 +88,10 @@ export const MedicamentDetailsModal = ({
     if (code === "A") return "default";
     if (code === "B") return "secondary";
     return "outline";
+  };
+
+  const getMedicamentDetailUrl = (cnk: string) => {
+    return `https://banquededonneesmedicaments.fagg-afmps.be/usage-humain/details/${cnk}`;
   };
 
   return (
@@ -217,14 +220,24 @@ export const MedicamentDetailsModal = ({
             <Separator />
 
             <div className="flex justify-between items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open('https://banquededonneesmedicaments.fagg-afmps.be/', '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                AFMPS Belgique
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(getMedicamentDetailUrl(medicamentDetails.cnk), '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Fiche officielle
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('https://banquededonneesmedicaments.fagg-afmps.be/usage-humain', '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Base AFMPS
+                </Button>
+              </div>
               <Button onClick={onClose}>Fermer</Button>
             </div>
           </div>
