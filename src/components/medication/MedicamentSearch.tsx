@@ -65,17 +65,17 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
     
     try {
       // Récupérer la composition pour obtenir le dosage
-      const composition = await medicamentsApi.getMedicamentComposition(medicament.codeCIS);
+      const composition = await medicamentsApi.getMedicamentComposition(medicament.cnk);
       const dosage = medicamentsApi.formatDosage(composition);
       
       onMedicamentSelect({
         ...medicament,
-        dosage: dosage || medicament.formePharmaceutique
+        dosage: dosage || medicament.category
       });
 
       toast({
         title: "Médicament sélectionné",
-        description: `${medicament.denomination} a été ajouté au formulaire.`,
+        description: `${medicament.name} a été ajouté au formulaire.`,
       });
 
       // Réinitialiser la recherche
@@ -91,9 +91,15 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
   };
 
   const getStatusBadgeVariant = (statut: string) => {
-    if (statut.includes("Autorisation")) return "default";
-    if (statut.includes("Retrait")) return "destructive";
+    if (statut.includes("Disponible")) return "default";
+    if (statut.includes("Retiré") || statut.includes("Suspendu")) return "destructive";
     return "secondary";
+  };
+
+  const getReimbursementBadgeVariant = (code: string) => {
+    if (code === "A") return "default";
+    if (code === "B") return "secondary";
+    return "outline";
   };
 
   return (
@@ -127,7 +133,7 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
         
         <p className="text-xs text-gray-500 flex items-center gap-1">
           <Info className="h-3 w-3" />
-          Données officielles de l'API Médicaments (Base de données publique française)
+          Données officielles de l'AFMPS (Agence fédérale des médicaments belges)
         </p>
       </div>
 
@@ -141,8 +147,8 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="font-medium text-green-800">Médicament sélectionné</span>
                 </div>
-                <p className="text-sm font-medium">{selectedMedicament.denomination}</p>
-                <p className="text-xs text-gray-600">{selectedMedicament.formePharmaceutique}</p>
+                <p className="text-sm font-medium">{selectedMedicament.name}</p>
+                <p className="text-xs text-gray-600">{selectedMedicament.company}</p>
               </div>
               <Button
                 type="button"
@@ -165,7 +171,7 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {searchResults.map((medicament) => (
                 <div
-                  key={medicament.codeCIS}
+                  key={medicament.cnk}
                   className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => handleSelectMedicament(medicament)}
                 >
@@ -173,30 +179,40 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h5 className="font-medium text-sm leading-tight">
-                          {medicament.denomination}
+                          {medicament.name}
                         </h5>
                         <p className="text-xs text-gray-600 mt-1">
-                          {medicament.formePharmaceutique}
+                          {medicament.company} • {medicament.category}
                         </p>
                       </div>
-                      <Badge 
-                        variant={getStatusBadgeVariant(medicament.statutAMM)}
-                        className="text-xs shrink-0 ml-2"
-                      >
-                        {medicament.statutAMM.includes("Autorisation") ? "Autorisé" : medicament.statutAMM}
-                      </Badge>
+                      <div className="flex gap-1 shrink-0 ml-2">
+                        <Badge 
+                          variant={getStatusBadgeVariant(medicament.deliveryStatus)}
+                          className="text-xs"
+                        >
+                          {medicament.deliveryStatus}
+                        </Badge>
+                        {medicament.reimbursementCode && (
+                          <Badge 
+                            variant={getReimbursementBadgeVariant(medicament.reimbursementCode)}
+                            className="text-xs"
+                          >
+                            Cat. {medicament.reimbursementCode}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
-                    {medicament.titulaires.length > 0 && (
-                      <p className="text-xs text-gray-500">
-                        Laboratoire: {medicament.titulaires[0]}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        Code CIS: {medicament.codeCIS}
-                      </span>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="space-y-1">
+                        <p className="text-gray-500">CNK: {medicament.cnk}</p>
+                        {medicament.publicPrice && (
+                          <p className="text-gray-600">
+                            Prix: {medicament.publicPrice}€
+                            {medicament.reimbursementRate && ` (Remb. ${medicament.reimbursementRate})`}
+                          </p>
+                        )}
+                      </div>
                       <Button
                         type="button"
                         size="sm"

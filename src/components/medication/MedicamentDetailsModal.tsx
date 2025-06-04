@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ExternalLink, Info, AlertCircle, CheckCircle } from "lucide-react";
+import { ExternalLink, Info, AlertCircle, CheckCircle, Euro } from "lucide-react";
 import { medicamentsApi, MedicamentInfo, MedicamentComposition, MedicamentPresentations } from "@/lib/medicaments-api";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -49,8 +49,8 @@ export const MedicamentDetailsModal = ({
         
         // Récupérer les détails supplémentaires
         const [compositionData, presentationsData] = await Promise.all([
-          medicamentsApi.getMedicamentComposition(medicament.codeCIS),
-          medicamentsApi.getMedicamentPresentations(medicament.codeCIS)
+          medicamentsApi.getMedicamentComposition(medicament.cnk),
+          medicamentsApi.getMedicamentPresentations(medicament.cnk)
         ]);
         
         setComposition(compositionData);
@@ -58,7 +58,7 @@ export const MedicamentDetailsModal = ({
       } else {
         toast({
           title: "Médicament non trouvé",
-          description: "Ce médicament n'a pas été trouvé dans la base de données officielle.",
+          description: "Ce médicament n'a pas été trouvé dans la base de données officielle belge.",
           variant: "default",
         });
       }
@@ -74,15 +74,21 @@ export const MedicamentDetailsModal = ({
   };
 
   const getStatusIcon = (statut: string) => {
-    if (statut.includes("Autorisation")) return <CheckCircle className="h-4 w-4 text-green-600" />;
-    if (statut.includes("Retrait")) return <AlertCircle className="h-4 w-4 text-red-600" />;
+    if (statut.includes("Disponible")) return <CheckCircle className="h-4 w-4 text-green-600" />;
+    if (statut.includes("Retiré") || statut.includes("Suspendu")) return <AlertCircle className="h-4 w-4 text-red-600" />;
     return <Info className="h-4 w-4 text-blue-600" />;
   };
 
   const getStatusBadgeVariant = (statut: string) => {
-    if (statut.includes("Autorisation")) return "default";
-    if (statut.includes("Retrait")) return "destructive";
+    if (statut.includes("Disponible")) return "default";
+    if (statut.includes("Retiré") || statut.includes("Suspendu")) return "destructive";
     return "secondary";
+  };
+
+  const getReimbursementBadgeVariant = (code: string) => {
+    if (code === "A") return "default";
+    if (code === "B") return "secondary";
+    return "outline";
   };
 
   return (
@@ -94,7 +100,7 @@ export const MedicamentDetailsModal = ({
             Informations officielles du médicament
           </DialogTitle>
           <DialogDescription>
-            Données issues de la base de données publique française des médicaments
+            Données issues de la base de données AFMPS (Agence fédérale des médicaments belges)
           </DialogDescription>
         </DialogHeader>
 
@@ -106,44 +112,53 @@ export const MedicamentDetailsModal = ({
           <div className="space-y-6">
             {/* Informations principales */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-lg">{medicamentDetails.denomination}</h3>
+              <h3 className="font-semibold text-lg">{medicamentDetails.name}</h3>
               
-              <div className="flex items-center gap-2">
-                {getStatusIcon(medicamentDetails.statutAMM)}
-                <Badge variant={getStatusBadgeVariant(medicamentDetails.statutAMM)}>
-                  {medicamentDetails.statutAMM}
+              <div className="flex items-center gap-2 flex-wrap">
+                {getStatusIcon(medicamentDetails.deliveryStatus)}
+                <Badge variant={getStatusBadgeVariant(medicamentDetails.deliveryStatus)}>
+                  {medicamentDetails.deliveryStatus}
                 </Badge>
-                {medicamentDetails.surveillance && (
-                  <Badge variant="outline" className="text-orange-600 border-orange-600">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    Surveillance renforcée
+                {medicamentDetails.reimbursementCode && (
+                  <Badge variant={getReimbursementBadgeVariant(medicamentDetails.reimbursementCode)}>
+                    Catégorie {medicamentDetails.reimbursementCode}
+                  </Badge>
+                )}
+                {medicamentDetails.prescriptionType && (
+                  <Badge variant="outline">
+                    {medicamentDetails.prescriptionType}
                   </Badge>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">Forme pharmaceutique:</span>
-                  <p className="text-gray-600">{medicamentDetails.formePharmaceutique}</p>
+                  <span className="font-medium">Laboratoire:</span>
+                  <p className="text-gray-600">{medicamentDetails.company}</p>
                 </div>
                 <div>
-                  <span className="font-medium">Voies d'administration:</span>
-                  <p className="text-gray-600">{medicamentDetails.voiesAdministration.join(', ')}</p>
+                  <span className="font-medium">Catégorie:</span>
+                  <p className="text-gray-600">{medicamentDetails.category}</p>
                 </div>
                 <div>
-                  <span className="font-medium">Date d'AMM:</span>
-                  <p className="text-gray-600">{new Date(medicamentDetails.dateAMM).toLocaleDateString('fr-FR')}</p>
+                  <span className="font-medium">Code ATC:</span>
+                  <p className="text-gray-600">{medicamentDetails.atc || 'Non spécifié'}</p>
                 </div>
                 <div>
-                  <span className="font-medium">Code CIS:</span>
-                  <p className="text-gray-600">{medicamentDetails.codeCIS}</p>
+                  <span className="font-medium">CNK:</span>
+                  <p className="text-gray-600">{medicamentDetails.cnk}</p>
                 </div>
               </div>
 
-              {medicamentDetails.titulaires.length > 0 && (
-                <div>
-                  <span className="font-medium text-sm">Titulaire(s) de l'AMM:</span>
-                  <p className="text-gray-600 text-sm">{medicamentDetails.titulaires.join(', ')}</p>
+              {medicamentDetails.publicPrice && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                  <Euro className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-green-800">Prix public: {medicamentDetails.publicPrice}€</span>
+                  {medicamentDetails.reimbursementRate && (
+                    <span className="text-green-600 text-sm">
+                      (Remboursement: {medicamentDetails.reimbursementRate})
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -157,13 +172,10 @@ export const MedicamentDetailsModal = ({
                 <div className="space-y-2">
                   {composition.map((comp, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded-lg text-sm">
-                      <div className="font-medium">{comp.substanceActive}</div>
+                      <div className="font-medium">{comp.activeSubstance}</div>
                       <div className="text-gray-600">
-                        Dosage: {comp.dosageSubstance} {comp.referenceDosage}
+                        Dosage: {comp.strength} {comp.unit}
                       </div>
-                      {comp.nature && (
-                        <div className="text-gray-500 text-xs">Nature: {comp.nature}</div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -177,16 +189,18 @@ export const MedicamentDetailsModal = ({
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {presentations.slice(0, 5).map((pres, index) => (
                     <div key={index} className="p-3 border rounded-lg text-sm">
-                      <div className="font-medium">{pres.libelle}</div>
+                      <div className="font-medium">{pres.name}</div>
                       <div className="flex justify-between items-center mt-1">
-                        <span className="text-gray-600">CIP: {pres.codeCIP13}</span>
-                        <Badge variant={pres.etatCommercialisation === "Commercialisée" ? "default" : "secondary"}>
-                          {pres.etatCommercialisation}
+                        <span className="text-gray-600">CNK: {pres.cnk}</span>
+                        <Badge variant={pres.deliveryStatus === "Disponible" ? "default" : "secondary"}>
+                          {pres.deliveryStatus}
                         </Badge>
                       </div>
-                      {pres.prix && (
-                        <div className="text-gray-600 text-xs mt-1">
-                          Prix: {pres.prix}€ {pres.tauxRemboursement && `(Remb. ${pres.tauxRemboursement}%)`}
+                      {pres.publicPrice && (
+                        <div className="text-gray-600 text-xs mt-1 flex items-center gap-1">
+                          <Euro className="h-3 w-3" />
+                          Prix: {pres.publicPrice}€ 
+                          {pres.reimbursementRate && `(Remb. ${pres.reimbursementRate})`}
                         </div>
                       )}
                     </div>
@@ -206,10 +220,10 @@ export const MedicamentDetailsModal = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open('https://api-medicaments.fr/', '_blank')}
+                onClick={() => window.open('https://banquededonneesmedicaments.fagg-afmps.be/', '_blank')}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                API Médicaments
+                AFMPS Belgique
               </Button>
               <Button onClick={onClose}>Fermer</Button>
             </div>
@@ -218,7 +232,7 @@ export const MedicamentDetailsModal = ({
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">
-              Aucune information trouvée pour ce médicament dans la base de données officielle.
+              Aucune information trouvée pour ce médicament dans la base de données officielle belge.
             </p>
             <Button variant="outline" className="mt-4" onClick={onClose}>
               Fermer

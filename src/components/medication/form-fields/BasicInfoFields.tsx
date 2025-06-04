@@ -27,20 +27,21 @@ export const BasicInfoFields = ({
   const handleMedicamentSelect = (medicament: MedicamentInfo & { dosage?: string }) => {
     // Simuler les événements onChange pour mettre à jour le formulaire parent
     const nameEvent = {
-      target: { name: 'name', value: medicament.denomination }
+      target: { name: 'name', value: medicament.name }
     } as React.ChangeEvent<HTMLInputElement>;
     
     const dosageEvent = {
-      target: { name: 'dosage', value: medicament.dosage || medicament.formePharmaceutique }
+      target: { name: 'dosage', value: medicament.dosage || medicament.category }
     } as React.ChangeEvent<HTMLInputElement>;
     
     const descriptionEvent = {
       target: { 
         name: 'description', 
         value: [
-          medicament.formePharmaceutique,
-          medicament.titulaires.length > 0 ? `Laboratoire: ${medicament.titulaires[0]}` : '',
-          `Code CIS: ${medicament.codeCIS}`
+          medicament.category,
+          medicament.company ? `Laboratoire: ${medicament.company}` : '',
+          `CNK: ${medicament.cnk}`,
+          medicament.publicPrice ? `Prix: ${medicament.publicPrice}€` : ''
         ].filter(Boolean).join(' • ')
       }
     } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -92,7 +93,7 @@ export const BasicInfoFields = ({
             name="name"
             value={name}
             onChange={onChange}
-            placeholder="Ex: Doliprane"
+            placeholder="Ex: Dafalgan"
             required
           />
         </div>
