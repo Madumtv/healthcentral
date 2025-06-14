@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Flag } from "lucide-react";
 import { HybridMedicationSearch } from "../HybridMedicationSearch";
 import { MedicamentInfo } from "@/lib/medicaments-api";
 
@@ -23,6 +23,7 @@ export const BasicInfoFields = ({
   onChange 
 }: BasicInfoFieldsProps) => {
   const [showMedicamentSearch, setShowMedicamentSearch] = useState(false);
+  const [searchRegion, setSearchRegion] = useState<'belgium' | 'france'>('belgium');
 
   const handleMedicamentSelect = (medicament: MedicamentInfo & { dosage?: string }) => {
     // Simuler les événements onChange pour mettre à jour le formulaire parent
@@ -40,7 +41,7 @@ export const BasicInfoFields = ({
         value: [
           medicament.category,
           medicament.company ? `Laboratoire: ${medicament.company}` : '',
-          `CNK: ${medicament.cnk}`,
+          searchRegion === 'belgium' ? `CNK: ${medicament.cnk}` : `Vidal ID: ${medicament.cnk}`,
           medicament.publicPrice ? `Prix: ${medicament.publicPrice}€` : ''
         ].filter(Boolean).join(' • ')
       }
@@ -53,28 +54,77 @@ export const BasicInfoFields = ({
     setShowMedicamentSearch(false);
   };
 
+  const handleSearchToggle = (region: 'belgium' | 'france') => {
+    setSearchRegion(region);
+    setShowMedicamentSearch(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Informations du médicament</h3>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowMedicamentSearch(!showMedicamentSearch)}
-          className="text-sm"
-        >
-          <Search className="mr-2 h-4 w-4" />
-          {showMedicamentSearch ? "Saisie manuelle" : "Recherche intelligente"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleSearchToggle('belgium')}
+            className="text-sm"
+          >
+            <Flag className="mr-2 h-4 w-4 text-yellow-500" />
+            Recherche Belgique
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleSearchToggle('france')}
+            className="text-sm"
+          >
+            <Flag className="mr-2 h-4 w-4 text-blue-500" />
+            Recherche France (Vidal)
+          </Button>
+          {showMedicamentSearch && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMedicamentSearch(false)}
+              className="text-sm"
+            >
+              Saisie manuelle
+            </Button>
+          )}
+        </div>
       </div>
 
       {showMedicamentSearch ? (
         <div className="space-y-4">
-          <HybridMedicationSearch 
-            onMedicamentSelect={handleMedicamentSelect}
-            className="p-4 border rounded-lg bg-blue-50"
-          />
+          <div className="p-4 border rounded-lg bg-blue-50">
+            {searchRegion === 'belgium' ? (
+              <HybridMedicationSearch 
+                onMedicamentSelect={handleMedicamentSelect}
+                className=""
+              />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-blue-700">
+                  <Flag className="h-4 w-4 text-blue-500" />
+                  <span className="font-medium">Recherche Vidal.fr (France)</span>
+                </div>
+                <p className="text-sm text-blue-600">
+                  Recherche dans la base de données française Vidal - médicaments disponibles en France
+                </p>
+                <div className="bg-orange-100 border border-orange-200 rounded-lg p-3">
+                  <p className="text-sm text-orange-700">
+                    <strong>Fonctionnalité en développement</strong> - La recherche Vidal.fr sera bientôt disponible. 
+                    Pour l'instant, vous pouvez consulter directement <a href="https://www.vidal.fr/" target="_blank" rel="noopener noreferrer" className="underline">vidal.fr</a> 
+                    et saisir manuellement les informations ci-dessous.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
           
           <Separator />
           
