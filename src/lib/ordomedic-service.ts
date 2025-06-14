@@ -85,6 +85,21 @@ class OrdomedicService {
       },
       {
         id: 'ordo_4',
+        first_name: 'Serge',
+        last_name: 'Vanderroost',
+        specialty: 'Médecine générale',
+        address: 'Avenue de la Couronne 217',
+        city: 'Ixelles',
+        postal_code: '1050',
+        phone: '02/648.12.34',
+        inami_number: '11234567890',
+        email: '',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_5',
         first_name: 'Sophie',
         last_name: 'Lambert',
         specialty: 'Pédiatrie',
@@ -99,7 +114,7 @@ class OrdomedicService {
         updated_at: new Date()
       },
       {
-        id: 'ordo_5',
+        id: 'ordo_6',
         first_name: 'Antoine',
         last_name: 'Dubois',
         specialty: 'Orthopédie',

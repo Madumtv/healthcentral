@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +7,15 @@ import {
   markDoseAsTaken, 
   markMultipleDosesAsTaken 
 } from "@/integrations/supabase/client";
+
+// Type pour les doses de médicaments
+interface MedicationDose {
+  id: string;
+  time_of_day: string;
+  is_taken: boolean;
+  taken_at?: string | null;
+  [key: string]: any;
+}
 
 // Fonction pour normaliser les valeurs de time_of_day
 const normalizeTimeOfDay = (timeOfDay: string): string => {
@@ -23,7 +31,7 @@ const normalizeTimeOfDay = (timeOfDay: string): string => {
 
 export const useMedicationDoses = (selectedDate: Date) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [medicationDoses, setMedicationDoses] = useState<any[]>([]);
+  const [medicationDoses, setMedicationDoses] = useState<MedicationDose[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -35,17 +43,20 @@ export const useMedicationDoses = (selectedDate: Date) => {
         
         // Vérifier si doses est un array et contient des données valides
         if (Array.isArray(doses)) {
-          const normalizedDoses = doses
-            .filter(dose => dose && typeof dose === 'object' && !('error' in dose))
-            .map(dose => {
-              if (dose.time_of_day && typeof dose.time_of_day === 'string') {
-                return {
-                  ...dose,
-                  time_of_day: normalizeTimeOfDay(dose.time_of_day)
-                };
-              }
-              return dose;
-            });
+          const normalizedDoses: MedicationDose[] = doses
+            .filter((dose): dose is MedicationDose => 
+              dose != null && 
+              typeof dose === 'object' && 
+              !('error' in dose) &&
+              'id' in dose &&
+              'time_of_day' in dose
+            )
+            .map(dose => ({
+              ...dose,
+              time_of_day: typeof dose.time_of_day === 'string' 
+                ? normalizeTimeOfDay(dose.time_of_day)
+                : dose.time_of_day
+            }));
           
           setMedicationDoses(normalizedDoses);
         } else {
