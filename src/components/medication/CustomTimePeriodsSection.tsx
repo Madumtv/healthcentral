@@ -26,13 +26,30 @@ export const CustomTimePeriodsSection = ({
   const [newPeriod, setNewPeriod] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   
-  // Les périodes par défaut qu'on ne peut pas supprimer
+  // Les périodes par défaut qu'on ne peut pas supprimer ET leurs équivalents français
   const defaultPeriods = ["morning", "noon", "evening", "night"];
+  const frenchEquivalents = {
+    "matin": "morning",
+    "midi": "noon", 
+    "soir": "evening",
+    "nuit": "night"
+  };
   
   // Convertir en période personnalisée valide (sans espaces, en minuscules)
   const formatPeriodKey = (input: string): string => {
     return input.trim().toLowerCase().replace(/\s+/g, '_');
   };
+  
+  // Filtrer les périodes personnalisées pour exclure les doublons avec les standards
+  const filteredSelectedPeriods = selectedPeriods.filter(period => {
+    // Exclure les périodes standards
+    if (defaultPeriods.includes(period)) return false;
+    
+    // Exclure les équivalents français des périodes standards
+    if (Object.keys(frenchEquivalents).includes(period)) return false;
+    
+    return true;
+  });
   
   const addCustomPeriod = () => {
     if (!newPeriod.trim()) {
@@ -42,8 +59,14 @@ export const CustomTimePeriodsSection = ({
     
     const formattedKey = formatPeriodKey(newPeriod);
     
+    // Vérifier si c'est un équivalent français d'une période standard
+    if (Object.keys(frenchEquivalents).includes(formattedKey)) {
+      setErrorMessage("Cette période correspond à une période standard déjà disponible");
+      return;
+    }
+    
     // Vérifier si cette période existe déjà
-    if (Object.keys(timeOfDayLabels).includes(formattedKey)) {
+    if (Object.keys(timeOfDayLabels).includes(formattedKey) || selectedPeriods.includes(formattedKey as TimeOfDay)) {
       setErrorMessage("Cette période existe déjà");
       return;
     }
@@ -75,24 +98,22 @@ export const CustomTimePeriodsSection = ({
           {title}
         </Label>
         
-        {selectedPeriods.length > 0 && (
+        {filteredSelectedPeriods.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
-            {selectedPeriods.map(period => (
+            {filteredSelectedPeriods.map(period => (
               <Badge 
                 key={period} 
-                variant={defaultPeriods.includes(period) ? "secondary" : "outline"}
+                variant="outline"
                 className="flex items-center gap-1 py-1.5 px-3 text-sm transition-colors hover:bg-muted group"
               >
                 {timeOfDayLabels[period] || period}
-                {!defaultPeriods.includes(period) && (
-                  <button 
-                    onClick={() => removePeriod(period)}
-                    className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label={`Supprimer ${timeOfDayLabels[period] || period}`}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                <button 
+                  onClick={() => removePeriod(period)}
+                  className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                  aria-label={`Supprimer ${timeOfDayLabels[period] || period}`}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </Badge>
             ))}
           </div>
