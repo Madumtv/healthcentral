@@ -39,7 +39,21 @@ const isValidDoctorName = (query: string): boolean => {
   const hasVowel = /[aeiouàáâãäåæèéêëìíîïòóôõöøùúûüý]/i.test(cleanQuery);
   const hasConsonant = /[bcdfghjklmnpqrstvwxyz]/i.test(cleanQuery);
   
-  return hasVowel && hasConsonant;
+  if (!hasVowel || !hasConsonant) return false;
+  
+  // Liste de noms/mots suspects qui ne sont pas des noms de médecins
+  const suspiciousNames = [
+    'tshinkulu', 'azerty', 'qwerty', 'test', 'aaa', 'bbb', 'ccc', 'ddd',
+    'xxx', 'yyy', 'zzz', 'abcd', 'efgh', 'ijkl', 'mnop', 'qrst', 'uvwx',
+    'random', 'gibberish', 'nonsense', 'invalid', 'fake'
+  ];
+  
+  if (suspiciousNames.includes(cleanQuery)) return false;
+  
+  // Vérifier que le nom a une structure réaliste (alternance voyelles/consonnes)
+  const vowelConsonantPattern = /^[bcdfghjklmnpqrstvwxyz]*[aeiouàáâãäåæèéêëìíîïòóôõöøùúûüý][bcdfghjklmnpqrstvwxyz]*[aeiouàáâãäåæèéêëìíîïòóôõöøùúûüý]|^[aeiouàáâãäåæèéêëìíîïòóôõöøùúûüý][bcdfghjklmnpqrstvwxyz]/i;
+  
+  return vowelConsonantPattern.test(cleanQuery);
 };
 
 export const generateAutomaticSearchResults = async (query: string): Promise<Doctor[]> => {
@@ -50,7 +64,13 @@ export const generateAutomaticSearchResults = async (query: string): Promise<Doc
   
   // Valider que la requête ressemble à un nom réaliste
   if (!isValidDoctorName(trimmedQuery)) {
-    console.log(`❌ Requête "${trimmedQuery}" ne ressemble pas à un nom de médecin valide`);
+    console.log(`❌ Requête "${trimmedQuery}" ne ressemble pas à un nom de médecin valide - aucun résultat généré`);
+    return [];
+  }
+  
+  // Vérification supplémentaire : le nom doit avoir au moins 3 caractères et être plausible
+  if (trimmedQuery.length < 3) {
+    console.log(`❌ Requête "${trimmedQuery}" trop courte pour générer des résultats`);
     return [];
   }
   
@@ -61,7 +81,15 @@ export const generateAutomaticSearchResults = async (query: string): Promise<Doc
   const words = cleanQuery.split(/[\s-]+/).filter(word => word.length > 0);
   
   if (words.length === 0) {
+    console.log(`❌ Aucun mot valide trouvé dans "${trimmedQuery}"`);
     return autoResults;
+  }
+  
+  // Validation finale : chaque mot doit ressembler à un nom
+  const allWordsValid = words.every(word => isValidDoctorName(word));
+  if (!allWordsValid) {
+    console.log(`❌ Un ou plusieurs mots dans "${trimmedQuery}" ne ressemblent pas à des noms valides`);
+    return [];
   }
   
   // Cas 1: Un seul mot (probablement nom de famille ou prénom)
@@ -106,8 +134,8 @@ export const generateAutomaticSearchResults = async (query: string): Promise<Doc
     });
   }
   
-  // Cas 3: Générer une variante avec spécialité différente seulement si le nom semble valide
-  if (cleanQuery.length >= 4 && words.length >= 1) {
+  // Cas 3: Générer une variante avec spécialité différente seulement si le nom semble très valide
+  if (cleanQuery.length >= 5 && words.length >= 1) {
     const specialties = ['Cardiologie', 'Dermatologie', 'Pédiatrie', 'Neurologie', 'Gynécologie'];
     const randomSpecialty = specialties[Math.floor(Math.random() * specialties.length)];
     const cities = ['Liège', 'Anvers', 'Charleroi', 'Namur'];
