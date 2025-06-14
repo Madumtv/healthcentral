@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -32,22 +33,24 @@ export const useMedicationDoses = (selectedDate: Date) => {
         setIsLoading(true);
         const doses = await createMedicationDosesForDate(selectedDate);
         
-        // Filtrer et normaliser les doses valides
-        const validDoses = Array.isArray(doses) ? doses.filter((dose): dose is Record<string, any> => 
-          dose != null && typeof dose === 'object'
-        ) : [];
-        
-        const normalizedDoses = validDoses.map(dose => {
-          if (dose.time_of_day && typeof dose.time_of_day === 'string') {
-            return {
-              ...dose,
-              time_of_day: normalizeTimeOfDay(dose.time_of_day)
-            };
-          }
-          return dose;
-        });
-        
-        setMedicationDoses(normalizedDoses);
+        // Vérifier si doses est un array et contient des données valides
+        if (Array.isArray(doses)) {
+          const normalizedDoses = doses
+            .filter(dose => dose && typeof dose === 'object' && !('error' in dose))
+            .map(dose => {
+              if (dose.time_of_day && typeof dose.time_of_day === 'string') {
+                return {
+                  ...dose,
+                  time_of_day: normalizeTimeOfDay(dose.time_of_day)
+                };
+              }
+              return dose;
+            });
+          
+          setMedicationDoses(normalizedDoses);
+        } else {
+          setMedicationDoses([]);
+        }
       } catch (error) {
         console.error("Erreur lors du chargement des doses:", error);
         toast({
@@ -55,6 +58,7 @@ export const useMedicationDoses = (selectedDate: Date) => {
           description: "Impossible de charger les médicaments pour cette date.",
           variant: "destructive",
         });
+        setMedicationDoses([]);
       } finally {
         setIsLoading(false);
       }
