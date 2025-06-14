@@ -64,7 +64,7 @@ export function Navbar() {
             {user ? (
               <>
                 <Link to="/dashboard" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
-                  Tableau de bord
+                  Aujourd'hui
                 </Link>
                 <Link to="/medications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
                   Mes médicaments
@@ -138,7 +138,7 @@ export function Navbar() {
                   className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
                   onClick={toggleMenu}
                 >
-                  Tableau de bord
+                  Aujourd'hui
                 </Link>
                 <Link
                   to="/medications"
