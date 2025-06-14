@@ -21,11 +21,17 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
     handleSubmit
   } = useAddDoctorForm({ onDoctorAdded, initialSearchQuery });
 
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleSubmit(e);
+  };
+
   return (
     <Card className="w-full">
       <AddDoctorFormHeader onCancel={onCancel} />
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <AddDoctorFormFields 
             formData={formData}
             onInputChange={handleInputChange}
@@ -33,8 +39,9 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
           <AddDoctorFormActions 
             onCancel={onCancel}
             isSubmitting={isSubmitting}
+            onSubmit={onFormSubmit}
           />
-        </form>
+        </div>
       </CardContent>
     </Card>
   );

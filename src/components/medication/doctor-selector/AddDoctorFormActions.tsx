@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 interface AddDoctorFormActionsProps {
   onCancel: () => void;
   isSubmitting: boolean;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
-export const AddDoctorFormActions = ({ onCancel, isSubmitting }: AddDoctorFormActionsProps) => {
+export const AddDoctorFormActions = ({ onCancel, isSubmitting, onSubmit }: AddDoctorFormActionsProps) => {
   return (
     <div className="flex justify-end space-x-3 pt-4">
       <Button
@@ -18,7 +19,11 @@ export const AddDoctorFormActions = ({ onCancel, isSubmitting }: AddDoctorFormAc
       >
         Annuler
       </Button>
-      <Button type="submit" disabled={isSubmitting}>
+      <Button 
+        type="button" 
+        disabled={isSubmitting}
+        onClick={onSubmit}
+      >
         {isSubmitting ? "Ajout en cours..." : "Ajouter le médecin"}
       </Button>
     </div>
