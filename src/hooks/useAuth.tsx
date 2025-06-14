@@ -28,7 +28,7 @@ export function useAuth() {
       
       if (error) {
         console.error("❌ Error fetching profile:", error);
-        // Même en cas d'erreur, on définit un profil vide pour éviter le blocage
+        // Toujours définir un profil, même vide
         setProfile({});
         return;
       }
@@ -71,7 +71,7 @@ export function useAuth() {
         } else {
           console.log("🚫 No user, clearing state");
           setUser(null);
-          setProfile(null);
+          setProfile({}); // Profil vide au lieu de null
         }
         
         console.log("✅ Setting loading to false from auth state change");
@@ -90,7 +90,7 @@ export function useAuth() {
         if (error) {
           console.error("❌ Session error:", error);
           setUser(null);
-          setProfile(null);
+          setProfile({});
           setIsLoading(false);
           return;
         }
@@ -102,12 +102,12 @@ export function useAuth() {
         } else {
           console.log("ℹ️ No current session");
           setUser(null);
-          setProfile(null);
+          setProfile({}); // Profil vide au lieu de null
         }
       } catch (error) {
         console.error("❌ Error checking session:", error);
         setUser(null);
-        setProfile(null);
+        setProfile({});
       } finally {
         if (mounted) {
           console.log("✅ Setting loading to false from session check");
@@ -130,7 +130,7 @@ export function useAuth() {
       console.log("🚪 Logging out...");
       await supabase.auth.signOut();
       setUser(null);
-      setProfile(null);
+      setProfile({});
       navigate("/");
     } catch (error) {
       console.error("❌ Error during logout:", error);
