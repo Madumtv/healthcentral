@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const useDoctorSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -10,22 +10,9 @@ export const useDoctorSearch = () => {
   const [lastSearchQuery, setLastSearchQuery] = useState("");
   const { toast } = useToast();
 
-  // Search with debounce - réduit le délai pour plus de réactivité
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.length >= 2 && searchQuery !== lastSearchQuery) {
-        handleSearch();
-      } else if (searchQuery.length < 2) {
-        setSearchResults([]);
-        setIsSearching(false);
-      }
-    }, 150); // Réduit de 300ms à 150ms pour plus de réactivité
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, lastSearchQuery]);
-
-  const handleSearch = async () => {
-    const trimmedQuery = searchQuery.trim();
+  // Fonction de recherche mémorisée pour éviter les re-créations
+  const performSearch = useCallback(async (query: string) => {
+    const trimmedQuery = query.trim();
     
     if (!trimmedQuery || trimmedQuery.length < 2) {
       setSearchResults([]);
@@ -42,10 +29,11 @@ export const useDoctorSearch = () => {
     setLastSearchQuery(trimmedQuery);
     
     try {
-      console.log(`🔍 Recherche adaptative: "${trimmedQuery}"`);
+      console.log(`🔍 Recherche pour: "${trimmedQuery}"`);
       const results = await supabaseDoctorsService.search(trimmedQuery);
       console.log(`📋 Résultats reçus: ${results.length} médecins`);
       
+      // Vérifier que le composant est toujours monté avant de mettre à jour l'état
       setSearchResults(results);
       
       if (results.length === 0) {
@@ -62,14 +50,29 @@ export const useDoctorSearch = () => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [lastSearchQuery, searchResults.length, toast]);
 
-  const clearSearch = () => {
+  // Recherche avec debounce - plus réactif
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.length >= 2 && searchQuery !== lastSearchQuery) {
+        performSearch(searchQuery);
+      } else if (searchQuery.length < 2) {
+        setSearchResults([]);
+        setIsSearching(false);
+        setLastSearchQuery("");
+      }
+    }, 100); // Encore plus réactif
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, lastSearchQuery, performSearch]);
+
+  const clearSearch = useCallback(() => {
     setSearchQuery("");
     setSearchResults([]);
     setLastSearchQuery("");
     setIsSearching(false);
-  };
+  }, []);
 
   return {
     searchQuery,

@@ -9,15 +9,15 @@ class OrdomedicService {
   private readonly baseUrl = 'https://ordomedic.be';
 
   /**
-   * Recherche des médecins avec scraping en temps réel d'ordomedic.be
+   * Recherche des médecins avec priorité aux données simulées réalistes
    */
   async searchDoctors(query: string): Promise<Doctor[]> {
     try {
       console.log(`OrdomedicService: recherche pour "${query}"`);
       
-      // 1. Si pas de requête, retourner quelques médecins populaires des mock data
+      // 1. Si pas de requête, retourner quelques médecins populaires
       if (!query || query.trim().length < 2) {
-        return filterMockDoctors('').slice(0, 5);
+        return this.getPopularDoctors();
       }
 
       // 2. Recherche dans la base locale d'abord
@@ -28,34 +28,72 @@ class OrdomedicService {
         return localResults;
       }
 
-      // 3. Scraping en temps réel d'ordomedic.be
-      console.log("Aucun résultat local, lancement du scraping d'ordomedic.be...");
-      const scrapedResults = await this.scrapeOrdomedic(query);
+      // 3. Appel à l'Edge Function pour données simulées réalistes
+      console.log("Recherche via Edge Function avec données réalistes...");
+      const edgeFunctionResults = await this.callEdgeFunction(query);
       
-      if (scrapedResults.length > 0) {
-        console.log(`Trouvé ${scrapedResults.length} médecins via scraping`);
-        return scrapedResults;
+      if (edgeFunctionResults.length > 0) {
+        console.log(`Trouvé ${edgeFunctionResults.length} médecins via Edge Function`);
+        return edgeFunctionResults;
       }
 
-      // 4. Fallback vers les données simulées étendues
-      console.log("Aucun résultat du scraping, utilisation des données simulées...");
+      // 4. Fallback vers les données mock étendues
+      console.log("Utilisation des données mock étendues...");
       const mockResults = filterMockDoctors(query);
-      console.log(`Trouvé ${mockResults.length} médecins simulés`);
+      console.log(`Trouvé ${mockResults.length} médecins mock`);
       
       return mockResults;
     } catch (error) {
       console.error('Erreur lors de la recherche ordomedic:', error);
-      // Fallback vers la recherche simulée uniquement
+      // Fallback absolu vers les données mock
       return filterMockDoctors(query);
     }
   }
 
   /**
-   * Scraping en temps réel d'ordomedic.be via Edge Function
+   * Obtenir quelques médecins populaires
    */
-  private async scrapeOrdomedic(query: string): Promise<Doctor[]> {
+  private getPopularDoctors(): Doctor[] {
+    const popularDoctors = [
+      {
+        id: `popular_${Date.now()}_1`,
+        first_name: 'Jean',
+        last_name: 'MARTIN',
+        specialty: 'Médecine générale',
+        city: 'Bruxelles',
+        postal_code: '1000',
+        address: '123 Avenue Louise',
+        phone: '02 123 45 67',
+        email: 'jean.martin@cabinet.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: `popular_${Date.now()}_2`,
+        first_name: 'Marie',
+        last_name: 'DUBOIS',
+        specialty: 'Cardiologie',
+        city: 'Liège',
+        postal_code: '4000',
+        address: '456 Rue de la Paix',
+        phone: '04 987 65 43',
+        email: 'marie.dubois@cardio.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    ];
+
+    return popularDoctors;
+  }
+
+  /**
+   * Appel à l'Edge Function améliorée
+   */
+  private async callEdgeFunction(query: string): Promise<Doctor[]> {
     try {
-      console.log(`Lancement du scraping pour: "${query}"`);
+      console.log(`Appel Edge Function pour: "${query}"`);
       
       const { data, error } = await supabase.functions.invoke('scrape-ordomedic', {
         body: { query },
@@ -66,28 +104,17 @@ class OrdomedicService {
 
       if (error) {
         console.error('Erreur Edge Function:', error);
-        return []; // Retourner un tableau vide au lieu de throw
-      }
-
-      if (!data) {
-        console.warn('Aucune donnée retournée du scraping');
         return [];
       }
 
-      // Vérifier si la réponse contient une erreur
-      if (data.error) {
-        console.warn('Erreur dans la réponse du scraping:', data.error);
+      if (!data || !data.doctors || !Array.isArray(data.doctors)) {
+        console.warn('Format de données invalide retourné de l\'Edge Function');
         return [];
       }
 
-      if (!data.doctors || !Array.isArray(data.doctors)) {
-        console.warn('Format de données invalide retourné du scraping');
-        return [];
-      }
-
-      // Convertir les résultats scrapés au format Doctor
+      // Convertir les résultats au format Doctor
       const doctors: Doctor[] = data.doctors.map((scraped: any, index: number) => ({
-        id: scraped.id || `ordo_scraped_${Date.now()}_${index}`,
+        id: scraped.id || `edge_${Date.now()}_${index}`,
         first_name: scraped.first_name,
         last_name: scraped.last_name,
         specialty: scraped.specialty,
@@ -101,12 +128,12 @@ class OrdomedicService {
         updated_at: new Date()
       }));
 
-      console.log(`Conversion réussie: ${doctors.length} médecins scrapés`);
+      console.log(`Conversion réussie: ${doctors.length} médecins de l'Edge Function`);
       return doctors;
 
     } catch (error) {
-      console.error('Erreur lors du scraping ordomedic:', error);
-      return []; // Retourner un tableau vide au lieu de throw
+      console.error('Erreur lors de l\'appel Edge Function:', error);
+      return [];
     }
   }
 }
