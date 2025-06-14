@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
@@ -9,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
 import { ProfileFormValues } from "@/components/profile/ProfileForm";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Profile {
   id: string;
@@ -25,6 +25,7 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -56,7 +57,7 @@ const ProfilePage = () => {
     checkUser();
   }, [navigate]);
 
-  const handleProfileUpdate = (values: ProfileFormValues) => {
+  const handleProfileUpdate = async (values: ProfileFormValues) => {
     setProfile(prev => prev ? { 
       ...prev, 
       name: values.name,
@@ -64,10 +65,16 @@ const ProfilePage = () => {
       last_name: values.lastName || undefined,
       birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
     } : null);
+    
+    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
+    await refreshProfile();
   };
 
-  const handleAvatarUpdate = (avatarUrl: string) => {
+  const handleAvatarUpdate = async (avatarUrl: string) => {
     setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+    
+    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
+    await refreshProfile();
   };
 
   if (loading) {
