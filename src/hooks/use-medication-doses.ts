@@ -34,15 +34,17 @@ export const useMedicationDoses = (selectedDate: Date) => {
         const doses = await createMedicationDosesForDate(selectedDate);
         
         // Normaliser les valeurs time_of_day dans les doses si elles existent
-        const normalizedDoses = Array.isArray(doses) ? doses.map(dose => {
-          if (dose && typeof dose === 'object' && 'time_of_day' in dose && dose.time_of_day) {
-            return {
-              ...dose,
-              time_of_day: normalizeTimeOfDay(dose.time_of_day)
-            };
-          }
-          return dose;
-        }).filter(dose => dose !== null) : [];
+        const normalizedDoses = Array.isArray(doses) ? doses
+          .filter((dose): dose is NonNullable<typeof dose> => dose !== null && dose !== undefined)
+          .map(dose => {
+            if (dose && typeof dose === 'object' && 'time_of_day' in dose && dose.time_of_day) {
+              return {
+                ...dose,
+                time_of_day: normalizeTimeOfDay(dose.time_of_day)
+              };
+            }
+            return dose;
+          }) : [];
         
         setMedicationDoses(normalizedDoses);
       } catch (error) {
