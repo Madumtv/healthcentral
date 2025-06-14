@@ -35,7 +35,7 @@ export const useMedicationDoses = (selectedDate: Date) => {
         
         // Normaliser les valeurs time_of_day dans les doses si elles existent
         const normalizedDoses = Array.isArray(doses) ? doses
-          .filter((dose): dose is NonNullable<typeof dose> => {
+          .filter((dose): dose is Record<string, any> => {
             return dose !== null && dose !== undefined && typeof dose === 'object';
           })
           .map(dose => {
