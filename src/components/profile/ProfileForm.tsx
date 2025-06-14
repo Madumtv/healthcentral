@@ -14,7 +14,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -39,8 +39,13 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: initialValues,
-    values: initialValues,
   });
+
+  // Mettre à jour le formulaire quand les valeurs initiales changent
+  useEffect(() => {
+    console.log("🔄 Mise à jour du formulaire avec les nouvelles valeurs:", initialValues);
+    form.reset(initialValues);
+  }, [initialValues, form]);
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;

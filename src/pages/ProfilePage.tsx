@@ -30,6 +30,7 @@ const ProfilePage = () => {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log("📝 Chargement du profil pour l'utilisateur:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -37,9 +38,11 @@ const ProfilePage = () => {
         .single();
 
       if (error) throw error;
+      
+      console.log("✅ Profil chargé:", data);
       setProfile(data as Profile);
     } catch (error) {
-      console.error("Erreur lors du chargement du profil:", error);
+      console.error("❌ Erreur lors du chargement du profil:", error);
       toast.error("Impossible de charger les informations du profil.");
     }
   };
@@ -64,17 +67,13 @@ const ProfilePage = () => {
     if (!user) return;
 
     try {
-      // Recharger les données depuis la base pour s'assurer qu'elles sont à jour
-      await loadUserProfile(user.id);
+      console.log("🔄 Mise à jour du profil avec les valeurs:", values);
       
-      // Mettre à jour l'état local
-      setProfile(prev => prev ? { 
-        ...prev, 
-        name: values.name,
-        first_name: values.firstName || undefined,
-        last_name: values.lastName || undefined,
-        birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
-      } : null);
+      // Attendre un court délai pour s'assurer que la base de données est mise à jour
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Recharger les données depuis la base
+      await loadUserProfile(user.id);
       
       // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
       await refreshProfile();
@@ -92,9 +91,6 @@ const ProfilePage = () => {
     try {
       // Recharger les données depuis la base
       await loadUserProfile(user.id);
-      
-      // Mettre à jour l'état local
-      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       
       // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
       await refreshProfile();
