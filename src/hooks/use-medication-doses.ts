@@ -33,12 +33,12 @@ export const useMedicationDoses = (selectedDate: Date) => {
         const doses = await createMedicationDosesForDate(selectedDate);
         
         // Filtrer et normaliser les doses valides
-        const validDoses = Array.isArray(doses) ? doses.filter(dose => 
-          dose && typeof dose === 'object' && dose !== null
+        const validDoses = Array.isArray(doses) ? doses.filter((dose): dose is Record<string, any> => 
+          dose != null && typeof dose === 'object'
         ) : [];
         
         const normalizedDoses = validDoses.map(dose => {
-          if (dose && 'time_of_day' in dose && dose.time_of_day && typeof dose.time_of_day === 'string') {
+          if (dose.time_of_day && typeof dose.time_of_day === 'string') {
             return {
               ...dose,
               time_of_day: normalizeTimeOfDay(dose.time_of_day)
