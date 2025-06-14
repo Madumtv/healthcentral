@@ -69,10 +69,7 @@ const ProfilePage = () => {
     try {
       console.log("🔄 Mise à jour du profil avec les valeurs:", values);
       
-      // Attendre un court délai pour s'assurer que la base de données est mise à jour
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Recharger les données depuis la base
+      // Recharger immédiatement les données depuis la base
       await loadUserProfile(user.id);
       
       // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar

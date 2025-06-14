@@ -36,6 +36,8 @@ interface ProfileFormProps {
 export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  console.log("🔧 ProfileForm - Valeurs initiales reçues:", initialValues);
+  
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: initialValues,
@@ -44,7 +46,18 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   // Mettre à jour le formulaire quand les valeurs initiales changent
   useEffect(() => {
     console.log("🔄 Mise à jour du formulaire avec les nouvelles valeurs:", initialValues);
-    form.reset(initialValues);
+    // Vérifier si les valeurs ont vraiment changé avant de reset
+    const currentValues = form.getValues();
+    const hasChanged = 
+      currentValues.name !== initialValues.name ||
+      currentValues.firstName !== initialValues.firstName ||
+      currentValues.lastName !== initialValues.lastName ||
+      currentValues.birthDate?.getTime() !== initialValues.birthDate?.getTime();
+    
+    if (hasChanged) {
+      console.log("📝 Reset du formulaire avec nouvelles valeurs");
+      form.reset(initialValues);
+    }
   }, [initialValues, form]);
 
   const onSubmit = async (values: ProfileFormValues) => {

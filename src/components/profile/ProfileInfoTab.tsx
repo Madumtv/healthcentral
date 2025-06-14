@@ -18,6 +18,17 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
   // Convertir la date de naissance de string en Date si elle existe
   const birthDate = profile?.birth_date ? new Date(profile.birth_date) : undefined;
 
+  // S'assurer que nous avons des valeurs par défaut correctes
+  const initialValues = {
+    name: profile?.name || "",
+    firstName: profile?.first_name || "",
+    lastName: profile?.last_name || "",
+    birthDate: birthDate
+  };
+
+  console.log("🔧 ProfileInfoTab - Valeurs initiales transmises:", initialValues);
+  console.log("🔧 ProfileInfoTab - Profile reçu:", profile);
+
   return (
     <Card>
       <CardHeader>
@@ -28,12 +39,8 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
       </CardHeader>
       <CardContent>
         <ProfileForm 
-          initialValues={{ 
-            name: profile?.name || "",
-            firstName: profile?.first_name || "",
-            lastName: profile?.last_name || "",
-            birthDate: birthDate
-          }}
+          key={profile?.id || 'no-profile'} // Force re-render quand le profil change
+          initialValues={initialValues}
           user={user}
           onSuccess={onProfileUpdate}
         />
