@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
@@ -41,22 +42,22 @@ const DashboardPage = () => {
     checkAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    const fetchMedications = async () => {
-      try {
-        const data = await supabaseMedicationService.getAll();
-        setMedications(data);
-      } catch (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger vos médicaments.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchMedications = async () => {
+    try {
+      const data = await supabaseMedicationService.getAll();
+      setMedications(data);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger vos médicaments.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMedications();
   }, [toast]);
 
@@ -67,7 +68,8 @@ const DashboardPage = () => {
   const handleDeleteMedication = async (id: string) => {
     try {
       await supabaseMedicationService.delete(id);
-      setMedications(medications.filter(med => med.id !== id));
+      // Recharger la liste des médicaments pour synchroniser les changements
+      await fetchMedications();
       toast({
         title: "Succès",
         description: "Médicament supprimé avec succès.",
