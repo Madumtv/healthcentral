@@ -4,17 +4,18 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Pill, Plus, Search } from "lucide-react";
+import { Pill, Plus } from "lucide-react";
 import { Medication } from "@/types";
 import { supabaseMedicationService } from "@/lib/supabase-medication-service";
 import MedicationCard from "@/components/MedicationCard";
+import { MedicationFilter } from "@/components/medication/MedicationFilter";
 
 const MedicationsPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [filteredMedications, setFilteredMedications] = useState<Medication[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -40,14 +41,26 @@ const MedicationsPage = () => {
   }, [toast]);
 
   useEffect(() => {
-    // Filtrer les médicaments en fonction du terme de recherche
-    const filtered = medications.filter(med => 
-      med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (med.description && med.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (med.prescribingDoctor && med.prescribingDoctor.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // Apply filters
+    let filtered = medications;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(med => 
+        med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (med.description && med.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (med.prescribingDoctor && med.prescribingDoctor.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (med.doctor && `${med.doctor.firstName} ${med.doctor.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Filter by selected doctor
+    if (selectedDoctorId) {
+      filtered = filtered.filter(med => med.doctorId === selectedDoctorId);
+    }
+
     setFilteredMedications(filtered);
-  }, [searchTerm, medications]);
+  }, [searchTerm, selectedDoctorId, medications]);
 
   const handleEditMedication = (id: string) => {
     navigate(`/medications/edit/${id}`);
@@ -68,6 +81,11 @@ const MedicationsPage = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSelectedDoctorId("");
   };
 
   return (
@@ -91,15 +109,13 @@ const MedicationsPage = () => {
           </div>
           
           <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Rechercher un médicament..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <MedicationFilter
+              searchTerm={searchTerm}
+              selectedDoctorId={selectedDoctorId}
+              onSearchChange={setSearchTerm}
+              onDoctorChange={setSelectedDoctorId}
+              onClearFilters={handleClearFilters}
+            />
           </div>
           
           {isLoading ? (
@@ -121,24 +137,27 @@ const MedicationsPage = () => {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Pill className="h-12 w-12 text-gray-300 mb-4" />
-                {searchTerm ? (
+                {searchTerm || selectedDoctorId ? (
                   <>
                     <p className="text-xl font-medium text-gray-500 mb-2">Aucun résultat trouvé</p>
-                    <p className="text-gray-400 mb-6">Aucun médicament ne correspond à votre recherche.</p>
+                    <p className="text-gray-400 mb-6">Aucun médicament ne correspond à vos filtres.</p>
+                    <Button onClick={handleClearFilters} variant="outline">
+                      Effacer les filtres
+                    </Button>
                   </>
                 ) : (
                   <>
                     <p className="text-xl font-medium text-gray-500 mb-2">Aucun médicament</p>
                     <p className="text-gray-400 mb-6">Vous n'avez pas encore ajouté de médicaments.</p>
+                    <Button 
+                      onClick={() => navigate("/medications/add")} 
+                      className="bg-medBlue hover:bg-blue-600"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un médicament
+                    </Button>
                   </>
                 )}
-                <Button 
-                  onClick={() => navigate("/medications/add")} 
-                  className="bg-medBlue hover:bg-blue-600"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Ajouter un médicament
-                </Button>
               </CardContent>
             </Card>
           )}
