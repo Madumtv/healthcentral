@@ -20,11 +20,11 @@ export const DashboardGreeting = ({ userName }: DashboardGreetingProps) => {
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-      <div>
-        <h1 className="text-3xl font-bold text-medBlue">
+      <div className="text-left">
+        <h1 className="text-3xl font-bold text-medBlue text-left">
           {getGreetingByTime()}{userName ? `, ${userName}` : ''}
         </h1>
-        <p className="text-gray-600">Gérez vos médicaments et consultez votre programme</p>
+        <p className="text-gray-600 text-left">Gérez vos médicaments et consultez votre programme</p>
       </div>
       <Button 
         className="mt-4 md:mt-0 bg-medBlue hover:bg-blue-600"
