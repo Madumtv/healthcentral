@@ -57,7 +57,7 @@ export function useAuth() {
     let mounted = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
         
         if (!mounted) return;
@@ -65,16 +65,14 @@ export function useAuth() {
         if (session?.user) {
           console.log("👤 Setting user from auth change");
           setUser(session.user);
-          // Charger le profil de manière asynchrone sans bloquer
-          fetchProfile(session.user.id);
+          // Charger le profil de manière asynchrone
+          await fetchProfile(session.user.id);
         } else {
           console.log("🚫 No user, clearing state");
           setUser(null);
           setProfile({});
         }
         
-        // Toujours mettre isLoading à false après un changement d'auth
-        console.log("✅ Setting loading to false from auth state change");
         setIsLoading(false);
       }
     );
@@ -98,14 +96,13 @@ export function useAuth() {
           console.log("✅ Current session found:", session.user.email);
           setUser(session.user);
           // Charger le profil de manière asynchrone
-          fetchProfile(session.user.id);
+          await fetchProfile(session.user.id);
         } else {
           console.log("ℹ️ No current session");
           setUser(null);
           setProfile({});
         }
         
-        // Toujours terminer le loading
         setIsLoading(false);
       } catch (error) {
         console.error("❌ Error checking session:", error);

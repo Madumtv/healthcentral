@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
@@ -27,6 +28,22 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { refreshProfile } = useAuth();
 
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data as Profile);
+    } catch (error) {
+      console.error("Erreur lors du chargement du profil:", error);
+      toast.error("Impossible de charger les informations du profil.");
+    }
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -36,45 +53,56 @@ const ProfilePage = () => {
       }
 
       setUser(session.user);
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) throw error;
-        setProfile(data as Profile);
-      } catch (error) {
-        console.error("Erreur lors du chargement du profil:", error);
-        toast.error("Impossible de charger les informations du profil.");
-      } finally {
-        setLoading(false);
-      }
+      await loadUserProfile(session.user.id);
+      setLoading(false);
     };
 
     checkUser();
   }, [navigate]);
 
   const handleProfileUpdate = async (values: ProfileFormValues) => {
-    setProfile(prev => prev ? { 
-      ...prev, 
-      name: values.name,
-      first_name: values.firstName || undefined,
-      last_name: values.lastName || undefined,
-      birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
-    } : null);
-    
-    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
-    await refreshProfile();
+    if (!user) return;
+
+    try {
+      // Recharger les données depuis la base pour s'assurer qu'elles sont à jour
+      await loadUserProfile(user.id);
+      
+      // Mettre à jour l'état local
+      setProfile(prev => prev ? { 
+        ...prev, 
+        name: values.name,
+        first_name: values.firstName || undefined,
+        last_name: values.lastName || undefined,
+        birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
+      } : null);
+      
+      // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
+      await refreshProfile();
+      
+      console.log("✅ Profil mis à jour avec succès");
+    } catch (error) {
+      console.error("❌ Erreur lors de la mise à jour du profil:", error);
+      toast.error("Erreur lors de la mise à jour du profil");
+    }
   };
 
   const handleAvatarUpdate = async (avatarUrl: string) => {
-    setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
-    
-    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
-    await refreshProfile();
+    if (!user) return;
+
+    try {
+      // Recharger les données depuis la base
+      await loadUserProfile(user.id);
+      
+      // Mettre à jour l'état local
+      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      
+      // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
+      await refreshProfile();
+      
+      console.log("✅ Avatar mis à jour avec succès");
+    } catch (error) {
+      console.error("❌ Erreur lors de la mise à jour de l'avatar:", error);
+    }
   };
 
   if (loading) {
