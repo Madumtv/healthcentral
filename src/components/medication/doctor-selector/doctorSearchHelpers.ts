@@ -1,11 +1,59 @@
 
 import { Doctor } from "@/lib/supabase-doctors-service";
 
+const isValidDoctorName = (query: string): boolean => {
+  const cleanQuery = query.trim().toLowerCase();
+  
+  // Rejeter les requêtes trop courtes
+  if (cleanQuery.length < 2) return false;
+  
+  // Rejeter les requêtes avec trop de caractères répétés
+  const charCount = {};
+  for (const char of cleanQuery) {
+    charCount[char] = (charCount[char] || 0) + 1;
+  }
+  
+  // Si plus de 50% des caractères sont identiques, c'est probablement du gibberish
+  const maxCharCount = Math.max(...Object.values(charCount));
+  if (maxCharCount > cleanQuery.length * 0.5) return false;
+  
+  // Rejeter les requêtes avec trop de consonnes consécutives (plus de 4)
+  if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(cleanQuery)) return false;
+  
+  // Rejeter les requêtes avec des patterns suspects (caractères aléatoires)
+  const suspiciousPatterns = [
+    /[aeiou]{4,}/i, // Trop de voyelles consécutives
+    /[xyz]{2,}/i,   // xyz répétés (souvent du gibberish)
+    /[qwerty]{3,}/i, // Séquences clavier
+    /[123456789]{2,}/, // Chiffres multiples
+    /[.,;:!?]{2,}/, // Ponctuation multiple
+    /^[aeiou]+$/i,  // Que des voyelles
+    /^[bcdfghjklmnpqrstvwxyz]+$/i // Que des consonnes
+  ];
+  
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(cleanQuery)) return false;
+  }
+  
+  // Vérifier si ça ressemble à un nom (au moins une voyelle et une consonne)
+  const hasVowel = /[aeiouàáâãäåæèéêëìíîïòóôõöøùúûüý]/i.test(cleanQuery);
+  const hasConsonant = /[bcdfghjklmnpqrstvwxyz]/i.test(cleanQuery);
+  
+  return hasVowel && hasConsonant;
+};
+
 export const generateAutomaticSearchResults = async (query: string): Promise<Doctor[]> => {
   // Simuler une latence de recherche
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   const trimmedQuery = query.trim();
+  
+  // Valider que la requête ressemble à un nom réaliste
+  if (!isValidDoctorName(trimmedQuery)) {
+    console.log(`❌ Requête "${trimmedQuery}" ne ressemble pas à un nom de médecin valide`);
+    return [];
+  }
+  
   const autoResults: Doctor[] = [];
   
   // Nettoyer et analyser la requête
@@ -58,8 +106,8 @@ export const generateAutomaticSearchResults = async (query: string): Promise<Doc
     });
   }
   
-  // Cas 3: Générer une variante avec spécialité différente
-  if (cleanQuery.length >= 4) {
+  // Cas 3: Générer une variante avec spécialité différente seulement si le nom semble valide
+  if (cleanQuery.length >= 4 && words.length >= 1) {
     const specialties = ['Cardiologie', 'Dermatologie', 'Pédiatrie', 'Neurologie', 'Gynécologie'];
     const randomSpecialty = specialties[Math.floor(Math.random() * specialties.length)];
     
@@ -95,5 +143,6 @@ export const shouldPerformAutoSearch = (
 ): boolean => {
   return searchResults.length === 0 && 
          suggestions.length === 0 && 
-         query.trim().length >= 3;
+         query.trim().length >= 3 &&
+         isValidDoctorName(query);
 };
