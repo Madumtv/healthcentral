@@ -36,7 +36,7 @@ export const transformMedicationFromDatabase = (dbMedication: any): Medication =
     notes: dbMedication.notes,
     prescribingDoctor: dbMedication.prescribing_doctor,
     doctorId: dbMedication.doctor_id,
-    doctor: dbMedication.doctors ? {
+    doctor: dbMedication.doctors && dbMedication.doctors !== null ? {
       id: dbMedication.doctors.id,
       firstName: dbMedication.doctors.first_name,
       lastName: dbMedication.doctors.last_name,
