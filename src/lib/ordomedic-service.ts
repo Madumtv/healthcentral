@@ -58,22 +58,36 @@ class OrdomedicService {
       console.log(`Lancement du scraping pour: "${query}"`);
       
       const { data, error } = await supabase.functions.invoke('scrape-ordomedic', {
-        body: { query }
+        body: { query },
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       if (error) {
         console.error('Erreur Edge Function:', error);
-        throw error;
+        return []; // Retourner un tableau vide au lieu de throw
       }
 
-      if (!data || !data.doctors) {
+      if (!data) {
         console.warn('Aucune donnée retournée du scraping');
         return [];
       }
 
+      // Vérifier si la réponse contient une erreur
+      if (data.error) {
+        console.warn('Erreur dans la réponse du scraping:', data.error);
+        return [];
+      }
+
+      if (!data.doctors || !Array.isArray(data.doctors)) {
+        console.warn('Format de données invalide retourné du scraping');
+        return [];
+      }
+
       // Convertir les résultats scrapés au format Doctor
-      const doctors: Doctor[] = data.doctors.map((scraped: any) => ({
-        id: scraped.id,
+      const doctors: Doctor[] = data.doctors.map((scraped: any, index: number) => ({
+        id: scraped.id || `ordo_scraped_${Date.now()}_${index}`,
         first_name: scraped.first_name,
         last_name: scraped.last_name,
         specialty: scraped.specialty,
@@ -92,7 +106,7 @@ class OrdomedicService {
 
     } catch (error) {
       console.error('Erreur lors du scraping ordomedic:', error);
-      throw error;
+      return []; // Retourner un tableau vide au lieu de throw
     }
   }
 }

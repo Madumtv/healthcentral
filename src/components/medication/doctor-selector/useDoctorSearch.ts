@@ -7,34 +7,58 @@ export const useDoctorSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Doctor[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [lastSearchQuery, setLastSearchQuery] = useState("");
   const { toast } = useToast();
 
-  // Search with debounce
+  // Search with debounce - réduit le délai pour plus de réactivité
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchQuery.length >= 2) {
+      if (searchQuery.length >= 2 && searchQuery !== lastSearchQuery) {
         handleSearch();
-      } else {
+      } else if (searchQuery.length < 2) {
         setSearchResults([]);
+        setIsSearching(false);
       }
-    }, 300);
+    }, 150); // Réduit de 300ms à 150ms pour plus de réactivité
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, lastSearchQuery]);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim() || searchQuery.length < 2) return;
+    const trimmedQuery = searchQuery.trim();
+    
+    if (!trimmedQuery || trimmedQuery.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    // Éviter les recherches dupliquées
+    if (trimmedQuery === lastSearchQuery && searchResults.length > 0) {
+      return;
+    }
 
     setIsSearching(true);
+    setLastSearchQuery(trimmedQuery);
+    
     try {
-      const results = await supabaseDoctorsService.search(searchQuery);
+      console.log(`🔍 Recherche adaptative: "${trimmedQuery}"`);
+      const results = await supabaseDoctorsService.search(trimmedQuery);
+      console.log(`📋 Résultats reçus: ${results.length} médecins`);
+      
       setSearchResults(results);
+      
+      if (results.length === 0) {
+        console.log(`⚠️ Aucun résultat pour "${trimmedQuery}"`);
+      }
     } catch (error) {
+      console.error('❌ Erreur de recherche:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de rechercher les médecins.",
+        title: "Erreur de recherche",
+        description: "Impossible de rechercher les médecins. Veuillez réessayer.",
         variant: "destructive",
       });
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -43,6 +67,8 @@ export const useDoctorSearch = () => {
   const clearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
+    setLastSearchQuery("");
+    setIsSearching(false);
   };
 
   return {
