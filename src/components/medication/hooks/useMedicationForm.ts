@@ -102,14 +102,18 @@ export const useMedicationForm = ({ initialMedication, isEditing, id }: UseMedic
         timeOfDay: cleanTimeOfDayDuplicates(medication.timeOfDay || [])
       };
       
+      console.log("Cleaned medication for submission:", cleanedMedication);
+      
       if (isEditing && id) {
-        await supabaseMedicationService.update(id, cleanedMedication);
+        const updatedMedication = await supabaseMedicationService.update(id, cleanedMedication);
+        console.log("Medication updated successfully:", updatedMedication);
         toast({
           title: "Succès",
           description: "Médicament mis à jour avec succès.",
         });
       } else {
-        await supabaseMedicationService.create(cleanedMedication as any);
+        const createdMedication = await supabaseMedicationService.create(cleanedMedication as any);
+        console.log("Medication created successfully:", createdMedication);
         toast({
           title: "Succès",
           description: "Médicament ajouté avec succès.",

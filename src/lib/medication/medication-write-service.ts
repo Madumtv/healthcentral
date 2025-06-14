@@ -10,6 +10,7 @@ export const medicationWriteService = {
     if (!user) throw new Error("Utilisateur non authentifié");
 
     const dbData = transformMedicationToDatabase(medication);
+    console.log("Creating medication with data:", dbData);
 
     const { data, error } = await supabase
       .from('medications')
@@ -20,13 +21,20 @@ export const medicationWriteService = {
       .select(MEDICATION_SELECT_QUERY)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating medication:", error);
+      throw error;
+    }
 
+    console.log("Medication created successfully:", data);
     return transformMedicationFromDatabase(data);
   },
 
   update: async (id: string, medication: Partial<Medication>): Promise<Medication> => {
+    console.log("Updating medication with ID:", id, "and data:", medication);
+    
     const updateData = transformMedicationUpdateToDatabase(medication);
+    console.log("Transformed update data:", updateData);
 
     const { data, error } = await supabase
       .from('medications')
@@ -35,8 +43,12 @@ export const medicationWriteService = {
       .select(MEDICATION_SELECT_QUERY)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating medication:", error);
+      throw error;
+    }
 
+    console.log("Medication updated successfully:", data);
     return transformMedicationFromDatabase(data);
   },
 
