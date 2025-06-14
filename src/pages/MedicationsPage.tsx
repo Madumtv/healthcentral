@@ -16,6 +16,7 @@ const MedicationsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -25,6 +26,7 @@ const MedicationsPage = () => {
       console.log("Fetched medications with doctor data:", data);
       setMedications(data);
       setFilteredMedications(data);
+      setLastRefresh(Date.now());
     } catch (error) {
       toast({
         title: "Erreur",
@@ -156,6 +158,7 @@ const MedicationsPage = () => {
                 </h2>
               </div>
               <MedicationsListTable 
+                key={lastRefresh}
                 medications={filteredMedications} 
                 onEdit={handleEditMedication} 
                 onDelete={handleDeleteMedication} 

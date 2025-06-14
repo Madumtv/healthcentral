@@ -23,6 +23,11 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
     setShowDetailsModal(true);
   };
 
+  const handleEdit = (id: string) => {
+    console.log("Editing medication:", id);
+    onEdit(id);
+  };
+
   return (
     <>
       <div className="rounded-md border">
@@ -44,8 +49,10 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
                 medication.infoLink.trim() !== "" && 
                 (medication.infoLink.startsWith("http://") || medication.infoLink.startsWith("https://"));
 
+              console.log("Rendering medication:", medication.name, "Doctor:", medication.doctor, "DoctorId:", medication.doctorId);
+
               return (
-                <TableRow key={medication.id}>
+                <TableRow key={`${medication.id}-${medication.updatedAt}`}>
                   <TableCell className="font-medium">
                     <div>
                       <div className="font-semibold text-medBlue">{medication.name}</div>
@@ -122,7 +129,7 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onEdit(medication.id)}
+                        onClick={() => handleEdit(medication.id)}
                         className="text-medBlue"
                       >
                         <Edit className="h-4 w-4" />
