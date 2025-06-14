@@ -89,8 +89,13 @@ const MedicationsPage = () => {
     setSelectedDoctorId("");
   };
 
-  // Écouter les changements de route pour actualiser les données
+  // Actualiser les données quand on revient sur la page
   useEffect(() => {
+    const handleFocus = () => {
+      console.log("Window focused, refreshing medications");
+      fetchMedications();
+    };
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log("Page became visible, refreshing medications");
@@ -98,9 +103,13 @@ const MedicationsPage = () => {
       }
     };
 
+    // Écouter quand la fenêtre reprend le focus
+    window.addEventListener('focus', handleFocus);
+    // Écouter quand la page redevient visible
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
+      window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
