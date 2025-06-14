@@ -54,12 +54,15 @@ export function useAuth() {
 
   useEffect(() => {
     console.log("🔐 Initializing auth...");
-    setIsLoading(true);
+    
+    let mounted = true;
 
-    // Écouter les changements d'authentification AVANT de vérifier la session
+    // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
+        
+        if (!mounted) return;
         
         if (session?.user) {
           console.log("👤 Setting user from auth change");
@@ -81,6 +84,8 @@ export function useAuth() {
       try {
         console.log("🔍 Checking current session...");
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error("❌ Session error:", error);
@@ -104,8 +109,10 @@ export function useAuth() {
         setUser(null);
         setProfile(null);
       } finally {
-        console.log("✅ Setting loading to false from session check");
-        setIsLoading(false);
+        if (mounted) {
+          console.log("✅ Setting loading to false from session check");
+          setIsLoading(false);
+        }
       }
     };
 
@@ -113,6 +120,7 @@ export function useAuth() {
 
     return () => {
       console.log("🧹 Cleaning up auth subscription");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
