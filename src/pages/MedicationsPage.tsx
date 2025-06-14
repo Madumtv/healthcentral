@@ -22,12 +22,14 @@ const MedicationsPage = () => {
 
   const fetchMedications = async () => {
     try {
+      console.log("Fetching medications...");
       const data = await supabaseMedicationService.getAll();
       console.log("Fetched medications with doctor data:", data);
       setMedications(data);
       setFilteredMedications(data);
       setLastRefresh(Date.now());
     } catch (error) {
+      console.error("Error fetching medications:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger vos médicaments.",
@@ -41,6 +43,31 @@ const MedicationsPage = () => {
   useEffect(() => {
     fetchMedications();
   }, [toast]);
+
+  // Actualiser les données quand on revient sur la page
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Window focused, refreshing medications");
+      fetchMedications();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Page became visible, refreshing medications");
+        fetchMedications();
+      }
+    };
+
+    // Écouter quand la fenêtre reprend le focus
+    window.addEventListener('focus', handleFocus);
+    // Écouter quand la page redevient visible
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Apply filters
@@ -90,31 +117,6 @@ const MedicationsPage = () => {
     setSearchTerm("");
     setSelectedDoctorId("");
   };
-
-  // Actualiser les données quand on revient sur la page
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log("Window focused, refreshing medications");
-      fetchMedications();
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log("Page became visible, refreshing medications");
-        fetchMedications();
-      }
-    };
-
-    // Écouter quand la fenêtre reprend le focus
-    window.addEventListener('focus', handleFocus);
-    // Écouter quand la page redevient visible
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">

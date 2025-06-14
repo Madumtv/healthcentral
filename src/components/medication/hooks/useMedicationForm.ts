@@ -104,20 +104,26 @@ export const useMedicationForm = ({ initialMedication, isEditing, id }: UseMedic
       
       console.log("Cleaned medication for submission:", cleanedMedication);
       
+      let savedMedication;
       if (isEditing && id) {
-        const updatedMedication = await supabaseMedicationService.update(id, cleanedMedication);
-        console.log("Medication updated successfully:", updatedMedication);
+        savedMedication = await supabaseMedicationService.update(id, cleanedMedication);
+        console.log("Medication updated successfully:", savedMedication);
         toast({
           title: "Succès",
           description: "Médicament mis à jour avec succès.",
         });
       } else {
-        const createdMedication = await supabaseMedicationService.create(cleanedMedication as any);
-        console.log("Medication created successfully:", createdMedication);
+        savedMedication = await supabaseMedicationService.create(cleanedMedication as any);
+        console.log("Medication created successfully:", savedMedication);
         toast({
           title: "Succès",
           description: "Médicament ajouté avec succès.",
         });
+      }
+      
+      // Si un docteur a été ajouté, vérifier que les données sont bien récupérées
+      if (savedMedication.doctorId && !savedMedication.doctor) {
+        console.log("Doctor ID present but doctor details missing, will be loaded on next page refresh");
       }
       
       navigate("/medications");
