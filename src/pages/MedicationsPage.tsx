@@ -8,8 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Pill, Plus } from "lucide-react";
 import { Medication } from "@/types";
 import { supabaseMedicationService } from "@/lib/supabase-medication-service";
-import MedicationCard from "@/components/MedicationCard";
 import { MedicationFilter } from "@/components/medication/MedicationFilter";
+import { MedicationsListTable } from "@/components/dashboard/MedicationsListTable";
 
 const MedicationsPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -123,15 +123,17 @@ const MedicationsPage = () => {
               <p className="text-lg text-gray-500">Chargement...</p>
             </div>
           ) : filteredMedications.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMedications.map(medication => (
-                <MedicationCard
-                  key={medication.id}
-                  medication={medication}
-                  onEdit={handleEditMedication}
-                  onDelete={handleDeleteMedication}
-                />
-              ))}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Liste de vos médicaments ({filteredMedications.length})
+                </h2>
+              </div>
+              <MedicationsListTable 
+                medications={filteredMedications} 
+                onEdit={handleEditMedication} 
+                onDelete={handleDeleteMedication} 
+              />
             </div>
           ) : (
             <Card>
