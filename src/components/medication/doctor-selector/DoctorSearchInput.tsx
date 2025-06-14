@@ -1,6 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { Search, Globe } from "lucide-react";
+import { Search, Database } from "lucide-react";
 
 interface DoctorSearchInputProps {
   value: string;
@@ -20,10 +20,10 @@ export const DoctorSearchInput = ({ value, onChange }: DoctorSearchInputProps) =
         <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
       </div>
       
-      <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
-        <Globe className="h-3 w-3" />
+      <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+        <Database className="h-3 w-3" />
         <span>
-          🔍 Recherche en temps réel sur DoctorAnytime.be • Ordomedic.be • Doctoralia.be
+          🏥 Recherche dans notre base de données enrichie de médecins belges
         </span>
       </div>
     </div>
