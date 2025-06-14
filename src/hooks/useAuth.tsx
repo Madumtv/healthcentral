@@ -28,15 +28,21 @@ export function useAuth() {
       
       if (error) {
         console.error("❌ Error fetching profile:", error);
+        // Même en cas d'erreur, on définit un profil vide pour éviter le blocage
+        setProfile({});
         return;
       }
 
       if (profileData) {
         console.log("✅ Profile fetched:", profileData);
         setProfile(profileData);
+      } else {
+        console.log("ℹ️ No profile data found, setting empty profile");
+        setProfile({});
       }
     } catch (error) {
       console.error("❌ Error fetching profile:", error);
+      setProfile({});
     }
   };
 
@@ -50,9 +56,30 @@ export function useAuth() {
     console.log("🔐 Initializing auth...");
     setIsLoading(true);
 
+    // Écouter les changements d'authentification AVANT de vérifier la session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
+        
+        if (session?.user) {
+          console.log("👤 Setting user from auth change");
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        } else {
+          console.log("🚫 No user, clearing state");
+          setUser(null);
+          setProfile(null);
+        }
+        
+        console.log("✅ Setting loading to false from auth state change");
+        setIsLoading(false);
+      }
+    );
+
     // Vérifier la session actuelle
     const checkSession = async () => {
       try {
+        console.log("🔍 Checking current session...");
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -64,11 +91,11 @@ export function useAuth() {
         }
 
         if (session?.user) {
-          console.log("✅ Session found:", session.user.email);
+          console.log("✅ Current session found:", session.user.email);
           setUser(session.user);
           await fetchProfile(session.user.id);
         } else {
-          console.log("ℹ️ No active session");
+          console.log("ℹ️ No current session");
           setUser(null);
           setProfile(null);
         }
@@ -77,30 +104,15 @@ export function useAuth() {
         setUser(null);
         setProfile(null);
       } finally {
+        console.log("✅ Setting loading to false from session check");
         setIsLoading(false);
       }
     };
 
     checkSession();
 
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
-        
-        if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-        
-        setIsLoading(false);
-      }
-    );
-
     return () => {
+      console.log("🧹 Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
