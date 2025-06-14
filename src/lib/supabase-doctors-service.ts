@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { ordomedicService } from "./ordomedic-service";
 
 export interface Doctor {
   id: string;
@@ -18,37 +19,71 @@ export interface Doctor {
 }
 
 export const supabaseDoctorsService = {
-  // Search doctors by name or specialty
+  // Search doctors by name or specialty (hybride: local + ordomedic)
   search: async (query: string): Promise<Doctor[]> => {
-    const { data, error } = await supabase
-      .from('doctors')
-      .select('*')
-      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%`)
-      .eq('is_active', true)
-      .order('last_name', { ascending: true })
-      .limit(20);
+    const results: Doctor[] = [];
 
-    if (error) throw error;
+    try {
+      // 1. Recherche locale dans Supabase
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*')
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%`)
+        .eq('is_active', true)
+        .order('last_name', { ascending: true })
+        .limit(10);
 
-    return (data || []).map(doctor => ({
-      id: doctor.id,
-      inami_number: doctor.inami_number,
-      first_name: doctor.first_name,
-      last_name: doctor.last_name,
-      specialty: doctor.specialty,
-      address: doctor.address,
-      city: doctor.city,
-      postal_code: doctor.postal_code,
-      phone: doctor.phone,
-      email: doctor.email,
-      is_active: doctor.is_active,
-      created_at: new Date(doctor.created_at),
-      updated_at: new Date(doctor.updated_at),
-    }));
+      if (error) {
+        console.error('Erreur recherche locale:', error);
+      } else {
+        const localDoctors = (data || []).map(doctor => ({
+          id: doctor.id,
+          inami_number: doctor.inami_number,
+          first_name: doctor.first_name,
+          last_name: doctor.last_name,
+          specialty: doctor.specialty,
+          address: doctor.address,
+          city: doctor.city,
+          postal_code: doctor.postal_code,
+          phone: doctor.phone,
+          email: doctor.email,
+          is_active: doctor.is_active,
+          created_at: new Date(doctor.created_at),
+          updated_at: new Date(doctor.updated_at),
+        }));
+        results.push(...localDoctors);
+      }
+
+      // 2. Recherche sur ordomedic.be
+      const ordomedicDoctors = await ordomedicService.searchDoctors(query);
+      results.push(...ordomedicDoctors);
+
+      // 3. Éliminer les doublons et limiter les résultats
+      const uniqueDoctors = results.filter((doctor, index, self) => 
+        index === self.findIndex(d => 
+          d.first_name === doctor.first_name && 
+          d.last_name === doctor.last_name && 
+          d.inami_number === doctor.inami_number
+        )
+      );
+
+      return uniqueDoctors.slice(0, 20);
+    } catch (error) {
+      console.error('Erreur lors de la recherche hybride:', error);
+      return results;
+    }
   },
 
   // Get doctor by ID
   getById: async (id: string): Promise<Doctor | null> => {
+    // Si l'ID commence par 'ordo_', c'est un médecin d'ordomedic
+    if (id.startsWith('ordo_')) {
+      // Rechercher dans ordomedic (pour l'instant via les données simulées)
+      const ordomedicDoctors = await ordomedicService.searchDoctors('');
+      return ordomedicDoctors.find(d => d.id === id) || null;
+    }
+
+    // Sinon, rechercher dans Supabase
     const { data, error } = await supabase
       .from('doctors')
       .select('*')
