@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Search, Plus } from "lucide-react";
-import { MedicamentSearch } from "../MedicamentSearch";
+import { HybridMedicationSearch } from "../HybridMedicationSearch";
 import { MedicamentInfo } from "@/lib/medicaments-api";
 
 interface BasicInfoFieldsProps {
@@ -65,13 +65,13 @@ export const BasicInfoFields = ({
           className="text-sm"
         >
           <Search className="mr-2 h-4 w-4" />
-          {showMedicamentSearch ? "Saisie manuelle" : "Recherche officielle"}
+          {showMedicamentSearch ? "Saisie manuelle" : "Recherche intelligente"}
         </Button>
       </div>
 
       {showMedicamentSearch ? (
         <div className="space-y-4">
-          <MedicamentSearch 
+          <HybridMedicationSearch 
             onMedicamentSelect={handleMedicamentSelect}
             className="p-4 border rounded-lg bg-blue-50"
           />
