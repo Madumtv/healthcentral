@@ -21,7 +21,7 @@ export const DoctorSearchInput = ({ value, onChange }: DoctorSearchInputProps) =
       </div>
       
       <p className="text-xs text-gray-500">
-        🔍 Recherche en temps réel sur DoctorAnytime.be, Ordomedic.be, Doctoralia.be et autres sources belges
+        🔍 Recherche dynamique dans la base de médecins belges
       </p>
     </div>
   );
