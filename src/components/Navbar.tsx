@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Pill, User, LogIn, Users } from "lucide-react";
+import { Menu, X, Pill, User, LogIn, Users, Calendar, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -54,19 +54,19 @@ export function Navbar() {
 
           {/* Desktop menu */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-            <Link to="/" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
+            <Link to="/" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center">
+              <Home className="h-4 w-4 mr-1" />
               Accueil
-            </Link>
-            <Link to="/about" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
-              À propos
             </Link>
             
             {user ? (
               <>
-                <Link to="/dashboard" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
+                <Link to="/dashboard" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center">
+                  <Calendar className="h-4 w-4 mr-1" />
                   Aujourd'hui
                 </Link>
-                <Link to="/medications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
+                <Link to="/medications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center">
+                  <Pill className="h-4 w-4 mr-1" />
                   Mes médicaments
                 </Link>
                 <Link to="/doctors" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center">
@@ -80,6 +80,9 @@ export function Navbar() {
                   <User className="h-4 w-4 mr-2" />
                   Profil
                 </Link>
+                <Link to="/about" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
+                  À propos
+                </Link>
                 <Button 
                   variant="ghost" 
                   onClick={handleLogout}
@@ -89,13 +92,18 @@ export function Navbar() {
                 </Button>
               </>
             ) : (
-              <Button 
-                onClick={() => navigate("/auth")} 
-                className="flex items-center bg-medBlue hover:bg-blue-600"
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Connexion
-              </Button>
+              <>
+                <Link to="/about" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
+                  À propos
+                </Link>
+                <Button 
+                  onClick={() => navigate("/auth")} 
+                  className="flex items-center bg-medBlue hover:bg-blue-600"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Connexion
+                </Button>
+              </>
             )}
           </div>
 
@@ -122,33 +130,29 @@ export function Navbar() {
           <div className="pt-2 pb-3 space-y-1">
             <Link
               to="/"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
               onClick={toggleMenu}
             >
+              <Home className="h-4 w-4 mr-2" />
               Accueil
-            </Link>
-            <Link
-              to="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
-              onClick={toggleMenu}
-            >
-              À propos
             </Link>
 
             {user ? (
               <>
                 <Link
                   to="/dashboard"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
                   onClick={toggleMenu}
                 >
+                  <Calendar className="h-4 w-4 mr-2" />
                   Aujourd'hui
                 </Link>
                 <Link
                   to="/medications"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
                   onClick={toggleMenu}
                 >
+                  <Pill className="h-4 w-4 mr-2" />
                   Mes médicaments
                 </Link>
                 <Link
@@ -167,6 +171,13 @@ export function Navbar() {
                   <User className="h-4 w-4 mr-2" />
                   Profil
                 </Link>
+                <Link
+                  to="/about"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                  onClick={toggleMenu}
+                >
+                  À propos
+                </Link>
                 <Button
                   variant="ghost"
                   onClick={handleLogout}
@@ -176,16 +187,25 @@ export function Navbar() {
                 </Button>
               </>
             ) : (
-              <Button
-                onClick={() => {
-                  navigate("/auth");
-                  toggleMenu();
-                }}
-                className="w-full mt-2 flex items-center justify-center bg-medBlue hover:bg-blue-600"
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Connexion
-              </Button>
+              <>
+                <Link
+                  to="/about"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
+                  onClick={toggleMenu}
+                >
+                  À propos
+                </Link>
+                <Button
+                  onClick={() => {
+                    navigate("/auth");
+                    toggleMenu();
+                  }}
+                  className="w-full mt-2 flex items-center justify-center bg-medBlue hover:bg-blue-600"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Connexion
+                </Button>
+              </>
             )}
           </div>
         </div>
