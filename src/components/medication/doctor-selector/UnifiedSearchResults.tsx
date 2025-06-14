@@ -1,7 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Globe, Database, ExternalLink, Plus, MapPin, Phone, User, link } from "lucide-react";
+import { Search, Globe, Database, ExternalLink, Plus, MapPin, Phone, User } from "lucide-react";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
 interface UnifiedSearchResultsProps {
