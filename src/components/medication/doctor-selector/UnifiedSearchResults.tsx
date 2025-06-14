@@ -1,5 +1,4 @@
 
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,18 +47,6 @@ export const UnifiedSearchResults = ({
       return `https://www.doctoranytime.be/fr/medecin/${firstName}-${lastName}`;
     }
     
-    if (doctor.source.includes('Wikipedia')) {
-      return `https://fr.wikipedia.org/wiki/${firstName}_${lastName}`;
-    }
-    
-    if (doctor.source.includes('Google Scholar')) {
-      return `https://scholar.google.com/scholar?q="${firstName}+${lastName}"+médecin`;
-    }
-    
-    if (doctor.source.includes('ResearchGate')) {
-      return `https://www.researchgate.net/search?q=${firstName}%20${lastName}`;
-    }
-    
     return null;
   };
   
@@ -96,7 +83,6 @@ export const UnifiedSearchResults = ({
           )}
         </div>
 
-        {/* Affichage de l'adresse complète si disponible */}
         {doctor.address && (
           <div className="flex items-start gap-1 text-xs text-gray-600 mb-2">
             <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
@@ -109,7 +95,6 @@ export const UnifiedSearchResults = ({
             {doctor.source || 'Base locale'}
           </Badge>
 
-          {/* Lien externe dynamique */}
           {(() => {
             const externalLink = getExternalLink(doctor);
             if (externalLink) {
@@ -199,46 +184,19 @@ export const UnifiedSearchResults = ({
         </Card>
       )}
 
-      {/* Recherche officielle étendue */}
-      {searchQuery.length >= 3 && searchResults.length === 0 && suggestions.length === 0 && officialResults.length === 0 && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2 text-orange-700">
-              <Globe className="h-4 w-4" />
-              Recherche officielle étendue
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-orange-600">
-              Rechercher sur Wikipedia, Google et autres sources officielles
-            </p>
-            
-            <Button
-              onClick={onOfficialSearch}
-              disabled={isOfficialSearching}
-              className="w-full bg-orange-600 hover:bg-orange-700"
-              size="sm"
-            >
-              <Search className="h-3 w-3 mr-2" />
-              {isOfficialSearching ? "Recherche en cours..." : "Lancer la recherche officielle"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Résultats de recherche officielle */}
-      {officialResults.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-orange-700">
-              <Globe className="h-4 w-4" />
-              Résultats recherche officielle ({officialResults.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {officialResults.map((doctor) => 
-              renderDoctorCard(doctor, onAddDoctor, "Ajouter", "border-orange-200")
-            )}
+      {/* Message informatif si aucun résultat */}
+      {searchQuery.length >= 3 && searchResults.length === 0 && suggestions.length === 0 && (
+        <Card className="border-gray-200 bg-gray-50">
+          <CardContent className="pt-4">
+            <div className="text-center py-4">
+              <Search className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-1">
+                Aucun médecin trouvé pour "{searchQuery}"
+              </p>
+              <p className="text-xs text-gray-500">
+                Essayez avec un nom différent ou utilisez la saisie manuelle
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}

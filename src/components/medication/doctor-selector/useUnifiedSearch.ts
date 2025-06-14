@@ -3,7 +3,6 @@ import { useState, useCallback } from "react";
 import { Doctor } from "@/lib/supabase-doctors-service";
 import { ordomedicService } from "@/lib/ordomedic-service";
 import { useToast } from "@/hooks/use-toast";
-import { generateAutomaticSearchResults, shouldPerformAutoSearch } from "./doctorSearchHelpers";
 
 export const useUnifiedSearch = () => {
   const [searchResults, setSearchResults] = useState<Doctor[]>([]);
@@ -42,14 +41,8 @@ export const useUnifiedSearch = () => {
       setSearchResults(searchResponse.doctors);
       setSuggestions(searchResponse.suggestions);
       
-      // Si aucun résultat et requête >= 3 caractères, recherche automatique étendue
-      if (shouldPerformAutoSearch(searchResponse.doctors, searchResponse.suggestions, trimmedQuery)) {
-        console.log(`🌐 Lancement recherche automatique étendue pour: "${trimmedQuery}"`);
-        const autoResults = await generateAutomaticSearchResults(trimmedQuery);
-        setOfficialResults(autoResults);
-      } else {
-        setOfficialResults([]);
-      }
+      // Plus de recherche automatique fictive - seuls les vrais résultats sont affichés
+      setOfficialResults([]);
       
     } catch (error) {
       console.error('❌ Erreur de recherche unifiée:', error);

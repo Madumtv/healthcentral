@@ -1,7 +1,6 @@
 
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { generateAutomaticSearchResults } from "./doctorSearchHelpers";
 
 export const useOfficialSearch = () => {
   const [isOfficialSearching, setIsOfficialSearching] = useState(false);
@@ -18,15 +17,16 @@ export const useOfficialSearch = () => {
     }
 
     setIsOfficialSearching(true);
-    console.log(`🌐 Lancement recherche officielle manuelle pour: "${searchQuery}"`);
+    console.log(`🌐 Recherche officielle désactivée - génération automatique supprimée`);
 
     try {
-      const results = await generateAutomaticSearchResults(searchQuery);
+      // Plus de génération automatique - retourner un tableau vide
+      const results: any[] = [];
       setOfficialResults(results);
       
       toast({
         title: "Recherche terminée",
-        description: `${results.length} résultat(s) trouvé(s) via les sources officielles.`,
+        description: "La recherche officielle automatique a été désactivée. Seuls les vrais résultats de la base de données sont affichés.",
       });
 
     } catch (error) {
