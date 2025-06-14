@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
@@ -24,12 +23,18 @@ const DashboardPage = () => {
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('name')
+            .select('name, first_name, last_name')
             .eq('id', session.user.id)
             .single();
           
           if (error) throw error;
-          setUserName(data?.name || session.user.email?.split('@')[0] || 'utilisateur');
+          
+          // Construire le nom d'affichage en utilisant la même logique que useAuth
+          const displayName = data?.name || 
+                             (data?.first_name && data?.last_name ? `${data.first_name} ${data.last_name}` : 
+                             data?.first_name || data?.last_name || session.user.email?.split('@')[0] || 'utilisateur');
+          
+          setUserName(displayName);
         } catch (error) {
           console.error("Erreur lors de la récupération du profil:", error);
           setUserName(session.user.email?.split('@')[0] || 'utilisateur');
