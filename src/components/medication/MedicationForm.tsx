@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Medication, TimeOfDay } from "@/types";
-import { medicationService } from "@/lib/mock-data";
+import { supabaseMedicationService } from "@/lib/supabase-medication-service";
 import BasicInfoFields from "./form-fields/BasicInfoFields";
 import StandardTimePeriods from "./form-fields/StandardTimePeriods";
 import DaysOfWeekField from "./form-fields/DaysOfWeekField";
@@ -118,13 +118,13 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
       }
       
       if (isEditing && id) {
-        await medicationService.update(id, medication);
+        await supabaseMedicationService.update(id, medication);
         toast({
           title: "Succès",
           description: "Médicament mis à jour avec succès.",
         });
       } else {
-        await medicationService.create(medication as any);
+        await supabaseMedicationService.create(medication as any);
         toast({
           title: "Succès",
           description: "Médicament ajouté avec succès.",

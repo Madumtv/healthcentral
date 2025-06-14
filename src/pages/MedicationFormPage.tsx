@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/components/ui/use-toast";
 import { Medication } from "@/types";
-import { medicationService } from "@/lib/mock-data";
+import { supabaseMedicationService } from "@/lib/supabase-medication-service";
 import MedicationForm from "@/components/medication/MedicationForm";
 import MedicationFormHeader from "@/components/medication/MedicationFormHeader";
 
@@ -31,7 +31,7 @@ const MedicationFormPage = () => {
     const fetchMedication = async () => {
       if (isEditing) {
         try {
-          const data = await medicationService.getById(id);
+          const data = await supabaseMedicationService.getById(id);
           if (data) {
             setMedication(data);
           } else {

@@ -6,9 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Pill, Plus, Search, Filter } from "lucide-react";
+import { Pill, Plus, Search } from "lucide-react";
 import { Medication } from "@/types";
-import { medicationService } from "@/lib/mock-data";
+import { supabaseMedicationService } from "@/lib/supabase-medication-service";
 import MedicationCard from "@/components/MedicationCard";
 
 const MedicationsPage = () => {
@@ -22,7 +22,7 @@ const MedicationsPage = () => {
   useEffect(() => {
     const fetchMedications = async () => {
       try {
-        const data = await medicationService.getAll();
+        const data = await supabaseMedicationService.getAll();
         setMedications(data);
         setFilteredMedications(data);
       } catch (error) {
@@ -55,7 +55,7 @@ const MedicationsPage = () => {
 
   const handleDeleteMedication = async (id: string) => {
     try {
-      await medicationService.delete(id);
+      await supabaseMedicationService.delete(id);
       setMedications(medications.filter(med => med.id !== id));
       toast({
         title: "Succès",

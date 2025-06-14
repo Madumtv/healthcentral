@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
 import { Medication } from "@/types";
-import { medicationService } from "@/lib/mock-data";
+import { supabaseMedicationService } from "@/lib/supabase-medication-service";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +45,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchMedications = async () => {
       try {
-        const data = await medicationService.getAll();
+        const data = await supabaseMedicationService.getAll();
         setMedications(data);
       } catch (error) {
         toast({
@@ -67,7 +67,7 @@ const DashboardPage = () => {
 
   const handleDeleteMedication = async (id: string) => {
     try {
-      await medicationService.delete(id);
+      await supabaseMedicationService.delete(id);
       setMedications(medications.filter(med => med.id !== id));
       toast({
         title: "Succès",
@@ -106,7 +106,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex col">
       <Navbar />
       
       <main className="flex-grow py-8">
