@@ -9,6 +9,18 @@ import {
   markMultipleDosesAsTaken 
 } from "@/integrations/supabase/client";
 
+// Fonction pour normaliser les valeurs de time_of_day
+const normalizeTimeOfDay = (timeOfDay: string): string => {
+  const frenchToEnglish = {
+    'matin': 'morning',
+    'midi': 'noon', 
+    'soir': 'evening',
+    'nuit': 'night'
+  };
+  
+  return frenchToEnglish[timeOfDay as keyof typeof frenchToEnglish] || timeOfDay;
+};
+
 export const useMedicationDoses = (selectedDate: Date) => {
   const [isLoading, setIsLoading] = useState(true);
   const [medicationDoses, setMedicationDoses] = useState<any[]>([]);
@@ -20,7 +32,14 @@ export const useMedicationDoses = (selectedDate: Date) => {
       try {
         setIsLoading(true);
         const doses = await createMedicationDosesForDate(selectedDate);
-        setMedicationDoses(doses || []);
+        
+        // Normaliser les valeurs time_of_day dans les doses
+        const normalizedDoses = (doses || []).map(dose => ({
+          ...dose,
+          time_of_day: normalizeTimeOfDay(dose.time_of_day)
+        }));
+        
+        setMedicationDoses(normalizedDoses);
       } catch (error) {
         console.error("Erreur lors du chargement des doses:", error);
         toast({
