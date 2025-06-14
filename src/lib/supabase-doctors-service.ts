@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ordomedicService } from "./ordomedic-service";
 
@@ -22,29 +21,16 @@ export interface Doctor {
 export const supabaseDoctorsService = {
   // Search doctors by name or specialty (hybride: local + scraping ordomedic.be en temps réel)
   search: async (query: string): Promise<Doctor[]> => {
-    if (!query || query.trim().length < 2) {
-      // Afficher quelques médecins populaires sans recherche
-      try {
-        const searchResults = await ordomedicService.searchDoctors('');
-        return searchResults.doctors.slice(0, 8);
-      } catch (error) {
-        console.error('Erreur lors du chargement des médecins populaires:', error);
-        return [];
-      }
-    }
-
     const results: Doctor[] = [];
 
     try {
-      // 1. Recherche locale dans Supabase en premier
+      // 1. TOUJOURS rechercher dans la base locale en premier
       console.log(`Recherche locale pour: "${query}"`);
       const { data, error } = await supabase
         .from('doctors')
         .select('*')
-        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%,city.ilike.%${query}%`)
         .eq('is_active', true)
-        .order('last_name', { ascending: true })
-        .limit(10);
+        .order('last_name', { ascending: true });
 
       if (error) {
         console.error('Erreur recherche locale:', error);
@@ -69,18 +55,38 @@ export const supabaseDoctorsService = {
         console.log(`Trouvé ${localDoctors.length} médecins dans la base locale`);
       }
 
-      // 2. Scraping en temps réel d'ordomedic.be (priorité élevée)
-      console.log(`Lancement du scraping ordomedic.be pour: "${query}"`);
-      const searchResults = await ordomedicService.searchDoctors(query);
-      const scrapedDoctors = searchResults.doctors;
-      console.log(`Trouvé ${scrapedDoctors.length} médecins via scraping ordomedic.be`);
-      
-      if (scrapedDoctors.length > 0) {
-        results.push(...scrapedDoctors);
+      // 2. Si on a une recherche spécifique (plus de 2 caractères), faire aussi le scraping
+      if (query && query.trim().length >= 2) {
+        console.log(`Lancement du scraping ordomedic.be pour: "${query}"`);
+        try {
+          const searchResults = await ordomedicService.searchDoctors(query);
+          const scrapedDoctors = searchResults.doctors;
+          console.log(`Trouvé ${scrapedDoctors.length} médecins via scraping ordomedic.be`);
+          
+          if (scrapedDoctors.length > 0) {
+            results.push(...scrapedDoctors);
+          }
+        } catch (scrapingError) {
+          console.error('Erreur lors du scraping:', scrapingError);
+          // Ne pas bloquer si le scraping échoue
+        }
       }
 
-      // 3. Éliminer les doublons basés sur nom/prénom et INAMI si disponible
-      const uniqueDoctors = results.filter((doctor, index, self) => 
+      // 3. Filtrer les résultats locaux si on a une query
+      let filteredResults = results;
+      if (query && query.trim().length > 0) {
+        const queryLower = query.toLowerCase();
+        filteredResults = results.filter(doctor => 
+          doctor.first_name.toLowerCase().includes(queryLower) ||
+          doctor.last_name.toLowerCase().includes(queryLower) ||
+          doctor.specialty?.toLowerCase().includes(queryLower) ||
+          doctor.city?.toLowerCase().includes(queryLower) ||
+          doctor.inami_number?.toLowerCase().includes(queryLower)
+        );
+      }
+
+      // 4. Éliminer les doublons basés sur nom/prénom et INAMI si disponible
+      const uniqueDoctors = filteredResults.filter((doctor, index, self) => 
         index === self.findIndex(d => {
           const sameNameAndFirstName = 
             d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
@@ -96,44 +102,38 @@ export const supabaseDoctorsService = {
         })
       );
 
-      // 4. Trier par pertinence puis par nom
+      // 5. Trier par pertinence puis par nom
       const sortedDoctors = uniqueDoctors.sort((a, b) => {
-        // Correspondance exacte en premier
-        const aExactMatch = `${a.first_name} ${a.last_name}`.toLowerCase() === query.toLowerCase();
-        const bExactMatch = `${b.first_name} ${b.last_name}`.toLowerCase() === query.toLowerCase();
-        if (aExactMatch && !bExactMatch) return -1;
-        if (!aExactMatch && bExactMatch) return 1;
+        // Médecins de la base locale en premier
+        const aIsLocal = a.source === 'Base locale';
+        const bIsLocal = b.source === 'Base locale';
+        if (aIsLocal && !bIsLocal) return -1;
+        if (!aIsLocal && bIsLocal) return 1;
+
+        // Correspondance exacte en premier si on a une query
+        if (query && query.trim().length > 0) {
+          const aExactMatch = `${a.first_name} ${a.last_name}`.toLowerCase() === query.toLowerCase();
+          const bExactMatch = `${b.first_name} ${b.last_name}`.toLowerCase() === query.toLowerCase();
+          if (aExactMatch && !bExactMatch) return -1;
+          if (!aExactMatch && bExactMatch) return 1;
+        }
 
         // Médecins avec spécialité en premier
         if (a.specialty && !b.specialty) return -1;
         if (!a.specialty && b.specialty) return 1;
 
-        // Médecins scrapés d'ordomedic.be en priorité (ID commence par "ordo_")
-        const aIsScraped = a.id.startsWith('ordo_');
-        const bIsScraped = b.id.startsWith('ordo_');
-        if (aIsScraped && !bIsScraped) return -1;
-        if (!aIsScraped && bIsScraped) return 1;
-
         // Ordre alphabétique
         return a.last_name.localeCompare(b.last_name);
       });
 
-      console.log(`Résultats finaux: ${sortedDoctors.length} médecins uniques trouvés`);
+      console.log(`Résultats finaux: ${sortedDoctors.length} médecins trouvés`);
       return sortedDoctors.slice(0, 25); // Limiter à 25 résultats
     } catch (error) {
-      console.error('Erreur lors de la recherche hybride complète:', error);
-      // En cas d'erreur, essayer au moins la recherche via ordomedic
-      try {
-        const fallbackResults = await ordomedicService.searchDoctors(query);
-        return fallbackResults.doctors.slice(0, 15);
-      } catch (fallbackError) {
-        console.error('Erreur de secours:', fallbackError);
-        return results; // Retourner ce qu'on a pu récupérer
-      }
+      console.error('Erreur lors de la recherche complète:', error);
+      return results; // Retourner ce qu'on a pu récupérer
     }
   },
 
-  // Get doctor by ID
   getById: async (id: string): Promise<Doctor | null> => {
     // Si l'ID commence par un préfixe externe, c'est un médecin d'une source externe
     if (id.startsWith('ordo_') || id.startsWith('doctoralia_') || 
