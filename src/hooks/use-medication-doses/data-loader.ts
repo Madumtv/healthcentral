@@ -21,6 +21,7 @@ export const loadMedicationDoses = async (
       
       return normalizedDoses;
     } else {
+      console.error("Expected array but got:", doses);
       return [];
     }
   } catch (error) {

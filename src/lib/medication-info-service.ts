@@ -154,7 +154,7 @@ class MedicationInfoService {
         name: med.name,
         company: med.company,
         category: med.category,
-        atc_code: med.atcCode || '',
+        atc_code: (med as any).atcCode || '',
         delivery_status: med.deliveryStatus,
         prescription_type: med.prescriptionType,
         pack_size: med.packSize,
@@ -211,14 +211,13 @@ class MedicationInfoService {
       name: data.name,
       company: data.company || '',
       category: data.category || '',
-      atcCode: data.atc_code || '',
       deliveryStatus: data.delivery_status || '',
       prescriptionType: data.prescription_type || '',
       packSize: data.pack_size || '',
       publicPrice: data.public_price?.toString() || '',
       reimbursementCode: data.reimbursement_code || '',
       reimbursementRate: data.reimbursement_rate || ''
-    };
+    } as MedicamentInfo;
   }
 }
 
