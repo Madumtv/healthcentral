@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Medication } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +27,11 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
       <Card className="w-full transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1 pr-4">
               <CardTitle className="text-lg font-medium text-medBlue">{medication.name}</CardTitle>
-              <CardDescription>{medication.dosage}</CardDescription>
+              <CardDescription className="mt-1">{medication.dosage}</CardDescription>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 flex-shrink-0">
               <Button variant="outline" size="icon" onClick={() => onEdit(medication.id)}>
                 <Edit className="h-4 w-4" />
               </Button>
@@ -46,53 +47,58 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
             <p className="text-sm text-gray-600">{medication.description}</p>
           )}
           
-          <div>
-            <h4 className="text-sm font-medium mb-1">Quand prendre</h4>
-            <div className="flex flex-wrap gap-2">
-              {medication.timeOfDay.map((time) => (
-                <Badge key={time} variant="outline" className="bg-blue-50 text-medBlue border-blue-200">
-                  {timeOfDayLabels[time]}
-                </Badge>
-              ))}
+          {medication.timeOfDay && medication.timeOfDay.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Quand prendre</h4>
+              <div className="flex flex-wrap gap-2">
+                {medication.timeOfDay.map((time) => (
+                  <Badge key={time} variant="outline" className="bg-blue-50 text-medBlue border-blue-200 px-2 py-1">
+                    {timeOfDayLabels[time] || time}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
-          <div>
-            <h4 className="text-sm font-medium mb-1">Jours de prise</h4>
-            <div className="flex flex-wrap gap-2">
-              {medication.daysOfWeek.map((day) => (
-                <Badge key={day} variant="outline" className="bg-green-50 text-medGreen border-green-200">
-                  {daysOfWeekLabels[day]}
-                </Badge>
-              ))}
+          {medication.daysOfWeek && medication.daysOfWeek.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Jours de prise</h4>
+              <div className="flex flex-wrap gap-2">
+                {medication.daysOfWeek.map((day) => (
+                  <Badge key={day} variant="outline" className="bg-green-50 text-medGreen border-green-200 px-2 py-1">
+                    {daysOfWeekLabels[day]}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
           {medication.notes && (
-            <div>
-              <h4 className="text-sm font-medium mb-1">Notes</h4>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Notes</h4>
               <p className="text-sm text-gray-600">{medication.notes}</p>
             </div>
           )}
           
           {medication.prescribingDoctor && (
-            <div>
-              <h4 className="text-sm font-medium mb-1">Médecin prescripteur</h4>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Médecin prescripteur</h4>
               <p className="text-sm text-gray-600">{medication.prescribingDoctor}</p>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-between pt-2 border-t">
+        <CardFooter className="flex justify-between pt-4 border-t bg-gray-50">
           <div className="flex gap-2">
             {hasValidLink ? (
               <a
                 href={medication.infoLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-medBlue hover:underline flex items-center"
+                className="text-sm text-medBlue hover:underline flex items-center gap-1"
               >
-                <ExternalLink className="h-3 w-3 mr-1" /> Lien personnalisé
+                <ExternalLink className="h-3 w-3" /> 
+                Lien personnalisé
               </a>
             ) : null}
             
@@ -100,7 +106,7 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
               variant="ghost"
               size="sm"
               onClick={() => setShowDetailsModal(true)}
-              className="text-sm text-medBlue hover:bg-blue-50 p-0 h-auto"
+              className="text-sm text-medBlue hover:bg-blue-50 p-1 h-auto"
             >
               <FileText className="h-3 w-3 mr-1" />
               Informations officielles
@@ -108,8 +114,9 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
           </div>
           
           {!hasValidLink && (
-            <span className="text-sm text-gray-400 flex items-center">
-              <Info className="h-3 w-3 mr-1" /> Pas d'informations complémentaires
+            <span className="text-sm text-gray-400 flex items-center gap-1">
+              <Info className="h-3 w-3" /> 
+              Pas d'informations complémentaires
             </span>
           )}
         </CardFooter>
