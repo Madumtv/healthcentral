@@ -13,19 +13,19 @@ export const loadMedicationDoses = async (
     // Ensure doses is an array and contains valid data
     if (Array.isArray(doses) && doses.length > 0) {
       // Filter out any invalid entries and ensure proper typing
-      const validDoses = doses.filter((dose: any): dose is MedicationDose => {
+      const validDoses = doses.filter((dose: any) => {
         return dose && typeof dose === 'object' && !('error' in dose) && isValidMedicationDose(dose);
       });
       
-      const normalizedDoses: MedicationDose[] = validDoses.map((dose: MedicationDose) => {
+      const normalizedDoses: MedicationDose[] = validDoses.map((dose: any) => {
         // Ensure dose has time_of_day property and normalize it
         if (dose.time_of_day && typeof dose.time_of_day === 'string') {
           return {
             ...dose,
             time_of_day: normalizeTimeOfDay(dose.time_of_day)
-          };
+          } as MedicationDose;
         }
-        return dose;
+        return dose as MedicationDose;
       });
       
       return normalizedDoses;

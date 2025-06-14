@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
@@ -21,7 +22,14 @@ class OrdomedicService {
    */
   async searchDoctors(query: string): Promise<Doctor[]> {
     try {
-      // 1. Recherche dans la base locale d'abord
+      console.log(`OrdomedicService: recherche pour "${query}"`);
+      
+      // 1. Si pas de requête, retourner quelques médecins populaires
+      if (!query || query.trim().length < 2) {
+        return this.getMockOrdomedicResults('').slice(0, 5);
+      }
+
+      // 2. Recherche dans la base locale d'abord
       const localResults = await this.searchLocalDoctors(query);
       
       if (localResults.length > 0) {
@@ -29,31 +37,27 @@ class OrdomedicService {
         return localResults;
       }
 
-      // 2. Si pas de résultats locaux, utiliser les données simulées étendues
-      console.log("Aucun résultat local, utilisation des données simulées...");
+      // 3. Recherche dans les données simulées étendues
+      console.log("Aucun résultat local, recherche dans les données simulées...");
       const mockResults = this.getMockOrdomedicResults(query);
-      
-      // 3. Sauvegarder les résultats simulés en local si c'est utile
-      if (mockResults.length > 0) {
-        await this.saveDoctorsToLocal(mockResults);
-      }
+      console.log(`Trouvé ${mockResults.length} médecins simulés`);
       
       return mockResults;
     } catch (error) {
       console.error('Erreur lors de la recherche ordomedic:', error);
-      // Fallback vers la recherche locale uniquement
-      return await this.searchLocalDoctors(query);
+      // Fallback vers la recherche simulée uniquement
+      return this.getMockOrdomedicResults(query);
     }
   }
 
   /**
    * Recherche des médecins dans la base de données locale
    */
-  private async searchLocalDoctors(query: string): Promise<Doctor[]> {
+  private async searchLocalDoctors(query: string): Promise<Doctor[]> => {
     const { data, error } = await supabase
       .from('doctors')
       .select('*')
-      .ilike('first_name', `%${query}%`)
+      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%`)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -79,42 +83,11 @@ class OrdomedicService {
   }
 
   /**
-   * Sauvegarde les médecins dans la base de données locale
+   * Données simulées basées sur des médecins réels d'ordomedic.be - base étendue
    */
-  private async saveDoctorsToLocal(doctors: Doctor[]): Promise<void> {
-    try {
-      const dataToInsert = doctors.map(doctor => ({
-        id: doctor.id,
-        inami_number: doctor.inami_number,
-        first_name: doctor.first_name,
-        last_name: doctor.last_name,
-        specialty: doctor.specialty,
-        address: doctor.address,
-        city: doctor.city,
-        postal_code: doctor.postal_code,
-        phone: doctor.phone,
-        email: doctor.email,
-        is_active: doctor.is_active,
-      }));
-
-      const { error } = await supabase
-        .from('doctors')
-        .insert(dataToInsert);
-
-      if (error) {
-        throw error;
-      }
-      console.log(`Médecins sauvegardés localement: ${doctors.length}`);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde locale des médecins:', error);
-    }
-  }
-
-  /**
-   * Données simulées basées sur des médecins réels d'ordomedic.be
-   */
-  private getMockOrdomedicResults(query: string): Doctor[] {
+  private getMockOrdomedicResults(query: string): Doctor[] => {
     const mockDoctors: Doctor[] = [
+      // Médecins existants
       {
         id: 'ordo_audrey_loumaye',
         first_name: 'Audrey',
@@ -131,7 +104,7 @@ class OrdomedicService {
         updated_at: new Date()
       },
       {
-        id: 'ordo_1',
+        id: 'ordo_jean_dupont',
         first_name: 'Jean',
         last_name: 'Dupont',
         specialty: 'Médecine générale',
@@ -146,7 +119,7 @@ class OrdomedicService {
         updated_at: new Date()
       },
       {
-        id: 'ordo_2',
+        id: 'ordo_marie_martin',
         first_name: 'Marie',
         last_name: 'Martin',
         specialty: 'Cardiologie',
@@ -161,7 +134,7 @@ class OrdomedicService {
         updated_at: new Date()
       },
       {
-        id: 'ordo_3',
+        id: 'ordo_pierre_leblanc',
         first_name: 'Pierre',
         last_name: 'Leblanc',
         specialty: 'Pédiatrie',
@@ -176,7 +149,7 @@ class OrdomedicService {
         updated_at: new Date()
       },
       {
-        id: 'ordo_4',
+        id: 'ordo_sophie_durand',
         first_name: 'Sophie',
         last_name: 'Durand',
         specialty: 'Gynécologie',
@@ -189,12 +162,75 @@ class OrdomedicService {
         is_active: true,
         created_at: new Date(),
         updated_at: new Date()
+      },
+      // Médecins supplémentaires pour une recherche plus complète
+      {
+        id: 'ordo_luc_bernard',
+        first_name: 'Luc',
+        last_name: 'Bernard',
+        specialty: 'Orthopédie',
+        address: 'Avenue des Arts 25',
+        city: 'Bruxelles',
+        postal_code: '1000',
+        phone: '02/345.67.89',
+        inami_number: '56789012345',
+        email: 'luc.bernard@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_anne_moreau',
+        first_name: 'Anne',
+        last_name: 'Moreau',
+        specialty: 'Dermatologie',
+        address: 'Rue Neuve 78',
+        city: 'Gand',
+        postal_code: '9000',
+        phone: '09/123.45.67',
+        inami_number: '67890123456',
+        email: 'anne.moreau@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_patrick_simon',
+        first_name: 'Patrick',
+        last_name: 'Simon',
+        specialty: 'Neurologie',
+        address: 'Boulevard de la Liberté 33',
+        city: 'Antwerpen',
+        postal_code: '2000',
+        phone: '03/456.78.90',
+        inami_number: '78901234567',
+        email: 'patrick.simon@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_catherine_laurent',
+        first_name: 'Catherine',
+        last_name: 'Laurent',
+        specialty: 'Ophtalmologie',
+        address: 'Place du Marché 12',
+        city: 'Mons',
+        postal_code: '7000',
+        phone: '065/567.89.01',
+        inami_number: '89012345678',
+        email: 'catherine.laurent@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ];
 
     // Filtrer selon la requête avec recherche plus flexible
+    const queryLower = query.toLowerCase();
     const filtered = mockDoctors.filter(doctor => {
-      const queryLower = query.toLowerCase();
+      if (!queryLower) return true;
+      
       const fullName = `${doctor.first_name} ${doctor.last_name}`.toLowerCase();
       const reverseName = `${doctor.last_name} ${doctor.first_name}`.toLowerCase();
       
@@ -206,6 +242,7 @@ class OrdomedicService {
              (doctor.city && doctor.city.toLowerCase().includes(queryLower));
     });
 
+    console.log(`Filtre appliqué sur "${query}": ${filtered.length} résultats`);
     return filtered;
   }
 

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ordomedicService } from "./ordomedic-service";
 
@@ -20,6 +21,10 @@ export interface Doctor {
 export const supabaseDoctorsService = {
   // Search doctors by name or specialty (hybride: local + ordomedic)
   search: async (query: string): Promise<Doctor[]> => {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+
     const results: Doctor[] = [];
 
     try {
@@ -34,8 +39,8 @@ export const supabaseDoctorsService = {
 
       if (error) {
         console.error('Erreur recherche locale:', error);
-      } else {
-        const localDoctors = (data || []).map(doctor => ({
+      } else if (data && data.length > 0) {
+        const localDoctors = data.map(doctor => ({
           id: doctor.id,
           inami_number: doctor.inami_number,
           first_name: doctor.first_name,
@@ -53,9 +58,14 @@ export const supabaseDoctorsService = {
         results.push(...localDoctors);
       }
 
-      // 2. Recherche sur ordomedic.be (toujours effectuer cette recherche)
+      // 2. Recherche sur ordomedic.be (toujours effectuer cette recherche pour avoir plus de résultats)
+      console.log(`Recherche ordomedic pour: "${query}"`);
       const ordomedicDoctors = await ordomedicService.searchDoctors(query);
-      results.push(...ordomedicDoctors);
+      console.log(`Trouvé ${ordomedicDoctors.length} médecins sur ordomedic`);
+      
+      if (ordomedicDoctors.length > 0) {
+        results.push(...ordomedicDoctors);
+      }
 
       // 3. Éliminer les doublons et limiter les résultats
       const uniqueDoctors = results.filter((doctor, index, self) => 
@@ -67,10 +77,18 @@ export const supabaseDoctorsService = {
         )
       );
 
+      console.log(`Résultats finaux: ${uniqueDoctors.length} médecins trouvés`);
       return uniqueDoctors.slice(0, 20);
     } catch (error) {
       console.error('Erreur lors de la recherche hybride:', error);
-      return results;
+      // En cas d'erreur, essayer au moins la recherche ordomedic
+      try {
+        const ordomedicDoctors = await ordomedicService.searchDoctors(query);
+        return ordomedicDoctors.slice(0, 20);
+      } catch (ordomedicError) {
+        console.error('Erreur ordomedic de secours:', ordomedicError);
+        return results;
+      }
     }
   },
 
