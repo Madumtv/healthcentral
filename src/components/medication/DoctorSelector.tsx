@@ -1,12 +1,11 @@
 
 import { DoctorSearchInput } from "./doctor-selector/DoctorSearchInput";
-import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
-import { DoctorSuggestions } from "./doctor-selector/DoctorSuggestions";
 import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
-import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
 import { UnifiedSearchResults } from "./doctor-selector/UnifiedSearchResults";
 import { useDoctorSearch } from "./doctor-selector/useDoctorSearch";
 import { Doctor } from "@/lib/supabase-doctors-service";
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 
 interface DoctorSelectorProps {
   selectedDoctorId?: string | null;
@@ -45,9 +44,11 @@ export const DoctorSelector = ({
     }
   };
 
-  const handleManualDoctorSubmit = (doctorName: string) => {
-    onDoctorChange(null, doctorName);
-    clearSearch();
+  const handleManualSubmit = () => {
+    if (searchQuery.trim()) {
+      onDoctorChange(null, searchQuery.trim());
+      clearSearch();
+    }
   };
 
   const handleClearSelection = () => {
@@ -72,6 +73,31 @@ export const DoctorSelector = ({
         onChange={setSearchQuery}
       />
 
+      {/* Bouton de saisie manuelle si du texte est saisi */}
+      {searchQuery.trim() && searchResults.length === 0 && suggestions.length === 0 && !isSearching && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-700">
+                Aucun médecin trouvé pour "{searchQuery}"
+              </p>
+              <p className="text-xs text-gray-500">
+                Vous pouvez saisir manuellement ce médecin
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleManualSubmit}
+              className="ml-3"
+            >
+              <UserPlus className="h-3 w-3 mr-1" />
+              Utiliser "{searchQuery}"
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Résultats unifiés */}
       <UnifiedSearchResults
         searchResults={searchResults}
@@ -84,9 +110,6 @@ export const DoctorSelector = ({
         onAddDoctor={handleSuggestionAdd}
         onOfficialSearch={performOfficialSearch}
       />
-
-      {/* Saisie manuelle */}
-      <ManualDoctorInput onSubmit={handleManualDoctorSubmit} />
     </div>
   );
 };
