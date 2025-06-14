@@ -14,14 +14,14 @@ export const DoctorSearchInput = ({ value, onChange }: DoctorSearchInputProps) =
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Rechercher un médecin (nom, prénom, spécialité)..."
+          placeholder="Rechercher un médecin (nom, prénom, spécialité, ville)..."
           className="pr-10"
         />
         <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
       </div>
       
       <p className="text-xs text-gray-500">
-        Tapez au moins 2 caractères pour rechercher dans la base de données belge
+        Recherche dans toutes les bases de données belges (Ordomedic, Doctoralia, etc.)
       </p>
     </div>
   );

@@ -19,20 +19,28 @@ export interface Doctor {
 }
 
 export const supabaseDoctorsService = {
-  // Search doctors by name or specialty (hybride: local + ordomedic)
+  // Search doctors by name or specialty (hybride: local + toutes sources externes)
   search: async (query: string): Promise<Doctor[]> => {
     if (!query || query.trim().length < 2) {
-      return [];
+      // Afficher quelques médecins populaires sans recherche
+      try {
+        const ordomedicDoctors = await ordomedicService.searchDoctors('');
+        return ordomedicDoctors.slice(0, 8);
+      } catch (error) {
+        console.error('Erreur lors du chargement des médecins populaires:', error);
+        return [];
+      }
     }
 
     const results: Doctor[] = [];
 
     try {
       // 1. Recherche locale dans Supabase
+      console.log(`Recherche locale pour: "${query}"`);
       const { data, error } = await supabase
         .from('doctors')
         .select('*')
-        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%`)
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,specialty.ilike.%${query}%,city.ilike.%${query}%`)
         .eq('is_active', true)
         .order('last_name', { ascending: true })
         .limit(10);
@@ -56,49 +64,75 @@ export const supabaseDoctorsService = {
           updated_at: new Date(doctor.updated_at),
         }));
         results.push(...localDoctors);
+        console.log(`Trouvé ${localDoctors.length} médecins dans la base locale`);
       }
 
-      // 2. Recherche sur ordomedic.be (toujours effectuer cette recherche pour avoir plus de résultats)
-      console.log(`Recherche ordomedic pour: "${query}"`);
-      const ordomedicDoctors = await ordomedicService.searchDoctors(query);
-      console.log(`Trouvé ${ordomedicDoctors.length} médecins sur ordomedic`);
+      // 2. Recherche dans toutes les sources externes (ordomedic + autres sites)
+      console.log(`Recherche dans les sources externes pour: "${query}"`);
+      const externalDoctors = await ordomedicService.searchDoctors(query);
+      console.log(`Trouvé ${externalDoctors.length} médecins dans les sources externes`);
       
-      if (ordomedicDoctors.length > 0) {
-        results.push(...ordomedicDoctors);
+      if (externalDoctors.length > 0) {
+        results.push(...externalDoctors);
       }
 
-      // 3. Éliminer les doublons et limiter les résultats
+      // 3. Éliminer les doublons basés sur nom/prénom et INAMI si disponible
       const uniqueDoctors = results.filter((doctor, index, self) => 
-        index === self.findIndex(d => 
-          d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
-          d.last_name.toLowerCase() === doctor.last_name.toLowerCase() && 
-          (d.inami_number === doctor.inami_number || 
-           (!d.inami_number && !doctor.inami_number))
-        )
+        index === self.findIndex(d => {
+          const sameNameAndFirstName = 
+            d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
+            d.last_name.toLowerCase() === doctor.last_name.toLowerCase();
+          
+          // Si les deux ont un numéro INAMI, les comparer
+          if (d.inami_number && doctor.inami_number) {
+            return sameNameAndFirstName && d.inami_number === doctor.inami_number;
+          }
+          
+          // Sinon, juste comparer nom/prénom
+          return sameNameAndFirstName;
+        })
       );
 
-      console.log(`Résultats finaux: ${uniqueDoctors.length} médecins trouvés`);
-      return uniqueDoctors.slice(0, 20);
+      // 4. Trier par pertinence puis par nom
+      const sortedDoctors = uniqueDoctors.sort((a, b) => {
+        // Correspondance exacte en premier
+        const aExactMatch = `${a.first_name} ${a.last_name}`.toLowerCase() === query.toLowerCase();
+        const bExactMatch = `${b.first_name} ${b.last_name}`.toLowerCase() === query.toLowerCase();
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+
+        // Médecins avec spécialité en premier
+        if (a.specialty && !b.specialty) return -1;
+        if (!a.specialty && b.specialty) return 1;
+
+        // Ordre alphabétique
+        return a.last_name.localeCompare(b.last_name);
+      });
+
+      console.log(`Résultats finaux: ${sortedDoctors.length} médecins uniques trouvés`);
+      return sortedDoctors.slice(0, 25); // Limiter à 25 résultats
     } catch (error) {
-      console.error('Erreur lors de la recherche hybride:', error);
-      // En cas d'erreur, essayer au moins la recherche ordomedic
+      console.error('Erreur lors de la recherche hybride complète:', error);
+      // En cas d'erreur, essayer au moins la recherche externe
       try {
-        const ordomedicDoctors = await ordomedicService.searchDoctors(query);
-        return ordomedicDoctors.slice(0, 20);
-      } catch (ordomedicError) {
-        console.error('Erreur ordomedic de secours:', ordomedicError);
-        return results;
+        const fallbackDoctors = await ordomedicService.searchDoctors(query);
+        return fallbackDoctors.slice(0, 15);
+      } catch (fallbackError) {
+        console.error('Erreur de secours:', fallbackError);
+        return results; // Retourner ce qu'on a pu récupérer
       }
     }
   },
 
   // Get doctor by ID
   getById: async (id: string): Promise<Doctor | null> => {
-    // Si l'ID commence par 'ordo_', c'est un médecin d'ordomedic
-    if (id.startsWith('ordo_')) {
-      // Rechercher dans ordomedic (pour l'instant via les données simulées)
-      const ordomedicDoctors = await ordomedicService.searchDoctors('');
-      return ordomedicDoctors.find(d => d.id === id) || null;
+    // Si l'ID commence par un préfixe externe, c'est un médecin d'une source externe
+    if (id.startsWith('ordo_') || id.startsWith('doctoralia_') || 
+        id.startsWith('doctoranytime_') || id.startsWith('qare_') || 
+        id.startsWith('specialist_')) {
+      // Rechercher dans les sources externes
+      const externalDoctors = await ordomedicService.searchDoctors('');
+      return externalDoctors.find(d => d.id === id) || null;
     }
 
     // Sinon, rechercher dans Supabase
@@ -130,7 +164,6 @@ export const supabaseDoctorsService = {
     };
   },
 
-  // Create a new doctor entry
   create: async (doctor: Omit<Doctor, "id" | "created_at" | "updated_at">): Promise<Doctor> => {
     const { data, error } = await supabase
       .from('doctors')
