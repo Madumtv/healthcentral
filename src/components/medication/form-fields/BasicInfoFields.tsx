@@ -99,7 +99,7 @@ export const BasicInfoFields = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="dosage">Nombre à prendre *</Label>
+          <Label htmlFor="dosage">Dosage unitaire *</Label>
           <Input
             id="dosage"
             name="dosage"
