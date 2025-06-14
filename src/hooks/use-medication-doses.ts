@@ -35,10 +35,12 @@ export const useMedicationDoses = (selectedDate: Date) => {
         
         // Normaliser les valeurs time_of_day dans les doses si elles existent
         const normalizedDoses = Array.isArray(doses) ? doses
-          .filter((dose): dose is NonNullable<typeof dose> => dose !== null && dose !== undefined)
+          .filter((dose): dose is NonNullable<typeof dose> => {
+            return dose !== null && dose !== undefined && typeof dose === 'object';
+          })
           .map(dose => {
-            // Vérification supplémentaire pour s'assurer que dose est un objet valide
-            if (dose && typeof dose === 'object' && 'time_of_day' in dose && dose.time_of_day) {
+            // À ce point, TypeScript sait que dose est un objet non-null
+            if ('time_of_day' in dose && dose.time_of_day && typeof dose.time_of_day === 'string') {
               return {
                 ...dose,
                 time_of_day: normalizeTimeOfDay(dose.time_of_day)
