@@ -54,8 +54,8 @@ const MedicationsPage = () => {
       );
     }
 
-    // Filter by selected doctor
-    if (selectedDoctorId) {
+    // Filter by selected doctor (exclude "all" value)
+    if (selectedDoctorId && selectedDoctorId !== "all") {
       filtered = filtered.filter(med => med.doctorId === selectedDoctorId);
     }
 

@@ -33,7 +33,9 @@ export const MedicationFilter = ({
     try {
       setIsLoadingDoctors(true);
       const results = await supabaseDoctorsService.search("");
-      setDoctors(results);
+      // Filter out doctors with empty or invalid IDs
+      const validDoctors = results.filter(doctor => doctor.id && doctor.id.trim() !== "");
+      setDoctors(validDoctors);
     } catch (error) {
       console.error("Error loading doctors:", error);
     } finally {
@@ -82,7 +84,7 @@ export const MedicationFilter = ({
               <SelectValue placeholder="Tous les médecins" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les médecins</SelectItem>
+              <SelectItem value="all">Tous les médecins</SelectItem>
               {doctors.map((doctor) => (
                 <SelectItem key={doctor.id} value={doctor.id}>
                   Dr {doctor.first_name} {doctor.last_name}
