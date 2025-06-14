@@ -39,7 +39,7 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
       </CardHeader>
       <CardContent>
         <ProfileForm 
-          key={profile?.id || 'no-profile'} // Force re-render quand le profil change
+          key={user?.id || 'no-user'} // Utiliser l'ID de l'utilisateur pour forcer re-render
           initialValues={initialValues}
           user={user}
           onSuccess={onProfileUpdate}
