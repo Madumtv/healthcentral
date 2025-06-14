@@ -1,222 +1,45 @@
-import { supabase } from "@/integrations/supabase/client";
-import { ordomedicService } from "./ordomedic-service";
 
-export interface Doctor {
-  id: string;
-  inami_number?: string;
-  first_name: string;
-  last_name: string;
-  specialty?: string;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  phone?: string;
-  email?: string;
-  source?: string;
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
+import { searchLocalDoctors, filterLocalDoctors } from "./doctors/local-search";
+import { searchExternalDoctors } from "./doctors/external-search";
+import { removeDuplicateDoctors, sortDoctors } from "./doctors/doctor-utils";
+import { getDoctorById, createDoctor } from "./doctors/doctor-crud";
+import { Doctor, DoctorCreateData } from "./doctors/types";
+
+// Re-export types for backward compatibility
+export type { Doctor, DoctorCreateData };
 
 export const supabaseDoctorsService = {
   // Search doctors by name or specialty (hybride: local + scraping ordomedic.be en temps réel)
   search: async (query: string): Promise<Doctor[]> => {
-    const results: Doctor[] = [];
-
     try {
+      console.log(`Recherche hybride pour: "${query}"`);
+      
       // 1. TOUJOURS rechercher dans la base locale en premier
-      console.log(`Recherche locale pour: "${query}"`);
-      const { data, error } = await supabase
-        .from('doctors')
-        .select('*')
-        .eq('is_active', true)
-        .order('last_name', { ascending: true });
-
-      if (error) {
-        console.error('Erreur recherche locale:', error);
-      } else if (data && data.length > 0) {
-        const localDoctors = data.map(doctor => ({
-          id: doctor.id,
-          inami_number: doctor.inami_number,
-          first_name: doctor.first_name,
-          last_name: doctor.last_name,
-          specialty: doctor.specialty,
-          address: doctor.address,
-          city: doctor.city,
-          postal_code: doctor.postal_code,
-          phone: doctor.phone,
-          email: doctor.email,
-          source: 'Base locale',
-          is_active: doctor.is_active,
-          created_at: new Date(doctor.created_at),
-          updated_at: new Date(doctor.updated_at),
-        }));
-        results.push(...localDoctors);
-        console.log(`Trouvé ${localDoctors.length} médecins dans la base locale`);
-      }
-
-      // 2. Si on a une recherche spécifique (plus de 2 caractères), faire aussi le scraping
-      if (query && query.trim().length >= 2) {
-        console.log(`Lancement du scraping ordomedic.be pour: "${query}"`);
-        try {
-          const searchResults = await ordomedicService.searchDoctors(query);
-          const scrapedDoctors = searchResults.doctors;
-          console.log(`Trouvé ${scrapedDoctors.length} médecins via scraping ordomedic.be`);
-          
-          if (scrapedDoctors.length > 0) {
-            results.push(...scrapedDoctors);
-          }
-        } catch (scrapingError) {
-          console.error('Erreur lors du scraping:', scrapingError);
-          // Ne pas bloquer si le scraping échoue
-        }
-      }
-
-      // 3. Filtrer les résultats locaux si on a une query
-      let filteredResults = results;
-      if (query && query.trim().length > 0) {
-        const queryLower = query.toLowerCase();
-        filteredResults = results.filter(doctor => 
-          doctor.first_name.toLowerCase().includes(queryLower) ||
-          doctor.last_name.toLowerCase().includes(queryLower) ||
-          doctor.specialty?.toLowerCase().includes(queryLower) ||
-          doctor.city?.toLowerCase().includes(queryLower) ||
-          doctor.inami_number?.toLowerCase().includes(queryLower)
-        );
-      }
-
-      // 4. Éliminer les doublons basés sur nom/prénom et INAMI si disponible
-      const uniqueDoctors = filteredResults.filter((doctor, index, self) => 
-        index === self.findIndex(d => {
-          const sameNameAndFirstName = 
-            d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
-            d.last_name.toLowerCase() === doctor.last_name.toLowerCase();
-          
-          // Si les deux ont un numéro INAMI, les comparer
-          if (d.inami_number && doctor.inami_number) {
-            return sameNameAndFirstName && d.inami_number === doctor.inami_number;
-          }
-          
-          // Sinon, juste comparer nom/prénom
-          return sameNameAndFirstName;
-        })
-      );
-
-      // 5. Trier par pertinence puis par nom
-      const sortedDoctors = uniqueDoctors.sort((a, b) => {
-        // Médecins de la base locale en premier
-        const aIsLocal = a.source === 'Base locale';
-        const bIsLocal = b.source === 'Base locale';
-        if (aIsLocal && !bIsLocal) return -1;
-        if (!aIsLocal && bIsLocal) return 1;
-
-        // Correspondance exacte en premier si on a une query
-        if (query && query.trim().length > 0) {
-          const aExactMatch = `${a.first_name} ${a.last_name}`.toLowerCase() === query.toLowerCase();
-          const bExactMatch = `${b.first_name} ${b.last_name}`.toLowerCase() === query.toLowerCase();
-          if (aExactMatch && !bExactMatch) return -1;
-          if (!aExactMatch && bExactMatch) return 1;
-        }
-
-        // Médecins avec spécialité en premier
-        if (a.specialty && !b.specialty) return -1;
-        if (!a.specialty && b.specialty) return 1;
-
-        // Ordre alphabétique
-        return a.last_name.localeCompare(b.last_name);
-      });
-
+      const localDoctors = await searchLocalDoctors();
+      
+      // 2. Si on a une recherche spécifique, faire aussi le scraping
+      const externalDoctors = await searchExternalDoctors(query);
+      
+      // 3. Combiner les résultats
+      const allDoctors = [...localDoctors, ...externalDoctors];
+      
+      // 4. Filtrer les résultats locaux si on a une query
+      const filteredDoctors = filterLocalDoctors(allDoctors, query);
+      
+      // 5. Éliminer les doublons
+      const uniqueDoctors = removeDuplicateDoctors(filteredDoctors);
+      
+      // 6. Trier par pertinence puis par nom
+      const sortedDoctors = sortDoctors(uniqueDoctors, query);
+      
       console.log(`Résultats finaux: ${sortedDoctors.length} médecins trouvés`);
       return sortedDoctors.slice(0, 25); // Limiter à 25 résultats
     } catch (error) {
       console.error('Erreur lors de la recherche complète:', error);
-      return results; // Retourner ce qu'on a pu récupérer
+      return [];
     }
   },
 
-  getById: async (id: string): Promise<Doctor | null> => {
-    // Si l'ID commence par un préfixe externe, c'est un médecin d'une source externe
-    if (id.startsWith('ordo_') || id.startsWith('doctoralia_') || 
-        id.startsWith('doctoranytime_') || id.startsWith('qare_') || 
-        id.startsWith('specialist_')) {
-      // Rechercher dans les sources externes
-      const searchResults = await ordomedicService.searchDoctors('');
-      const externalDoctors = searchResults.doctors;
-      return externalDoctors.find(d => d.id === id) || null;
-    }
-
-    // Sinon, rechercher dans Supabase
-    const { data, error } = await supabase
-      .from('doctors')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
-      throw error;
-    }
-
-    return {
-      id: data.id,
-      inami_number: data.inami_number,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      specialty: data.specialty,
-      address: data.address,
-      city: data.city,
-      postal_code: data.postal_code,
-      phone: data.phone,
-      email: data.email,
-      source: 'Base locale',
-      is_active: data.is_active,
-      created_at: new Date(data.created_at),
-      updated_at: new Date(data.updated_at),
-    };
-  },
-
-  create: async (doctor: Omit<Doctor, "id" | "created_at" | "updated_at">): Promise<Doctor> => {
-    console.log("Creating doctor with data:", doctor);
-    
-    const { data, error } = await supabase
-      .from('doctors')
-      .insert({
-        inami_number: doctor.inami_number || null,
-        first_name: doctor.first_name,
-        last_name: doctor.last_name,
-        specialty: doctor.specialty || null,
-        address: doctor.address || null,
-        city: doctor.city || null,
-        postal_code: doctor.postal_code || null,
-        phone: doctor.phone || null,
-        email: doctor.email || null,
-        is_active: doctor.is_active,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating doctor:", error);
-      throw error;
-    }
-
-    console.log("Doctor created successfully:", data);
-
-    return {
-      id: data.id,
-      inami_number: data.inami_number,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      specialty: data.specialty,
-      address: data.address,
-      city: data.city,
-      postal_code: data.postal_code,
-      phone: data.phone,
-      email: data.email,
-      source: 'Base locale',
-      is_active: data.is_active,
-      created_at: new Date(data.created_at),
-      updated_at: new Date(data.updated_at),
-    };
-  }
+  getById: getDoctorById,
+  create: createDoctor
 };
