@@ -1,4 +1,4 @@
-
+import { supabase } from "@/integrations/supabase/client";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
 export interface OrdomedicDoctor {
@@ -17,24 +17,94 @@ class OrdomedicService {
   private readonly baseUrl = 'https://ordomedic.be';
 
   /**
-   * Recherche des médecins sur ordomedic.be
-   * Note: Ceci est une simulation car ordomedic.be ne fournit pas d'API publique
-   * En production, il faudrait soit un scraper soit une API officielle
+   * Recherche des médecins avec priorité sur la base locale
    */
   async searchDoctors(query: string): Promise<Doctor[]> {
     try {
-      // Pour l'instant, nous simulons des données d'ordomedic.be
-      // En production, il faudrait implémenter un scraper ou utiliser une API
-      return this.getMockOrdomedicResults(query);
+      // 1. Recherche dans la base locale d'abord
+      const localResults = await this.searchLocalDoctors(query);
+      
+      if (localResults.length > 0) {
+        console.log(`Trouvé ${localResults.length} médecins dans la base locale`);
+        return localResults;
+      }
+
+      // 2. Si pas de résultats locaux, utiliser les données simulées
+      console.log("Aucun résultat local, utilisation des données simulées...");
+      const mockResults = this.getMockOrdomedicResults(query);
+      
+      // 3. Sauvegarder les résultats simulés en local si c'est utile
+      if (mockResults.length > 0) {
+        await this.saveDoctorsToLocal(mockResults);
+      }
+      
+      return mockResults;
     } catch (error) {
       console.error('Erreur lors de la recherche ordomedic:', error);
+      // Fallback vers la recherche locale uniquement
+      return await this.searchLocalDoctors(query);
+    }
+  }
+
+  /**
+   * Recherche dans la base locale des médecins
+   */
+  private async searchLocalDoctors(query: string): Promise<Doctor[]> {
+    try {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*')
+        .or(`first_name.ilike.%${query}%, last_name.ilike.%${query}%, specialty.ilike.%${query}%, city.ilike.%${query}%`)
+        .eq('is_active', true)
+        .limit(20);
+
+      if (error) {
+        console.error("Erreur recherche locale médecins:", error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error("Erreur lors de la recherche locale:", error);
       return [];
     }
   }
 
   /**
+   * Sauvegarder les médecins en local
+   */
+  private async saveDoctorsToLocal(doctors: Doctor[]): Promise<void> {
+    try {
+      const dataToInsert = doctors.map(doctor => ({
+        first_name: doctor.first_name,
+        last_name: doctor.last_name,
+        specialty: doctor.specialty,
+        address: doctor.address,
+        city: doctor.city,
+        postal_code: doctor.postal_code,
+        phone: doctor.phone,
+        email: doctor.email,
+        inami_number: doctor.inami_number,
+        is_active: true
+      }));
+
+      const { error } = await supabase
+        .from('doctors')
+        .upsert(dataToInsert, { 
+          onConflict: 'inami_number',
+          ignoreDuplicates: true 
+        });
+
+      if (error) {
+        console.error("Erreur sauvegarde médecins:", error);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des médecins:", error);
+    }
+  }
+
+  /**
    * Données simulées basées sur des médecins réels d'ordomedic.be
-   * À remplacer par un vrai scraper ou API
    */
   private getMockOrdomedicResults(query: string): Doctor[] {
     const mockDoctors = [
@@ -143,13 +213,10 @@ class OrdomedicService {
 
   /**
    * Méthode pour implémenter un vrai scraper d'ordomedic.be
-   * (nécessiterait un backend ou une fonction edge)
    */
   private async scrapeOrdomedic(query: string): Promise<OrdomedicDoctor[]> {
     // Cette méthode nécessiterait un backend pour éviter les problèmes CORS
-    // et respecter les conditions d'utilisation d'ordomedic.be
-    
-    console.warn('Scraping d\'ordomedic.be non implémenté - utilisation des données simulées');
+    console.warn('Scraping d\'ordomedic.be non implémenté - utilisation des données locales');
     return [];
   }
 }

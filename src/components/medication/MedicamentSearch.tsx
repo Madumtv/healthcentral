@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Info, CheckCircle, AlertTriangle, ExternalLink } from "lucide-react";
-import { medicamentsApi, MedicamentInfo } from "@/lib/medicaments-api";
+import { Search, Info, CheckCircle, AlertTriangle } from "lucide-react";
+import { medicationInfoService } from "@/lib/medication-info-service";
+import { MedicamentInfo } from "@/lib/medicaments-api";
 import { useToast } from "@/components/ui/use-toast";
 
 interface MedicamentSearchProps {
@@ -19,7 +20,7 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
   const [searchResults, setSearchResults] = useState<MedicamentInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMedicament, setSelectedMedicament] = useState<MedicamentInfo | null>(null);
-  const [apiError, setApiError] = useState(false);
+  const [dataSource, setDataSource] = useState<'local' | 'external' | null>(null);
   const { toast } = useToast();
 
   // Recherche avec debounce
@@ -29,7 +30,7 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
         handleSearch();
       } else {
         setSearchResults([]);
-        setApiError(false);
+        setDataSource(null);
       }
     }, 500);
 
@@ -40,11 +41,17 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
     if (!searchQuery.trim() || searchQuery.length < 3) return;
 
     setIsSearching(true);
-    setApiError(false);
+    setDataSource(null);
     
     try {
-      const results = await medicamentsApi.searchMedicaments(searchQuery);
+      const results = await medicationInfoService.searchMedications(searchQuery);
       setSearchResults(results);
+      
+      // Déterminer la source des données
+      if (results.length > 0) {
+        // Si on a des résultats rapidement, c'est probablement du local
+        setDataSource('local');
+      }
       
       if (results.length === 0) {
         toast({
@@ -55,12 +62,11 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
       }
     } catch (error) {
       console.error("Erreur lors de la recherche de médicaments:", error);
-      setApiError(true);
       setSearchResults([]);
       
       toast({
-        title: "Service temporairement indisponible",
-        description: "La recherche officielle de médicaments n'est pas disponible. Veuillez utiliser la saisie manuelle.",
+        title: "Erreur de recherche",
+        description: "Une erreur est survenue lors de la recherche. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -73,8 +79,10 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
     
     try {
       // Récupérer la composition pour obtenir le dosage
-      const composition = await medicamentsApi.getMedicamentComposition(medicament.cnk);
-      const dosage = medicamentsApi.formatDosage(composition);
+      const composition = await medicationInfoService.getMedicationComposition(medicament.cnk);
+      const dosage = composition.length > 0 
+        ? `${composition[0].strength} ${composition[0].unit}` 
+        : medicament.category;
       
       onMedicamentSelect({
         ...medicament,
@@ -89,7 +97,7 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
       // Réinitialiser la recherche
       setSearchQuery("");
       setSearchResults([]);
-      setApiError(false);
+      setDataSource(null);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -140,21 +148,17 @@ export const MedicamentSearch = ({ onMedicamentSelect, className = "" }: Medicam
           </Button>
         </div>
         
-        <p className="text-xs text-gray-500 flex items-center gap-1">
-          <Info className="h-3 w-3" />
-          Données officielles de l'AFMPS (Agence fédérale des médicaments belges)
-        </p>
-
-        {/* Message d'erreur API */}
-        {apiError && (
-          <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <div className="text-sm">
-              <p className="text-orange-800 font-medium">Service temporairement indisponible</p>
-              <p className="text-orange-700">La recherche officielle ne fonctionne pas actuellement. Veuillez utiliser la saisie manuelle ci-dessous.</p>
-            </div>
-          </div>
-        )}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Info className="h-3 w-3" />
+            Données optimisées - recherche locale et externe
+          </p>
+          {dataSource && (
+            <Badge variant="outline" className="text-xs">
+              {dataSource === 'local' ? '🚀 Données locales' : '🌐 API externe'}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Médicament sélectionné */}

@@ -57,6 +57,41 @@ export type Database = {
         }
         Relationships: []
       }
+      medication_composition: {
+        Row: {
+          active_substance: string
+          cnk: string
+          created_at: string
+          id: string
+          strength: string | null
+          unit: string | null
+        }
+        Insert: {
+          active_substance: string
+          cnk: string
+          created_at?: string
+          id?: string
+          strength?: string | null
+          unit?: string | null
+        }
+        Update: {
+          active_substance?: string
+          cnk?: string
+          created_at?: string
+          id?: string
+          strength?: string | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_composition_cnk_fkey"
+            columns: ["cnk"]
+            isOneToOne: false
+            referencedRelation: "medication_info"
+            referencedColumns: ["cnk"]
+          },
+        ]
+      }
       medication_doses: {
         Row: {
           created_at: string
@@ -101,6 +136,104 @@ export type Database = {
           },
         ]
       }
+      medication_info: {
+        Row: {
+          atc_code: string | null
+          category: string | null
+          cnk: string
+          company: string | null
+          created_at: string
+          delivery_status: string | null
+          id: string
+          name: string
+          pack_size: string | null
+          prescription_type: string | null
+          public_price: number | null
+          reimbursement_code: string | null
+          reimbursement_rate: string | null
+          updated_at: string
+        }
+        Insert: {
+          atc_code?: string | null
+          category?: string | null
+          cnk: string
+          company?: string | null
+          created_at?: string
+          delivery_status?: string | null
+          id?: string
+          name: string
+          pack_size?: string | null
+          prescription_type?: string | null
+          public_price?: number | null
+          reimbursement_code?: string | null
+          reimbursement_rate?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atc_code?: string | null
+          category?: string | null
+          cnk?: string
+          company?: string | null
+          created_at?: string
+          delivery_status?: string | null
+          id?: string
+          name?: string
+          pack_size?: string | null
+          prescription_type?: string | null
+          public_price?: number | null
+          reimbursement_code?: string | null
+          reimbursement_rate?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      medication_presentations: {
+        Row: {
+          cnk: string
+          created_at: string
+          delivery_status: string | null
+          id: string
+          name: string
+          pack_size: string | null
+          presentation_cnk: string
+          public_price: number | null
+          reimbursement_code: string | null
+          reimbursement_rate: string | null
+        }
+        Insert: {
+          cnk: string
+          created_at?: string
+          delivery_status?: string | null
+          id?: string
+          name: string
+          pack_size?: string | null
+          presentation_cnk: string
+          public_price?: number | null
+          reimbursement_code?: string | null
+          reimbursement_rate?: string | null
+        }
+        Update: {
+          cnk?: string
+          created_at?: string
+          delivery_status?: string | null
+          id?: string
+          name?: string
+          pack_size?: string | null
+          presentation_cnk?: string
+          public_price?: number | null
+          reimbursement_code?: string | null
+          reimbursement_rate?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_presentations_cnk_fkey"
+            columns: ["cnk"]
+            isOneToOne: false
+            referencedRelation: "medication_info"
+            referencedColumns: ["cnk"]
+          },
+        ]
+      }
       medications: {
         Row: {
           created_at: string
@@ -110,6 +243,7 @@ export type Database = {
           dosage: string
           id: string
           info_link: string | null
+          medication_info_cnk: string | null
           name: string
           notes: string | null
           prescribing_doctor: string | null
@@ -125,6 +259,7 @@ export type Database = {
           dosage: string
           id?: string
           info_link?: string | null
+          medication_info_cnk?: string | null
           name: string
           notes?: string | null
           prescribing_doctor?: string | null
@@ -140,6 +275,7 @@ export type Database = {
           dosage?: string
           id?: string
           info_link?: string | null
+          medication_info_cnk?: string | null
           name?: string
           notes?: string | null
           prescribing_doctor?: string | null
@@ -154,6 +290,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "doctors"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medications_medication_info_cnk_fkey"
+            columns: ["medication_info_cnk"]
+            isOneToOne: false
+            referencedRelation: "medication_info"
+            referencedColumns: ["cnk"]
           },
         ]
       }
