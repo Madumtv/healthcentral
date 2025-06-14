@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
 import { ordomedicService } from "@/lib/ordomedic-service";
@@ -103,29 +102,35 @@ export const useDoctorSearch = () => {
     }
   }, [searchQuery, toast]);
 
-  // Recherche automatique étendue (simulation Wikipedia/Google)
+  // Recherche automatique étendue améliorée (simulation Wikipedia/Google)
   const performAutomaticExtendedSearch = async (query: string): Promise<Doctor[]> => {
     // Simuler une latence de recherche
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Générer des résultats basés sur la requête
-    const words = query.trim().split(/\s+/);
+    const trimmedQuery = query.trim();
     const autoResults: Doctor[] = [];
     
-    if (words.length >= 2) {
-      const firstName = words[0];
-      const lastName = words.slice(1).join(' ');
-      
+    // Nettoyer et analyser la requête
+    const cleanQuery = trimmedQuery.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '').trim();
+    const words = cleanQuery.split(/[\s-]+/).filter(word => word.length > 0);
+    
+    if (words.length === 0) {
+      return autoResults;
+    }
+    
+    // Cas 1: Un seul mot (probablement nom de famille ou prénom)
+    if (words.length === 1) {
+      const singleWord = words[0];
       autoResults.push({
-        id: `auto_wiki_${Date.now()}`,
-        first_name: firstName,
-        last_name: lastName,
+        id: `auto_single_${Date.now()}`,
+        first_name: 'Docteur',
+        last_name: singleWord,
         specialty: 'Médecine générale',
         city: 'Belgique',
-        postal_code: '0000',
+        postal_code: '1000',
         address: 'Trouvé via recherche automatique',
         phone: 'À vérifier',
-        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@auto.be`,
+        email: `${singleWord.toLowerCase()}@auto-search.be`,
         source: 'Recherche automatique (Wikipedia/Google)',
         is_active: true,
         created_at: new Date(),
@@ -133,6 +138,51 @@ export const useDoctorSearch = () => {
       });
     }
     
+    // Cas 2: Deux mots ou plus (prénom + nom)
+    if (words.length >= 2) {
+      const firstName = words[0];
+      const lastName = words.slice(1).join(' ');
+      
+      autoResults.push({
+        id: `auto_full_${Date.now()}`,
+        first_name: firstName,
+        last_name: lastName,
+        specialty: 'Médecine générale',
+        city: 'Belgique',
+        postal_code: '1000',
+        address: 'Trouvé via recherche automatique',
+        phone: 'À vérifier',
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase().replace(/\s+/g, '.')}@auto-search.be`,
+        source: 'Recherche automatique (Wikipedia/Google)',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+    }
+    
+    // Cas 3: Générer une variante avec spécialité différente
+    if (cleanQuery.length >= 4) {
+      const specialties = ['Cardiologie', 'Dermatologie', 'Pédiatrie', 'Neurologie', 'Gynécologie'];
+      const randomSpecialty = specialties[Math.floor(Math.random() * specialties.length)];
+      
+      autoResults.push({
+        id: `auto_spec_${Date.now()}`,
+        first_name: words[0] || 'Dr',
+        last_name: words.slice(1).join(' ') || cleanQuery,
+        specialty: randomSpecialty,
+        city: 'Bruxelles',
+        postal_code: '1000',
+        address: 'Cabinet médical - Recherche automatique',
+        phone: '02/XXX.XX.XX',
+        email: `${cleanQuery.toLowerCase().replace(/\s+/g, '.')}@specialiste.be`,
+        source: 'Recherche automatique (Sites spécialisés)',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+    }
+    
+    console.log(`✅ Recherche automatique: ${autoResults.length} résultats générés pour "${cleanQuery}"`);
     return autoResults;
   };
 
