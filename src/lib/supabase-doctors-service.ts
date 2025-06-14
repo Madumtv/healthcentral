@@ -13,6 +13,7 @@ export interface Doctor {
   postal_code?: string;
   phone?: string;
   email?: string;
+  source?: string;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -24,8 +25,8 @@ export const supabaseDoctorsService = {
     if (!query || query.trim().length < 2) {
       // Afficher quelques médecins populaires sans recherche
       try {
-        const ordomedicDoctors = await ordomedicService.searchDoctors('');
-        return ordomedicDoctors.slice(0, 8);
+        const searchResults = await ordomedicService.searchDoctors('');
+        return searchResults.doctors.slice(0, 8);
       } catch (error) {
         console.error('Erreur lors du chargement des médecins populaires:', error);
         return [];
@@ -59,6 +60,7 @@ export const supabaseDoctorsService = {
           postal_code: doctor.postal_code,
           phone: doctor.phone,
           email: doctor.email,
+          source: 'Base locale',
           is_active: doctor.is_active,
           created_at: new Date(doctor.created_at),
           updated_at: new Date(doctor.updated_at),
@@ -69,7 +71,8 @@ export const supabaseDoctorsService = {
 
       // 2. Scraping en temps réel d'ordomedic.be (priorité élevée)
       console.log(`Lancement du scraping ordomedic.be pour: "${query}"`);
-      const scrapedDoctors = await ordomedicService.searchDoctors(query);
+      const searchResults = await ordomedicService.searchDoctors(query);
+      const scrapedDoctors = searchResults.doctors;
       console.log(`Trouvé ${scrapedDoctors.length} médecins via scraping ordomedic.be`);
       
       if (scrapedDoctors.length > 0) {
@@ -121,8 +124,8 @@ export const supabaseDoctorsService = {
       console.error('Erreur lors de la recherche hybride complète:', error);
       // En cas d'erreur, essayer au moins la recherche via ordomedic
       try {
-        const fallbackDoctors = await ordomedicService.searchDoctors(query);
-        return fallbackDoctors.slice(0, 15);
+        const fallbackResults = await ordomedicService.searchDoctors(query);
+        return fallbackResults.doctors.slice(0, 15);
       } catch (fallbackError) {
         console.error('Erreur de secours:', fallbackError);
         return results; // Retourner ce qu'on a pu récupérer
@@ -137,7 +140,8 @@ export const supabaseDoctorsService = {
         id.startsWith('doctoranytime_') || id.startsWith('qare_') || 
         id.startsWith('specialist_')) {
       // Rechercher dans les sources externes
-      const externalDoctors = await ordomedicService.searchDoctors('');
+      const searchResults = await ordomedicService.searchDoctors('');
+      const externalDoctors = searchResults.doctors;
       return externalDoctors.find(d => d.id === id) || null;
     }
 
@@ -164,6 +168,7 @@ export const supabaseDoctorsService = {
       postal_code: data.postal_code,
       phone: data.phone,
       email: data.email,
+      source: 'Base locale',
       is_active: data.is_active,
       created_at: new Date(data.created_at),
       updated_at: new Date(data.updated_at),
@@ -201,6 +206,7 @@ export const supabaseDoctorsService = {
       postal_code: data.postal_code,
       phone: data.phone,
       email: data.email,
+      source: 'Base locale',
       is_active: data.is_active,
       created_at: new Date(data.created_at),
       updated_at: new Date(data.updated_at),

@@ -35,14 +35,14 @@ export const useDoctorSearch = () => {
       console.log(`🔍 Recherche hybride pour: "${trimmedQuery}"`);
       
       // Utiliser le service hybride qui gère local + suggestions
-      const { doctors, suggestions: newSuggestions } = await ordomedicService.searchDoctors(trimmedQuery);
+      const searchResponse = await ordomedicService.searchDoctors(trimmedQuery);
       
-      console.log(`📋 Résultats reçus: ${doctors.length} médecins, ${newSuggestions.length} suggestions`);
+      console.log(`📋 Résultats reçus: ${searchResponse.doctors.length} médecins, ${searchResponse.suggestions.length} suggestions`);
       
-      setSearchResults(doctors);
-      setSuggestions(newSuggestions);
+      setSearchResults(searchResponse.doctors);
+      setSuggestions(searchResponse.suggestions);
       
-      if (doctors.length === 0 && newSuggestions.length === 0) {
+      if (searchResponse.doctors.length === 0 && searchResponse.suggestions.length === 0) {
         console.log(`⚠️ Aucun résultat pour "${trimmedQuery}"`);
       }
     } catch (error) {
