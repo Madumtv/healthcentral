@@ -7,26 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
-import { LockKeyhole } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { useState } from "react";
 
 const passwordChangeSchema = z.object({
-  currentPassword: z.string().min(6, {
-    message: "Le mot de passe actuel doit contenir au moins 6 caractères.",
-  }),
   newPassword: z.string().min(6, {
-    message: "Le nouveau mot de passe doit contenir au moins 6 caractères.",
+    message: "Le mot de passe doit contenir au moins 6 caractères.",
   }),
-  confirmNewPassword: z.string().min(6, {
-    message: "La confirmation du mot de passe doit contenir au moins 6 caractères.",
-  }),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas.",
-  path: ["confirmNewPassword"],
+  path: ["confirmPassword"],
 });
 
-type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
+type PasswordChangeValues = z.infer<typeof passwordChangeSchema>;
 
 interface PasswordChangeFormProps {
   user: User | null;
@@ -34,49 +28,31 @@ interface PasswordChangeFormProps {
 
 export function PasswordChangeForm({ user }: PasswordChangeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<PasswordChangeFormValues>({
+  
+  const form = useForm<PasswordChangeValues>({
     resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
-      currentPassword: "",
       newPassword: "",
-      confirmNewPassword: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (values: PasswordChangeFormValues) => {
-    if (!user) {
-      toast.error("Vous devez être connecté pour changer votre mot de passe.");
-      return;
-    }
+  const onSubmit = async (values: PasswordChangeValues) => {
+    if (!user) return;
 
     setIsSubmitting(true);
-
     try {
-      // Vérifier le mot de passe actuel en essayant de se connecter
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: values.currentPassword,
-      });
-
-      if (signInError) {
-        toast.error("Le mot de passe actuel est incorrect.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Changer le mot de passe
       const { error } = await supabase.auth.updateUser({
-        password: values.newPassword,
+        password: values.newPassword
       });
 
       if (error) throw error;
       
-      toast.success("Mot de passe modifié avec succès !");
       form.reset();
-    } catch (error: any) {
-      console.error("Erreur lors du changement de mot de passe:", error);
-      toast.error(error.message || "La modification du mot de passe a échoué.");
+      toast.success("Mot de passe mis à jour avec succès !");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mot de passe:", error);
+      toast.error("La mise à jour du mot de passe a échoué.");
     } finally {
       setIsSubmitting(false);
     }
@@ -87,40 +63,26 @@ export function PasswordChangeForm({ user }: PasswordChangeFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="currentPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mot de passe actuel</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
           name="newPassword"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nouveau mot de passe</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••" {...field} />
+                <Input type="password" placeholder="Entrez votre nouveau mot de passe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
-          name="confirmNewPassword"
+          name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
+              <FormLabel>Confirmer le mot de passe</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••" {...field} />
+                <Input type="password" placeholder="Confirmez votre nouveau mot de passe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -128,8 +90,7 @@ export function PasswordChangeForm({ user }: PasswordChangeFormProps) {
         />
 
         <Button type="submit" disabled={isSubmitting}>
-          <LockKeyhole className="mr-2 h-4 w-4" />
-          Changer le mot de passe
+          {isSubmitting ? "Mise à jour..." : "Changer le mot de passe"}
         </Button>
       </form>
     </Form>
