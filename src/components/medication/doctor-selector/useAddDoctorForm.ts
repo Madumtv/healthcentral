@@ -97,16 +97,17 @@ export const useAddDoctorForm = ({ onDoctorAdded, initialSearchQuery }: UseAddDo
     try {
       console.log("Creating doctor with form data:", formData);
       
+      // Corriger la transformation des données - utiliser null au lieu d'undefined pour les champs vides
       const doctorData = {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
-        specialty: formData.specialty.trim() || undefined,
-        address: formData.address.trim() || undefined,
-        city: formData.city.trim() || undefined,
-        postal_code: formData.postalCode.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined,
-        inami_number: formData.inamiNumber.trim() || undefined,
+        specialty: formData.specialty.trim() || null,
+        address: formData.address.trim() || null,
+        city: formData.city.trim() || null,
+        postal_code: formData.postalCode.trim() || null,
+        phone: formData.phone.trim() || null,
+        email: formData.email.trim() || null,
+        inami_number: formData.inamiNumber.trim() || null,
         is_active: true
       };
 
