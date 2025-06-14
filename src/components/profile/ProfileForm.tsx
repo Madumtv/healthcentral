@@ -14,6 +14,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -33,6 +34,8 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: initialValues,
@@ -42,13 +45,14 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
 
+    setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ 
           name: values.name, 
-          first_name: values.firstName,
-          last_name: values.lastName,
+          first_name: values.firstName || null,
+          last_name: values.lastName || null,
           birth_date: values.birthDate ? values.birthDate.toISOString() : null,
           updated_at: new Date().toISOString() 
         })
@@ -61,6 +65,8 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
       toast.error("La mise à jour du profil a échoué.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,7 +174,9 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
           </FormItem>
         )}
 
-        <Button type="submit">Enregistrer les modifications</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+        </Button>
       </form>
     </Form>
   );

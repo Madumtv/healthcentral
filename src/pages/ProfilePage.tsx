@@ -17,6 +17,7 @@ interface Profile {
   last_name?: string;
   birth_date?: string;
   email: string;
+  avatar_url?: string;
 }
 
 const ProfilePage = () => {
@@ -65,6 +66,10 @@ const ProfilePage = () => {
     } : null);
   };
 
+  const handleAvatarUpdate = (avatarUrl: string) => {
+    setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -82,10 +87,13 @@ const ProfilePage = () => {
       <Navbar />
       <div className="container flex-grow py-10">
         <ProfileHeader 
+          user={user}
           name={profile?.name} 
           firstName={profile?.first_name}
           lastName={profile?.last_name}
-          email={user?.email || null} 
+          email={user?.email || null}
+          avatarUrl={profile?.avatar_url}
+          onAvatarUpdate={handleAvatarUpdate}
         />
         
         <ProfileTabs 
