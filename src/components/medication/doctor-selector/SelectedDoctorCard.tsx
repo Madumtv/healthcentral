@@ -21,7 +21,9 @@ export const SelectedDoctorCard = ({ doctorText, doctorId, onClear }: SelectedDo
       if (doctorId) {
         setIsLoading(true);
         try {
+          console.log("Récupération des détails pour le médecin ID:", doctorId);
           const doctor = await supabaseDoctorsService.getById(doctorId);
+          console.log("Détails du médecin récupérés:", doctor);
           setDoctorDetails(doctor);
         } catch (error) {
           console.error("Erreur lors de la récupération des détails du médecin:", error);
@@ -68,7 +70,8 @@ export const SelectedDoctorCard = ({ doctorText, doctorId, onClear }: SelectedDo
                   <div className="flex items-center gap-2">
                     <MapPin className="h-3 w-3" />
                     <span>
-                      {doctorDetails.address && `${doctorDetails.address}, `}
+                      {doctorDetails.address && `${doctorDetails.address}`}
+                      {doctorDetails.address && (doctorDetails.postal_code || doctorDetails.city) && ", "}
                       {doctorDetails.postal_code && `${doctorDetails.postal_code} `}
                       {doctorDetails.city}
                     </span>

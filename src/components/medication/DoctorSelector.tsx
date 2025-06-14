@@ -49,7 +49,6 @@ export const DoctorSelector = ({
 
   const handleManualSubmit = () => {
     if (searchQuery.trim()) {
-      // Afficher le formulaire d'ajout avec le nom pré-rempli
       setShowAddForm(true);
     }
   };
@@ -62,6 +61,7 @@ export const DoctorSelector = ({
 
   const handleCancelAddForm = () => {
     setShowAddForm(false);
+    setSearchQuery("");
   };
 
   const handleClearSelection = () => {
@@ -71,11 +71,13 @@ export const DoctorSelector = ({
   // Si on affiche le formulaire d'ajout
   if (showAddForm) {
     return (
-      <AddDoctorForm
-        onDoctorAdded={handleDoctorAdded}
-        onCancel={handleCancelAddForm}
-        initialSearchQuery={searchQuery}
-      />
+      <div className="space-y-4">
+        <AddDoctorForm
+          onDoctorAdded={handleDoctorAdded}
+          onCancel={handleCancelAddForm}
+          initialSearchQuery={searchQuery}
+        />
+      </div>
     );
   }
 

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
+import { ArrowLeft } from "lucide-react";
 
 interface AddDoctorFormProps {
   onDoctorAdded: (doctor: Doctor) => void;
@@ -16,9 +17,31 @@ interface AddDoctorFormProps {
 export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: AddDoctorFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Extraire prénom et nom du searchQuery initial si possible
+  const parseInitialName = (query: string) => {
+    if (!query) return { firstName: "", lastName: "" };
+    
+    // Supprimer "Dr" ou "Dr." du début
+    const cleanQuery = query.replace(/^(Dr\.?|Docteur)\s*/i, "").trim();
+    
+    // Séparer par espace - prendre le premier mot comme prénom, le reste comme nom
+    const parts = cleanQuery.split(/\s+/);
+    if (parts.length === 1) {
+      return { firstName: "", lastName: parts[0] };
+    } else {
+      return { 
+        firstName: parts[0], 
+        lastName: parts.slice(1).join(" ") 
+      };
+    }
+  };
+
+  const { firstName: initialFirstName, lastName: initialLastName } = parseInitialName(initialSearchQuery || "");
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: initialSearchQuery || "",
+    firstName: initialFirstName,
+    lastName: initialLastName,
     specialty: "",
     address: "",
     city: "",
@@ -48,6 +71,8 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
     setIsSubmitting(true);
     
     try {
+      console.log("Création du médecin avec les données:", formData);
+      
       const newDoctor = await supabaseDoctorsService.create({
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
@@ -61,6 +86,8 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
         is_active: true
       });
 
+      console.log("Médecin créé avec succès:", newDoctor);
+
       toast({
         title: "Succès",
         description: `Dr ${newDoctor.first_name} ${newDoctor.last_name} a été ajouté avec succès.`,
@@ -71,7 +98,7 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
       console.error("Erreur lors de l'ajout du médecin:", error);
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter le médecin. Veuillez réessayer.",
+        description: error.message || "Impossible d'ajouter le médecin. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -80,9 +107,19 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Ajouter un nouveau médecin</CardTitle>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onCancel}
+            className="p-1 h-auto"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <CardTitle>Ajouter un nouveau médecin</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
