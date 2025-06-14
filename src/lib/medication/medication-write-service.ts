@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Medication } from "@/types";
 import { transformMedicationFromDatabase, transformMedicationToDatabase, transformMedicationUpdateToDatabase } from "./medication-transformer";
-import { MEDICATION_SELECT_QUERY } from "./medication-queries";
+import { MEDICATION_SELECT_QUERY_WITH_OPTIONAL_DOCTOR } from "./medication-queries";
 
 export const medicationWriteService = {
   create: async (medication: Omit<Medication, "id" | "createdAt" | "updatedAt">): Promise<Medication> => {
@@ -18,7 +18,7 @@ export const medicationWriteService = {
         ...dbData,
         user_id: user.id,
       })
-      .select(MEDICATION_SELECT_QUERY)
+      .select(MEDICATION_SELECT_QUERY_WITH_OPTIONAL_DOCTOR)
       .single();
 
     if (error) {
@@ -26,7 +26,7 @@ export const medicationWriteService = {
       throw error;
     }
 
-    console.log("Medication created successfully:", data);
+    console.log("Medication created successfully with complete data:", data);
     return transformMedicationFromDatabase(data);
   },
 
@@ -40,7 +40,7 @@ export const medicationWriteService = {
       .from('medications')
       .update(updateData)
       .eq('id', id)
-      .select(MEDICATION_SELECT_QUERY)
+      .select(MEDICATION_SELECT_QUERY_WITH_OPTIONAL_DOCTOR)
       .single();
 
     if (error) {
@@ -48,7 +48,7 @@ export const medicationWriteService = {
       throw error;
     }
 
-    console.log("Medication updated successfully with doctor data:", data);
+    console.log("Medication updated successfully with complete data:", data);
     return transformMedicationFromDatabase(data);
   },
 

@@ -1,4 +1,3 @@
-
 import { Medication } from "@/types";
 
 // Fonction pour normaliser les valeurs de time_of_day
@@ -25,8 +24,9 @@ const normalizeTimeOfDay = (timeOfDay: string[]): string[] => {
 
 export const transformMedicationFromDatabase = (dbMedication: any): Medication => {
   console.log("Transforming medication from database:", dbMedication);
+  console.log("Doctor data in transformation:", dbMedication.doctors);
   
-  return {
+  const medication: Medication = {
     id: dbMedication.id,
     name: dbMedication.name,
     description: dbMedication.description,
@@ -36,20 +36,38 @@ export const transformMedicationFromDatabase = (dbMedication: any): Medication =
     notes: dbMedication.notes,
     prescribingDoctor: dbMedication.prescribing_doctor,
     doctorId: dbMedication.doctor_id,
-    doctor: dbMedication.doctors && dbMedication.doctors !== null ? {
-      id: dbMedication.doctors.id,
-      firstName: dbMedication.doctors.first_name,
-      lastName: dbMedication.doctors.last_name,
-      specialty: dbMedication.doctors.specialty,
-      phone: dbMedication.doctors.phone,
-      email: dbMedication.doctors.email,
-      city: dbMedication.doctors.city,
-      inamiNumber: dbMedication.doctors.inami_number,
-    } : undefined,
+    doctor: undefined, // Par défaut
     infoLink: dbMedication.info_link,
     createdAt: new Date(dbMedication.created_at),
     updatedAt: new Date(dbMedication.updated_at),
   };
+
+  // Gestion des données du docteur avec logging détaillé
+  if (dbMedication.doctors) {
+    console.log("Doctor object found:", dbMedication.doctors);
+    if (typeof dbMedication.doctors === 'object' && dbMedication.doctors.id) {
+      medication.doctor = {
+        id: dbMedication.doctors.id,
+        firstName: dbMedication.doctors.first_name,
+        lastName: dbMedication.doctors.last_name,
+        specialty: dbMedication.doctors.specialty,
+        phone: dbMedication.doctors.phone,
+        email: dbMedication.doctors.email,
+        city: dbMedication.doctors.city,
+        inamiNumber: dbMedication.doctors.inami_number,
+      };
+      console.log("Doctor data transformed successfully:", medication.doctor);
+    } else {
+      console.log("Doctor object exists but no valid ID found");
+    }
+  } else if (dbMedication.doctor_id) {
+    console.log("Doctor ID exists but no doctor object found, doctor_id:", dbMedication.doctor_id);
+  } else {
+    console.log("No doctor data available for this medication");
+  }
+
+  console.log("Final transformed medication:", medication);
+  return medication;
 };
 
 export const transformMedicationToDatabase = (medication: Omit<Medication, "id" | "createdAt" | "updatedAt">) => {

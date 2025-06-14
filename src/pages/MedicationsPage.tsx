@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -66,6 +67,20 @@ const MedicationsPage = () => {
     return () => {
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Force refresh when coming back from navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      console.log("Navigation back detected, refreshing medications");
+      fetchMedications();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
