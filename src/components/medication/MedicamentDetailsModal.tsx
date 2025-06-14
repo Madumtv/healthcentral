@@ -90,8 +90,16 @@ export const MedicamentDetailsModal = ({
     return "outline";
   };
 
-  const getMedicamentDetailUrl = (cnk: string) => {
-    return `https://banquededonneesmedicaments.fagg-afmps.be/usage-humain/details/${cnk}`;
+  const getMedicamentDetailUrl = (medicamentDetails: MedicamentInfo) => {
+    // Formater le nom pour l'URL (remplacer espaces par tirets, enlever caractères spéciaux)
+    const formattedName = medicamentDetails.name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    return `https://www.pharmacie.be/Medicine/Detail/${formattedName}~${medicamentDetails.cnk}`;
   };
 
   return (
@@ -224,18 +232,18 @@ export const MedicamentDetailsModal = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(getMedicamentDetailUrl(medicamentDetails.cnk), '_blank')}
+                  onClick={() => window.open(getMedicamentDetailUrl(medicamentDetails), '_blank')}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Fiche officielle
+                  Fiche Pharmacie.be
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open('https://banquededonneesmedicaments.fagg-afmps.be/usage-humain', '_blank')}
+                  onClick={() => window.open('https://www.pharmacie.be', '_blank')}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Base AFMPS
+                  Pharmacie.be
                 </Button>
               </div>
               <Button onClick={onClose}>Fermer</Button>
