@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, Plus, User, MapPin, Phone } from "lucide-react";
+import { User } from "lucide-react";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
-import { useToast } from "@/components/ui/use-toast";
+import { useDoctorSearch } from "./doctor-selector/useDoctorSearch";
+import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
+import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
+import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
+import { DoctorSearchInput } from "./doctor-selector/DoctorSearchInput";
 
 interface DoctorSelectorProps {
   selectedDoctorId?: string;
@@ -22,13 +23,16 @@ export const DoctorSelector = ({
   onDoctorSelect, 
   className = "" 
 }: DoctorSelectorProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Doctor[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
-  const [manualDoctorText, setManualDoctorText] = useState(prescribingDoctorText || "");
-  const { toast } = useToast();
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    isSearching,
+    clearSearch
+  } = useDoctorSearch();
 
   // Load selected doctor on mount
   useEffect(() => {
@@ -43,56 +47,28 @@ export const DoctorSelector = ({
     }
   }, [selectedDoctorId]);
 
-  // Search with debounce
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.length >= 2) {
-        handleSearch();
-      } else {
-        setSearchResults([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || searchQuery.length < 2) return;
-
-    setIsSearching(true);
-    try {
-      const results = await supabaseDoctorsService.search(searchQuery);
-      setSearchResults(results);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de rechercher les médecins.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const handleSelectDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
     const doctorText = `Dr ${doctor.first_name} ${doctor.last_name}${doctor.specialty ? ` (${doctor.specialty})` : ''}`;
     onDoctorSelect(doctor.id, doctorText);
-    setSearchQuery("");
-    setSearchResults([]);
+    clearSearch();
     setShowManualInput(false);
   };
 
-  const handleManualInput = () => {
+  const handleManualInput = (doctorText: string) => {
     setSelectedDoctor(null);
-    onDoctorSelect(null, manualDoctorText);
+    onDoctorSelect(null, doctorText);
     setShowManualInput(false);
   };
 
   const handleClearSelection = () => {
     setSelectedDoctor(null);
-    setManualDoctorText("");
     onDoctorSelect(null, "");
+  };
+
+  const toggleInputMode = () => {
+    setShowManualInput(!showManualInput);
+    clearSearch();
   };
 
   return (
@@ -106,140 +82,38 @@ export const DoctorSelector = ({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setShowManualInput(!showManualInput)}
+          onClick={toggleInputMode}
           className="text-sm"
         >
           {showManualInput ? "Recherche officielle" : "Saisie manuelle"}
         </Button>
       </div>
 
-      {/* Selected doctor display */}
       {selectedDoctor && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="pt-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-green-800">
-                    Dr {selectedDoctor.first_name} {selectedDoctor.last_name}
-                  </span>
-                </div>
-                {selectedDoctor.specialty && (
-                  <Badge variant="outline" className="text-xs">
-                    {selectedDoctor.specialty}
-                  </Badge>
-                )}
-                {selectedDoctor.city && (
-                  <div className="flex items-center gap-1 text-xs text-gray-600">
-                    <MapPin className="h-3 w-3" />
-                    {selectedDoctor.city}
-                  </div>
-                )}
-                {selectedDoctor.inami_number && (
-                  <p className="text-xs text-gray-500">INAMI: {selectedDoctor.inami_number}</p>
-                )}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSelection}
-              >
-                Changer
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <SelectedDoctorCard 
+          doctor={selectedDoctor} 
+          onClear={handleClearSelection} 
+        />
       )}
 
-      {/* Manual input mode */}
       {showManualInput && !selectedDoctor && (
-        <div className="space-y-2">
-          <Input
-            value={manualDoctorText}
-            onChange={(e) => setManualDoctorText(e.target.value)}
-            placeholder="Ex: Dr Martin Dubois"
-          />
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleManualInput}
-            disabled={!manualDoctorText.trim()}
-          >
-            Confirmer
-          </Button>
-        </div>
+        <ManualDoctorInput
+          initialValue={prescribingDoctorText}
+          onConfirm={handleManualInput}
+        />
       )}
 
-      {/* Search mode */}
       {!showManualInput && !selectedDoctor && (
-        <div className="space-y-2">
-          <div className="relative">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un médecin (nom, prénom, spécialité)..."
-              className="pr-10"
-            />
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          </div>
-          
-          <p className="text-xs text-gray-500">
-            Tapez au moins 2 caractères pour rechercher dans la base de données belge
-          </p>
-        </div>
+        <DoctorSearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
       )}
 
-      {/* Search results */}
-      {searchResults.length > 0 && !selectedDoctor && (
-        <Card>
-          <CardContent className="pt-4">
-            <h4 className="font-medium mb-3">Médecins trouvés</h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {searchResults.map((doctor) => (
-                <div
-                  key={doctor.id}
-                  className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handleSelectDoctor(doctor)}
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-medium text-sm">
-                        Dr {doctor.first_name} {doctor.last_name}
-                      </h5>
-                      {doctor.specialty && (
-                        <Badge variant="outline" className="text-xs">
-                          {doctor.specialty}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-600">
-                      {doctor.city && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {doctor.city}
-                        </div>
-                      )}
-                      {doctor.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {doctor.phone}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {doctor.inami_number && (
-                      <p className="text-xs text-gray-500">INAMI: {doctor.inami_number}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <DoctorSearchResults
+        doctors={searchResults}
+        onSelectDoctor={handleSelectDoctor}
+      />
 
       {isSearching && (
         <p className="text-sm text-gray-500">Recherche en cours...</p>
