@@ -2,9 +2,9 @@
 import { DoctorSearchInput } from "./doctor-selector/DoctorSearchInput";
 import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
 import { DoctorSuggestions } from "./doctor-selector/DoctorSuggestions";
-import { OfficialSearch } from "./doctor-selector/OfficialSearch";
 import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
 import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
+import { UnifiedSearchResults } from "./doctor-selector/UnifiedSearchResults";
 import { useDoctorSearch } from "./doctor-selector/useDoctorSearch";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
@@ -24,9 +24,12 @@ export const DoctorSelector = ({
     setSearchQuery,
     searchResults,
     suggestions,
+    officialResults,
     isSearching,
+    isOfficialSearching,
     clearSearch,
-    addSuggestedDoctor
+    addSuggestedDoctor,
+    performOfficialSearch
   } = useDoctorSearch();
 
   const handleDoctorSelect = (doctor: Doctor) => {
@@ -69,29 +72,18 @@ export const DoctorSelector = ({
         onChange={setSearchQuery}
       />
 
-      {/* Résultats de recherche locale */}
-      {searchResults.length > 0 && (
-        <DoctorSearchResults
-          doctors={searchResults}
-          onSelectDoctor={handleDoctorSelect}
-        />
-      )}
-
-      {/* Suggestions de médecins externes */}
-      {suggestions.length > 0 && (
-        <DoctorSuggestions
-          suggestions={suggestions}
-          onAddDoctor={handleSuggestionAdd}
-        />
-      )}
-
-      {/* Recherche officielle étendue */}
-      {searchQuery.length >= 3 && searchResults.length === 0 && suggestions.length === 0 && (
-        <OfficialSearch
-          query={searchQuery}
-          onAddDoctor={handleSuggestionAdd}
-        />
-      )}
+      {/* Résultats unifiés */}
+      <UnifiedSearchResults
+        searchResults={searchResults}
+        suggestions={suggestions}
+        officialResults={officialResults}
+        isSearching={isSearching}
+        isOfficialSearching={isOfficialSearching}
+        searchQuery={searchQuery}
+        onSelectDoctor={handleDoctorSelect}
+        onAddDoctor={handleSuggestionAdd}
+        onOfficialSearch={performOfficialSearch}
+      />
 
       {/* Saisie manuelle */}
       <ManualDoctorInput onSubmit={handleManualDoctorSubmit} />
