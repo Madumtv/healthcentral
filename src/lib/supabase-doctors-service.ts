@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ordomedicService } from "./ordomedic-service";
 
@@ -54,16 +53,17 @@ export const supabaseDoctorsService = {
         results.push(...localDoctors);
       }
 
-      // 2. Recherche sur ordomedic.be
+      // 2. Recherche sur ordomedic.be (toujours effectuer cette recherche)
       const ordomedicDoctors = await ordomedicService.searchDoctors(query);
       results.push(...ordomedicDoctors);
 
       // 3. Éliminer les doublons et limiter les résultats
       const uniqueDoctors = results.filter((doctor, index, self) => 
         index === self.findIndex(d => 
-          d.first_name === doctor.first_name && 
-          d.last_name === doctor.last_name && 
-          d.inami_number === doctor.inami_number
+          d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
+          d.last_name.toLowerCase() === doctor.last_name.toLowerCase() && 
+          (d.inami_number === doctor.inami_number || 
+           (!d.inami_number && !doctor.inami_number))
         )
       );
 

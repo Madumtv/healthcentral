@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
@@ -30,7 +29,7 @@ class OrdomedicService {
         return localResults;
       }
 
-      // 2. Si pas de résultats locaux, utiliser les données simulées
+      // 2. Si pas de résultats locaux, utiliser les données simulées étendues
       console.log("Aucun résultat local, utilisation des données simulées...");
       const mockResults = this.getMockOrdomedicResults(query);
       
@@ -117,6 +116,21 @@ class OrdomedicService {
   private getMockOrdomedicResults(query: string): Doctor[] {
     const mockDoctors: Doctor[] = [
       {
+        id: 'ordo_audrey_loumaye',
+        first_name: 'Audrey',
+        last_name: 'LOUMAYE',
+        specialty: 'Médecine générale',
+        address: 'Rue de la Station 45',
+        city: 'Namur',
+        postal_code: '5000',
+        phone: '081/22.33.44',
+        inami_number: '11223344556',
+        email: 'audrey.loumaye@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
         id: 'ordo_1',
         first_name: 'Jean',
         last_name: 'Dupont',
@@ -126,7 +140,7 @@ class OrdomedicService {
         postal_code: '1000',
         phone: '02/123.45.67',
         inami_number: '12345678901',
-        email: '',
+        email: 'jean.dupont@ordomedic.be',
         is_active: true,
         created_at: new Date(),
         updated_at: new Date()
@@ -141,20 +155,56 @@ class OrdomedicService {
         postal_code: '1050',
         phone: '02/234.56.78',
         inami_number: '23456789012',
-        email: '',
+        email: 'marie.martin@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_3',
+        first_name: 'Pierre',
+        last_name: 'Leblanc',
+        specialty: 'Pédiatrie',
+        address: 'Place Saint-Lambert 12',
+        city: 'Liège',
+        postal_code: '4000',
+        phone: '04/345.67.89',
+        inami_number: '34567890123',
+        email: 'pierre.leblanc@ordomedic.be',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 'ordo_4',
+        first_name: 'Sophie',
+        last_name: 'Durand',
+        specialty: 'Gynécologie',
+        address: 'Chaussée de Charleroi 89',
+        city: 'Charleroi',
+        postal_code: '6000',
+        phone: '071/456.78.90',
+        inami_number: '45678901234',
+        email: 'sophie.durand@ordomedic.be',
         is_active: true,
         created_at: new Date(),
         updated_at: new Date()
       }
     ];
 
-    // Filtrer selon la requête
-    const filtered = mockDoctors.filter(doctor =>
-      doctor.first_name.toLowerCase().includes(query.toLowerCase()) ||
-      doctor.last_name.toLowerCase().includes(query.toLowerCase()) ||
-      (doctor.specialty && doctor.specialty.toLowerCase().includes(query.toLowerCase())) ||
-      (doctor.city && doctor.city.toLowerCase().includes(query.toLowerCase()))
-    );
+    // Filtrer selon la requête avec recherche plus flexible
+    const filtered = mockDoctors.filter(doctor => {
+      const queryLower = query.toLowerCase();
+      const fullName = `${doctor.first_name} ${doctor.last_name}`.toLowerCase();
+      const reverseName = `${doctor.last_name} ${doctor.first_name}`.toLowerCase();
+      
+      return fullName.includes(queryLower) ||
+             reverseName.includes(queryLower) ||
+             doctor.first_name.toLowerCase().includes(queryLower) ||
+             doctor.last_name.toLowerCase().includes(queryLower) ||
+             (doctor.specialty && doctor.specialty.toLowerCase().includes(queryLower)) ||
+             (doctor.city && doctor.city.toLowerCase().includes(queryLower));
+    });
 
     return filtered;
   }
