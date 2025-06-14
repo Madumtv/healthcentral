@@ -43,23 +43,39 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   });
 
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
+    if (!user) {
+      console.error("Aucun utilisateur connecté");
+      toast.error("Aucun utilisateur connecté");
+      return;
+    }
+
+    console.log("Tentative de sauvegarde du profil:", values);
+    console.log("ID utilisateur:", user.id);
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          name: values.name, 
-          first_name: values.firstName || null,
-          last_name: values.lastName || null,
-          birth_date: values.birthDate ? values.birthDate.toISOString() : null,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', user.id);
+      const updateData = { 
+        name: values.name, 
+        first_name: values.firstName || null,
+        last_name: values.lastName || null,
+        birth_date: values.birthDate ? values.birthDate.toISOString() : null,
+        updated_at: new Date().toISOString() 
+      };
 
-      if (error) throw error;
+      console.log("Données à sauvegarder:", updateData);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id)
+        .select();
+
+      if (error) {
+        console.error("Erreur Supabase:", error);
+        throw error;
+      }
       
+      console.log("Profil sauvegardé avec succès:", data);
       onSuccess(values);
       toast.success("Profil mis à jour avec succès !");
     } catch (error) {
