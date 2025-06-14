@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -33,21 +32,20 @@ export const useMedicationDoses = (selectedDate: Date) => {
         setIsLoading(true);
         const doses = await createMedicationDosesForDate(selectedDate);
         
-        // Normaliser les valeurs time_of_day dans les doses si elles existent
-        const normalizedDoses = Array.isArray(doses) ? doses
-          .filter((dose): dose is Record<string, any> => {
-            return dose !== null && dose !== undefined && typeof dose === 'object';
-          })
-          .map(dose => {
-            // À ce point, TypeScript sait que dose est un objet non-null
-            if ('time_of_day' in dose && dose.time_of_day && typeof dose.time_of_day === 'string') {
-              return {
-                ...dose,
-                time_of_day: normalizeTimeOfDay(dose.time_of_day)
-              };
-            }
-            return dose;
-          }) : [];
+        // Filtrer et normaliser les doses valides
+        const validDoses = Array.isArray(doses) ? doses.filter(dose => 
+          dose && typeof dose === 'object' && dose !== null
+        ) : [];
+        
+        const normalizedDoses = validDoses.map(dose => {
+          if (dose && 'time_of_day' in dose && dose.time_of_day && typeof dose.time_of_day === 'string') {
+            return {
+              ...dose,
+              time_of_day: normalizeTimeOfDay(dose.time_of_day)
+            };
+          }
+          return dose;
+        });
         
         setMedicationDoses(normalizedDoses);
       } catch (error) {
