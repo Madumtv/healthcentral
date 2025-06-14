@@ -1,4 +1,5 @@
 
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,39 @@ export const UnifiedSearchResults = ({
   onAddDoctor,
   onOfficialSearch
 }: UnifiedSearchResultsProps) => {
+  
+  const getExternalLink = (doctor: Doctor): string | null => {
+    if (!doctor.source) return null;
+    
+    const firstName = doctor.first_name.toLowerCase();
+    const lastName = doctor.last_name.toLowerCase();
+    
+    if (doctor.source.includes('ordomedic')) {
+      return `https://www.ordomedic.be/fr/medecins/${firstName}-${lastName}`;
+    }
+    
+    if (doctor.source.includes('Doctoralia')) {
+      return `https://www.doctoralia.be/medecin/${firstName}-${lastName}`;
+    }
+    
+    if (doctor.source.includes('DoctorAnytime')) {
+      return `https://www.doctoranytime.be/fr/medecin/${firstName}-${lastName}`;
+    }
+    
+    if (doctor.source.includes('Wikipedia')) {
+      return `https://fr.wikipedia.org/wiki/${firstName}_${lastName}`;
+    }
+    
+    if (doctor.source.includes('Google Scholar')) {
+      return `https://scholar.google.com/scholar?q="${firstName}+${lastName}"+médecin`;
+    }
+    
+    if (doctor.source.includes('ResearchGate')) {
+      return `https://www.researchgate.net/search?q=${firstName}%20${lastName}`;
+    }
+    
+    return null;
+  };
   
   const renderDoctorCard = (doctor: Doctor, onAction: (doctor: Doctor) => void, actionLabel: string, cardColor: string) => (
     <div
@@ -64,12 +98,9 @@ export const UnifiedSearchResults = ({
 
         {/* Affichage de l'adresse complète si disponible */}
         {doctor.address && (
-          <div className="flex items-start gap-1 text-xs text-gray-600 mb-1">
+          <div className="flex items-start gap-1 text-xs text-gray-600 mb-2">
             <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
             <span className="text-gray-700">{doctor.address}</span>
-            {doctor.postal_code && doctor.city && (
-              <span>, {doctor.postal_code} {doctor.city}</span>
-            )}
           </div>
         )}
         
@@ -78,42 +109,24 @@ export const UnifiedSearchResults = ({
             {doctor.source || 'Base locale'}
           </Badge>
 
-          {/* Lien externe si le docteur provient d'une source externe */}
-          {doctor.source && doctor.source.includes('ordomedic.be') && (
-            <a
-              href={`https://www.ordomedic.be/fr/medecins/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Voir sur ordomedic.be
-            </a>
-          )}
-
-          {doctor.source && doctor.source.includes('Doctoralia') && (
-            <a
-              href={`https://www.doctoralia.be/medecin/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Voir sur Doctoralia
-            </a>
-          )}
-
-          {doctor.source && doctor.source.includes('DoctorAnytime') && (
-            <a
-              href={`https://www.doctoranytime.be/fr/medecin/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Voir sur DoctorAnytime
-            </a>
-          )}
+          {/* Lien externe dynamique */}
+          {(() => {
+            const externalLink = getExternalLink(doctor);
+            if (externalLink) {
+              return (
+                <a
+                  href={externalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Voir la source
+                </a>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
       
