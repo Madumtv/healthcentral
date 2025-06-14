@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +30,16 @@ const normalizeTimeOfDay = (timeOfDay: string): string => {
   return frenchToEnglish[timeOfDay as keyof typeof frenchToEnglish] || timeOfDay;
 };
 
+// Type guard pour vérifier si un objet est une dose valide
+const isValidMedicationDose = (item: any): item is MedicationDose => {
+  return item && 
+    typeof item === 'object' && 
+    typeof item.id === 'string' &&
+    typeof item.time_of_day === 'string' &&
+    typeof item.is_taken === 'boolean' &&
+    !('error' in item);
+};
+
 export const useMedicationDoses = (selectedDate: Date) => {
   const [isLoading, setIsLoading] = useState(true);
   const [medicationDoses, setMedicationDoses] = useState<MedicationDose[]>([]);
@@ -43,20 +54,12 @@ export const useMedicationDoses = (selectedDate: Date) => {
         
         // Vérifier si doses est un array et contient des données valides
         if (Array.isArray(doses)) {
-          const normalizedDoses: MedicationDose[] = doses
-            .filter((dose): dose is MedicationDose => 
-              dose != null && 
-              typeof dose === 'object' && 
-              !('error' in dose) &&
-              'id' in dose &&
-              'time_of_day' in dose
-            )
-            .map(dose => ({
-              ...dose,
-              time_of_day: typeof dose.time_of_day === 'string' 
-                ? normalizeTimeOfDay(dose.time_of_day)
-                : dose.time_of_day
-            }));
+          const validDoses = doses.filter(isValidMedicationDose);
+          
+          const normalizedDoses: MedicationDose[] = validDoses.map(dose => ({
+            ...dose,
+            time_of_day: normalizeTimeOfDay(dose.time_of_day)
+          }));
           
           setMedicationDoses(normalizedDoses);
         } else {
