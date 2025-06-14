@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -20,23 +19,24 @@ const MedicationsPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMedications = async () => {
-      try {
-        const data = await supabaseMedicationService.getAll();
-        setMedications(data);
-        setFilteredMedications(data);
-      } catch (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger vos médicaments.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchMedications = async () => {
+    try {
+      const data = await supabaseMedicationService.getAll();
+      console.log("Fetched medications with doctor data:", data);
+      setMedications(data);
+      setFilteredMedications(data);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger vos médicaments.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMedications();
   }, [toast]);
 
@@ -69,7 +69,8 @@ const MedicationsPage = () => {
   const handleDeleteMedication = async (id: string) => {
     try {
       await supabaseMedicationService.delete(id);
-      setMedications(medications.filter(med => med.id !== id));
+      // Actualiser la liste après suppression
+      await fetchMedications();
       toast({
         title: "Succès",
         description: "Médicament supprimé avec succès.",
@@ -87,6 +88,22 @@ const MedicationsPage = () => {
     setSearchTerm("");
     setSelectedDoctorId("");
   };
+
+  // Écouter les changements de route pour actualiser les données
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Page became visible, refreshing medications");
+        fetchMedications();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -24,6 +24,8 @@ const normalizeTimeOfDay = (timeOfDay: string[]): string[] => {
 };
 
 export const transformMedicationFromDatabase = (dbMedication: any): Medication => {
+  console.log("Transforming medication from database:", dbMedication);
+  
   return {
     id: dbMedication.id,
     name: dbMedication.name,
@@ -77,5 +79,6 @@ export const transformMedicationUpdateToDatabase = (medication: Partial<Medicati
   if (medication.doctorId !== undefined) updateData.doctor_id = medication.doctorId;
   if (medication.infoLink !== undefined) updateData.info_link = medication.infoLink;
 
+  console.log("Update data prepared:", updateData);
   return updateData;
 };

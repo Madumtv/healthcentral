@@ -48,7 +48,7 @@ export const medicationWriteService = {
       throw error;
     }
 
-    console.log("Medication updated successfully:", data);
+    console.log("Medication updated successfully with doctor data:", data);
     return transformMedicationFromDatabase(data);
   },
 
