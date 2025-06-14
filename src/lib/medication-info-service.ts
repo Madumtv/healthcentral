@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { medicamentsApi, MedicamentInfo, MedicamentComposition } from "@/lib/medicaments-api";
 
@@ -105,6 +104,7 @@ class MedicationInfoService {
 
       if (!error && compositions && compositions.length > 0) {
         return compositions.map(comp => ({
+          cnk: comp.cnk,
           activeSubstance: comp.active_substance,
           strength: comp.strength || '',
           unit: comp.unit || 'mg'
@@ -210,13 +210,13 @@ class MedicationInfoService {
       name: data.name,
       company: data.company || '',
       category: data.category || '',
-      atcCode: data.atc_code,
+      atcCode: data.atc_code || '',
       deliveryStatus: data.delivery_status || '',
-      prescriptionType: data.prescription_type,
-      packSize: data.pack_size,
-      publicPrice: data.public_price,
-      reimbursementCode: data.reimbursement_code,
-      reimbursementRate: data.reimbursement_rate
+      prescriptionType: data.prescription_type || '',
+      packSize: data.pack_size || '',
+      publicPrice: data.public_price?.toString() || '',
+      reimbursementCode: data.reimbursement_code || '',
+      reimbursementRate: data.reimbursement_rate || ''
     };
   }
 }

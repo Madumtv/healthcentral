@@ -47,59 +47,38 @@ class OrdomedicService {
   }
 
   /**
-   * Recherche dans la base locale des médecins
+   * Recherche des médecins dans la base de données locale
    */
   private async searchLocalDoctors(query: string): Promise<Doctor[]> {
-    try {
-      const { data, error } = await supabase
-        .from('doctors')
-        .select('*')
-        .or(`first_name.ilike.%${query}%, last_name.ilike.%${query}%, specialty.ilike.%${query}%, city.ilike.%${query}%`)
-        .eq('is_active', true)
-        .limit(20);
+    const { data, error } = await supabase
+      .from('doctors')
+      .select('*')
+      .ilike('first_name', `%${query}%`)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Erreur recherche locale médecins:", error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error("Erreur lors de la recherche locale:", error);
+    if (error) {
+      console.error('Erreur lors de la recherche locale de médecins:', error);
       return [];
     }
+
+    return data as Doctor[];
   }
 
   /**
-   * Sauvegarder les médecins en local
+   * Sauvegarde les médecins dans la base de données locale
    */
   private async saveDoctorsToLocal(doctors: Doctor[]): Promise<void> {
     try {
-      const dataToInsert = doctors.map(doctor => ({
-        first_name: doctor.first_name,
-        last_name: doctor.last_name,
-        specialty: doctor.specialty,
-        address: doctor.address,
-        city: doctor.city,
-        postal_code: doctor.postal_code,
-        phone: doctor.phone,
-        email: doctor.email,
-        inami_number: doctor.inami_number,
-        is_active: true
-      }));
-
       const { error } = await supabase
         .from('doctors')
-        .upsert(dataToInsert, { 
-          onConflict: 'inami_number',
-          ignoreDuplicates: true 
-        });
+        .insert(doctors);
 
       if (error) {
-        console.error("Erreur sauvegarde médecins:", error);
+        throw error;
       }
+      console.log(`Médecins sauvegardés localement: ${doctors.length}`);
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde des médecins:", error);
+      console.error('Erreur lors de la sauvegarde locale des médecins:', error);
     }
   }
 
@@ -107,7 +86,7 @@ class OrdomedicService {
    * Données simulées basées sur des médecins réels d'ordomedic.be
    */
   private getMockOrdomedicResults(query: string): Doctor[] {
-    const mockDoctors = [
+    const mockDoctors: Doctor[] = [
       {
         id: 'ordo_1',
         first_name: 'Jean',
@@ -128,71 +107,11 @@ class OrdomedicService {
         first_name: 'Marie',
         last_name: 'Martin',
         specialty: 'Cardiologie',
-        address: 'Avenue Louise 123',
+        address: 'Avenue Louise 50',
         city: 'Bruxelles',
         postal_code: '1050',
-        phone: '02/987.65.43',
-        inami_number: '98765432109',
-        email: '',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: 'ordo_3',
-        first_name: 'Pierre',
-        last_name: 'Vanderroost',
-        specialty: 'Neurologie',
-        address: 'Chaussée de Waterloo 456',
-        city: 'Uccle',
-        postal_code: '1180',
-        phone: '02/456.78.90',
-        inami_number: '45678901234',
-        email: '',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: 'ordo_4',
-        first_name: 'Serge',
-        last_name: 'Vanderroost',
-        specialty: 'Médecine générale',
-        address: 'Avenue de la Couronne 217',
-        city: 'Ixelles',
-        postal_code: '1050',
-        phone: '02/648.12.34',
-        inami_number: '11234567890',
-        email: '',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: 'ordo_5',
-        first_name: 'Sophie',
-        last_name: 'Lambert',
-        specialty: 'Pédiatrie',
-        address: 'Rue Neuve 789',
-        city: 'Liège',
-        postal_code: '4000',
-        phone: '04/321.09.87',
-        inami_number: '32109876543',
-        email: '',
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-      },
-      {
-        id: 'ordo_6',
-        first_name: 'Antoine',
-        last_name: 'Dubois',
-        specialty: 'Orthopédie',
-        address: 'Boulevard Anspach 321',
-        city: 'Bruxelles',
-        postal_code: '1000',
-        phone: '02/654.32.10',
-        inami_number: '65432109876',
+        phone: '02/234.56.78',
+        inami_number: '23456789012',
         email: '',
         is_active: true,
         created_at: new Date(),
@@ -212,11 +131,11 @@ class OrdomedicService {
   }
 
   /**
-   * Méthode pour implémenter un vrai scraper d'ordomedic.be
+   * Scrape les données depuis Ordomedic (pas utilisé pour le moment)
    */
   private async scrapeOrdomedic(query: string): Promise<OrdomedicDoctor[]> {
-    // Cette méthode nécessiterait un backend pour éviter les problèmes CORS
-    console.warn('Scraping d\'ordomedic.be non implémenté - utilisation des données locales');
+    // Implémentation du scraping ici (nécessite une librairie comme Cheerio)
+    console.warn('Scraping Ordomedic non implémenté');
     return [];
   }
 }
