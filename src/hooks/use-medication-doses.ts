@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +36,8 @@ export const useMedicationDoses = (selectedDate: Date) => {
         const normalizedDoses = Array.isArray(doses) ? doses
           .filter((dose): dose is NonNullable<typeof dose> => dose !== null && dose !== undefined)
           .map(dose => {
-            if (dose && typeof dose === 'object' && 'time_of_day' in dose && dose.time_of_day) {
+            // Le filtre garantit que dose n'est pas null, donc on peut accéder à ses propriétés
+            if (typeof dose === 'object' && 'time_of_day' in dose && dose.time_of_day) {
               return {
                 ...dose,
                 time_of_day: normalizeTimeOfDay(dose.time_of_day)
