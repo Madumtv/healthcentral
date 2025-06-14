@@ -14,49 +14,208 @@ interface ScrapedDoctor {
   source?: string;
 }
 
-// Base étendue de médecins belges réels pour recherche dynamique
-const BELGIAN_DOCTORS_DATABASE = [
-  // Médecins demandés spécifiquement
-  { first: 'Andrey', last: 'BRAGIN', specialty: 'Cardiologie', city: 'Bruxelles', postal: '1000', address: '45 Avenue Louise', phone: '02 513 89 45' },
-  { first: 'Serge', last: 'VANDERROOST', specialty: 'Médecine générale', city: 'Gand', postal: '9000', address: '12 Rue de Flandre', phone: '09 225 67 89' },
-  
-  // Base étendue de médecins belges
-  { first: 'Jean', last: 'MARTIN', specialty: 'Médecine générale', city: 'Liège', postal: '4000', address: '78 Rue des Guillemins', phone: '04 222 33 44' },
-  { first: 'Marie', last: 'DUBOIS', specialty: 'Pédiatrie', city: 'Bruxelles', postal: '1050', address: '156 Avenue Churchill', phone: '02 640 12 34' },
-  { first: 'Pierre', last: 'BERNARD', specialty: 'Cardiologie', city: 'Anvers', postal: '2000', address: '89 Meir', phone: '03 201 56 78' },
-  { first: 'Sophie', last: 'LEFEBVRE', specialty: 'Dermatologie', city: 'Namur', postal: '5000', address: '34 Rue de Fer', phone: '081 22 45 67' },
-  { first: 'Luc', last: 'MOREAU', specialty: 'Orthopédie', city: 'Charleroi', postal: '6000', address: '67 Boulevard Tirou', phone: '071 33 56 89' },
-  { first: 'Anne', last: 'SIMON', specialty: 'Gynécologie', city: 'Mons', postal: '7000', address: '23 Grand Place', phone: '065 33 78 90' },
-  { first: 'Michel', last: 'LAURENT', specialty: 'Neurologie', city: 'Hasselt', postal: '3500', address: '45 Grote Markt', phone: '011 22 34 56' },
-  { first: 'Catherine', last: 'ROUX', specialty: 'Ophtalmologie', city: 'Louvain', postal: '3000', address: '12 Oude Markt', phone: '016 23 45 67' },
-  { first: 'David', last: 'GARCIA', specialty: 'Psychiatrie', city: 'Bruxelles', postal: '1070', address: '89 Chaussée de Mons', phone: '02 520 89 01' },
-  { first: 'Nathalie', last: 'PETIT', specialty: 'Endocrinologie', city: 'Tournai', postal: '7500', address: '56 Grand Place', phone: '069 22 34 45' },
-  { first: 'François', last: 'MOREAU', specialty: 'Pneumologie', city: 'Verviers', postal: '4800', address: '34 Rue Xhavée', phone: '087 33 45 56' },
-  { first: 'Isabelle', last: 'LEROY', specialty: 'Rhumatologie', city: 'Kortrijk', postal: '8500', address: '78 Grote Markt', phone: '056 22 67 78' },
-  { first: 'Philippe', last: 'THOMAS', specialty: 'Urologie', city: 'Bruges', postal: '8000', address: '45 Markt', phone: '050 33 78 89' },
-  { first: 'Valérie', last: 'ROBERT', specialty: 'Radiologie', city: 'Mechelen', postal: '2800', address: '67 Grote Markt', phone: '015 22 45 56' },
-  { first: 'Christophe', last: 'RICHARD', specialty: 'Gastro-entérologie', city: 'Ostende', postal: '8400', address: '23 Wapenplein', phone: '059 33 56 67' },
-  { first: 'Sandrine', last: 'HENRY', specialty: 'Allergologie', city: 'Arlon', postal: '6700', address: '12 Place Léopold', phone: '063 22 34 45' },
-  { first: 'Thierry', last: 'MARTIN', specialty: 'Anesthésie', city: 'Genk', postal: '3600', address: '89 Grote Markt', phone: '089 33 45 56' },
-  { first: 'Sylvie', last: 'DURAND', specialty: 'Médecine du travail', city: 'La Louvière', postal: '7100', address: '45 Rue du Temple', phone: '064 22 67 78' },
-  
-  // Noms belges/flamands supplémentaires
-  { first: 'Dirk', last: 'VAN DAMME', specialty: 'Médecine générale', city: 'Aalst', postal: '9300', address: '12 Grote Markt', phone: '053 77 88 99' },
-  { first: 'Karin', last: 'PEETERS', specialty: 'Pédiatrie', city: 'Leuven', postal: '3000', address: '34 Bondgenotenlaan', phone: '016 32 14 78' },
-  { first: 'Marc', last: 'JANSSEN', specialty: 'Cardiologie', city: 'Turnhout', postal: '2300', address: '56 Grote Markt', phone: '014 41 52 63' },
-  { first: 'Els', last: 'DE SMET', specialty: 'Gynécologie', city: 'Sint-Niklaas', postal: '9100', address: '78 Grote Markt', phone: '03 776 25 14' },
-  { first: 'Johan', last: 'WILLEMS', specialty: 'Orthopédie', city: 'Roeselare', postal: '8800', address: '90 Grote Markt', phone: '051 20 31 42' },
-  
-  // Médecins avec des noms qui commencent par "WA" pour tester
-  { first: 'Walter', last: 'WASILEWSKI', specialty: 'Cardiologie', city: 'Bruxelles', postal: '1000', address: '123 Avenue des Arts', phone: '02 511 22 33' },
-  { first: 'Wassim', last: 'WAHBI', specialty: 'Médecine générale', city: 'Anvers', postal: '2000', address: '45 Rue Nationale', phone: '03 202 44 55' },
-  { first: 'Wanda', last: 'WALSH', specialty: 'Pédiatrie', city: 'Liège', postal: '4000', address: '67 Boulevard d\'Avroy', phone: '04 223 66 77' },
-  { first: 'Warren', last: 'WATSON', specialty: 'Neurologie', city: 'Gand', postal: '9000', address: '89 Korenlei', phone: '09 226 88 99' },
-  { first: 'Walid', last: 'WARDEH', specialty: 'Orthopédie', city: 'Charleroi', postal: '6000', address: '12 Rue de la Montagne', phone: '071 334 11 22' }
-];
+// Fonction pour scraper DoctorAnytime.be
+async function scrapeDoctorAnytime(query: string): Promise<ScrapedDoctor[]> {
+  try {
+    console.log(`🔍 Scraping DoctorAnytime.be pour: "${query}"`);
+    
+    const searchUrl = `https://www.doctoranytime.be/fr/recherche?q=${encodeURIComponent(query)}`;
+    console.log(`URL de recherche: ${searchUrl}`);
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`❌ Erreur HTTP ${response.status} pour DoctorAnytime`);
+      return [];
+    }
+
+    const html = await response.text();
+    console.log(`📄 HTML reçu, taille: ${html.length} caractères`);
+    
+    // Parser le HTML pour extraire les médecins
+    const doctors: ScrapedDoctor[] = [];
+    
+    // Regex pour extraire les informations des médecins
+    const doctorPattern = /<div[^>]*class="[^"]*doctor[^"]*"[^>]*>[\s\S]*?<\/div>/gi;
+    const namePattern = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i;
+    const specialtyPattern = /<span[^>]*class="[^"]*specialty[^"]*"[^>]*>([^<]+)<\/span>/i;
+    const locationPattern = /<span[^>]*class="[^"]*location[^"]*"[^>]*>([^<]+)<\/span>/i;
+    
+    const matches = html.match(doctorPattern);
+    if (matches) {
+      matches.forEach((match, index) => {
+        const nameMatch = match.match(namePattern);
+        const specialtyMatch = match.match(specialtyPattern);
+        const locationMatch = match.match(locationPattern);
+        
+        if (nameMatch) {
+          const fullName = nameMatch[1].trim();
+          const nameParts = fullName.split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          doctors.push({
+            id: `doctoranytime_${Date.now()}_${index}`,
+            first_name: firstName,
+            last_name: lastName,
+            specialty: specialtyMatch ? specialtyMatch[1].trim() : undefined,
+            city: locationMatch ? locationMatch[1].trim() : undefined,
+            source: 'DoctorAnytime.be'
+          });
+        }
+      });
+    }
+    
+    console.log(`✅ DoctorAnytime: ${doctors.length} médecins trouvés`);
+    return doctors;
+    
+  } catch (error) {
+    console.error(`❌ Erreur scraping DoctorAnytime:`, error.message);
+    return [];
+  }
+}
+
+// Fonction pour scraper Ordomedic.be
+async function scrapeOrdomedic(query: string): Promise<ScrapedDoctor[]> {
+  try {
+    console.log(`🔍 Scraping Ordomedic.be pour: "${query}"`);
+    
+    const searchUrl = `https://ordomedic.be/fr/medecins?search=${encodeURIComponent(query)}`;
+    console.log(`URL de recherche: ${searchUrl}`);
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+        'Referer': 'https://ordomedic.be/',
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`❌ Erreur HTTP ${response.status} pour Ordomedic`);
+      return [];
+    }
+
+    const html = await response.text();
+    console.log(`📄 HTML reçu d'Ordomedic, taille: ${html.length} caractères`);
+    
+    const doctors: ScrapedDoctor[] = [];
+    
+    // Parser spécifique pour Ordomedic.be
+    const doctorBlocks = html.split('<div class="doctor-card"');
+    
+    for (let i = 1; i < doctorBlocks.length; i++) {
+      const block = doctorBlocks[i];
+      
+      // Extraire le nom
+      const nameMatch = block.match(/<h3[^>]*>Dr\.?\s*([^<]+)<\/h3>/i);
+      // Extraire la spécialité
+      const specialtyMatch = block.match(/<p[^>]*class="specialty"[^>]*>([^<]+)<\/p>/i);
+      // Extraire l'adresse
+      const addressMatch = block.match(/<p[^>]*class="address"[^>]*>([^<]+)<\/p>/i);
+      
+      if (nameMatch) {
+        const fullName = nameMatch[1].trim();
+        const nameParts = fullName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        doctors.push({
+          id: `ordomedic_${Date.now()}_${i}`,
+          first_name: firstName,
+          last_name: lastName,
+          specialty: specialtyMatch ? specialtyMatch[1].trim() : undefined,
+          address: addressMatch ? addressMatch[1].trim() : undefined,
+          source: 'Ordomedic.be'
+        });
+      }
+    }
+    
+    console.log(`✅ Ordomedic: ${doctors.length} médecins trouvés`);
+    return doctors;
+    
+  } catch (error) {
+    console.error(`❌ Erreur scraping Ordomedic:`, error.message);
+    return [];
+  }
+}
+
+// Fonction pour scraper Doctoralia.be
+async function scrapeDoctoralia(query: string): Promise<ScrapedDoctor[]> {
+  try {
+    console.log(`🔍 Scraping Doctoralia.be pour: "${query}"`);
+    
+    const searchUrl = `https://www.doctoralia.be/recherche?q=${encodeURIComponent(query)}`;
+    console.log(`URL de recherche: ${searchUrl}`);
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`❌ Erreur HTTP ${response.status} pour Doctoralia`);
+      return [];
+    }
+
+    const html = await response.text();
+    console.log(`📄 HTML reçu de Doctoralia, taille: ${html.length} caractères`);
+    
+    const doctors: ScrapedDoctor[] = [];
+    
+    // Parser pour Doctoralia
+    const profilePattern = /<div[^>]*data-doctor[^>]*>[\s\S]*?<\/div>/gi;
+    const matches = html.match(profilePattern);
+    
+    if (matches) {
+      matches.forEach((match, index) => {
+        const nameMatch = match.match(/data-doctor-name="([^"]+)"/i);
+        const specialtyMatch = match.match(/data-specialty="([^"]+)"/i);
+        const cityMatch = match.match(/data-city="([^"]+)"/i);
+        
+        if (nameMatch) {
+          const fullName = nameMatch[1].trim().replace('Dr. ', '').replace('Dr ', '');
+          const nameParts = fullName.split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+          
+          doctors.push({
+            id: `doctoralia_${Date.now()}_${index}`,
+            first_name: firstName,
+            last_name: lastName,
+            specialty: specialtyMatch ? specialtyMatch[1].trim() : undefined,
+            city: cityMatch ? cityMatch[1].trim() : undefined,
+            source: 'Doctoralia.be'
+          });
+        }
+      });
+    }
+    
+    console.log(`✅ Doctoralia: ${doctors.length} médecins trouvés`);
+    return doctors;
+    
+  } catch (error) {
+    console.error(`❌ Erreur scraping Doctoralia:`, error.message);
+    return [];
+  }
+}
 
 Deno.serve(async (req) => {
-  console.log(`=== NOUVELLE REQUÊTE ===`);
+  console.log(`=== NOUVELLE REQUÊTE DE RECHERCHE WEB ===`);
   console.log(`Method: ${req.method}`);
   console.log(`URL: ${req.url}`);
 
@@ -84,32 +243,19 @@ Deno.serve(async (req) => {
       query = '';
     }
     
-    console.log(`=== RECHERCHE MÉDICALE DYNAMIQUE ===`)
+    console.log(`=== RECHERCHE WEB EN TEMPS RÉEL ===`)
     console.log(`Query finale: "${query}"`)
     
-    // Si pas de requête, retourner médecins populaires
+    // Si pas de requête valide
     if (!query || query.trim().length < 2) {
-      console.log(`Query trop courte, retour médecins populaires`)
-      const popularDoctors = BELGIAN_DOCTORS_DATABASE.slice(0, 8).map((doc, index) => ({
-        id: `popular_${Date.now()}_${index}`,
-        first_name: doc.first,
-        last_name: doc.last,
-        specialty: doc.specialty,
-        city: doc.city,
-        postal_code: doc.postal,
-        address: doc.address,
-        phone: doc.phone,
-        email: `${doc.first.toLowerCase()}.${doc.last.toLowerCase().replace(' ', '')}@cabinet-medical.be`,
-        source: 'popular'
-      }))
-      
+      console.log(`Query trop courte pour recherche web`);
       return new Response(
         JSON.stringify({ 
-          doctors: popularDoctors,
+          doctors: [],
           metadata: { 
-            source: 'popular_doctors', 
-            query: '', 
-            total: popularDoctors.length,
+            message: 'Veuillez saisir au moins 2 caractères pour la recherche',
+            query: query,
+            sources: [],
             timestamp: new Date().toISOString()
           }
         }),
@@ -120,81 +266,80 @@ Deno.serve(async (req) => {
       )
     }
 
-    const cleanQuery = query.trim().toLowerCase()
-    console.log(`Recherche dans la base pour: "${cleanQuery}"`)
+    const cleanQuery = query.trim();
+    console.log(`🌐 Lancement de la recherche web pour: "${cleanQuery}"`);
 
-    // Recherche intelligente dans la base de médecins
-    const matchingDoctors = BELGIAN_DOCTORS_DATABASE.filter(doc => {
-      const fullName = `${doc.first} ${doc.last}`.toLowerCase()
-      const reverseName = `${doc.last} ${doc.first}`.toLowerCase()
-      const cityMatch = doc.city.toLowerCase().includes(cleanQuery)
-      const specialtyMatch = doc.specialty.toLowerCase().includes(cleanQuery)
-      
-      const nameMatches = fullName.includes(cleanQuery) || 
-                         reverseName.includes(cleanQuery) ||
-                         doc.first.toLowerCase().includes(cleanQuery) ||
-                         doc.last.toLowerCase().includes(cleanQuery)
-      
-      const matches = nameMatches || cityMatch || specialtyMatch
-      
-      if (matches) {
-        console.log(`✅ Match trouvé: ${doc.first} ${doc.last} (${doc.specialty}) - ${doc.city}`)
+    // Lancer les recherches en parallèle sur tous les sites
+    const searchPromises = [
+      scrapeDoctorAnytime(cleanQuery),
+      scrapeOrdomedic(cleanQuery),
+      scrapeDoctoralia(cleanQuery)
+    ];
+
+    console.log(`⏳ Recherche en cours sur 3 sites...`);
+    const results = await Promise.allSettled(searchPromises);
+    
+    // Collecter tous les résultats réussis
+    const allDoctors: ScrapedDoctor[] = [];
+    const successfulSources: string[] = [];
+    
+    results.forEach((result, index) => {
+      const siteName = ['DoctorAnytime.be', 'Ordomedic.be', 'Doctoralia.be'][index];
+      if (result.status === 'fulfilled' && result.value.length > 0) {
+        allDoctors.push(...result.value);
+        successfulSources.push(siteName);
+        console.log(`✅ ${siteName}: ${result.value.length} résultats`);
+      } else {
+        console.log(`⚠️ ${siteName}: aucun résultat ou erreur`);
       }
-      
-      return matches
-    })
+    });
 
-    console.log(`Trouvé ${matchingDoctors.length} médecins correspondants`)
-
-    // Convertir en format ScrapedDoctor
-    const results: ScrapedDoctor[] = matchingDoctors.map((doc, index) => ({
-      id: `search_${Date.now()}_${index}`,
-      first_name: doc.first,
-      last_name: doc.last,
-      specialty: doc.specialty,
-      city: doc.city,
-      postal_code: doc.postal,
-      address: doc.address,
-      phone: doc.phone,
-      email: `${doc.first.toLowerCase()}.${doc.last.toLowerCase().replace(' ', '')}@cabinet-medical.be`,
-      source: 'database_search'
-    }))
+    // Dédupliquer les résultats
+    const uniqueDoctors = allDoctors.filter((doctor, index, self) => 
+      index === self.findIndex(d => 
+        d.first_name.toLowerCase() === doctor.first_name.toLowerCase() && 
+        d.last_name.toLowerCase() === doctor.last_name.toLowerCase()
+      )
+    );
 
     // Trier par pertinence
-    const sortedResults = results.sort((a, b) => {
-      // Correspondance exacte du nom complet
-      const aFullName = `${a.first_name} ${a.last_name}`.toLowerCase()
-      const bFullName = `${b.first_name} ${b.last_name}`.toLowerCase()
+    const sortedDoctors = uniqueDoctors.sort((a, b) => {
+      const aFullName = `${a.first_name} ${a.last_name}`.toLowerCase();
+      const bFullName = `${b.first_name} ${b.last_name}`.toLowerCase();
       
-      const aExactMatch = aFullName === cleanQuery
-      const bExactMatch = bFullName === cleanQuery
-      if (aExactMatch && !bExactMatch) return -1
-      if (!aExactMatch && bExactMatch) return 1
+      // Correspondance exacte en premier
+      const aExactMatch = aFullName === cleanQuery.toLowerCase();
+      const bExactMatch = bFullName === cleanQuery.toLowerCase();
+      if (aExactMatch && !bExactMatch) return -1;
+      if (!aExactMatch && bExactMatch) return 1;
 
-      // Correspondance du début du nom
-      const aStartsWithQuery = aFullName.startsWith(cleanQuery)
-      const bStartsWithQuery = bFullName.startsWith(cleanQuery)
-      if (aStartsWithQuery && !bStartsWithQuery) return -1
-      if (!aStartsWithQuery && bStartsWithQuery) return 1
+      // Correspondance du début
+      const aStartsWithQuery = aFullName.startsWith(cleanQuery.toLowerCase());
+      const bStartsWithQuery = bFullName.startsWith(cleanQuery.toLowerCase());
+      if (aStartsWithQuery && !bStartsWithQuery) return -1;
+      if (!aStartsWithQuery && bStartsWithQuery) return 1;
 
-      // Ordre alphabétique
-      return a.last_name.localeCompare(b.last_name)
-    })
+      return a.last_name.localeCompare(b.last_name);
+    });
 
-    console.log(`=== RÉSULTATS FINAUX ===`)
-    console.log(`Total: ${sortedResults.length} médecins trouvés`)
-    sortedResults.forEach(doc => {
-      console.log(`- ${doc.first_name} ${doc.last_name} (${doc.specialty}) - ${doc.city}`)
-    })
+    console.log(`=== RÉSULTATS FINAUX DE LA RECHERCHE WEB ===`);
+    console.log(`Total: ${sortedDoctors.length} médecins trouvés sur ${successfulSources.length} sites`);
+    console.log(`Sites consultés avec succès: ${successfulSources.join(', ')}`);
+    
+    sortedDoctors.forEach(doc => {
+      console.log(`- ${doc.first_name} ${doc.last_name} (${doc.specialty || 'N/A'}) - ${doc.source}`);
+    });
     
     return new Response(
       JSON.stringify({ 
-        doctors: sortedResults.slice(0, 20),
+        doctors: sortedDoctors.slice(0, 20), // Limiter à 20 résultats
         metadata: {
           query: cleanQuery,
-          total: sortedResults.length,
-          sources: ['database_search'],
-          timestamp: new Date().toISOString()
+          total: sortedDoctors.length,
+          sources: successfulSources,
+          sites_searched: ['DoctorAnytime.be', 'Ordomedic.be', 'Doctoralia.be'],
+          timestamp: new Date().toISOString(),
+          search_type: 'real_time_web_scraping'
         }
       }),
       { 
@@ -204,31 +349,17 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('=== ERREUR GLOBALE ===')
+    console.error('=== ERREUR GLOBALE DE RECHERCHE WEB ===')
     console.error('Erreur:', error.message)
     console.error('Stack:', error.stack)
     
-    // Fallback de sécurité
-    const fallbackDoctors = BELGIAN_DOCTORS_DATABASE.slice(0, 5).map((doc, index) => ({
-      id: `fallback_${Date.now()}_${index}`,
-      first_name: doc.first,
-      last_name: doc.last,
-      specialty: doc.specialty,
-      city: doc.city,
-      postal_code: doc.postal,
-      address: doc.address,
-      phone: doc.phone,
-      email: `${doc.first.toLowerCase()}.${doc.last.toLowerCase().replace(' ', '')}@cabinet-medical.be`,
-      source: 'fallback'
-    }))
-    
     return new Response(
       JSON.stringify({ 
-        doctors: fallbackDoctors,
+        doctors: [],
         metadata: {
           query: 'erreur',
-          source: 'fallback_data',
           error: error.message,
+          search_type: 'real_time_web_scraping_failed',
           timestamp: new Date().toISOString()
         }
       }),
