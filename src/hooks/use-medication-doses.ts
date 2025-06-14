@@ -56,10 +56,15 @@ export const useMedicationDoses = (selectedDate: Date) => {
         if (Array.isArray(doses)) {
           const validDoses = doses.filter(isValidMedicationDose);
           
-          const normalizedDoses: MedicationDose[] = validDoses.map(dose => ({
-            ...dose,
-            time_of_day: normalizeTimeOfDay(dose.time_of_day)
-          }));
+          const normalizedDoses: MedicationDose[] = validDoses.map(dose => {
+            return {
+              id: dose.id,
+              time_of_day: normalizeTimeOfDay(dose.time_of_day),
+              is_taken: dose.is_taken,
+              taken_at: dose.taken_at,
+              ...dose
+            };
+          });
           
           setMedicationDoses(normalizedDoses);
         } else {
