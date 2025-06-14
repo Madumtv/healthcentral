@@ -30,23 +30,58 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const checkUser = async () => {
+      console.log("Checking user session...");
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.log("No session found, redirecting to auth");
         navigate("/auth");
         return;
       }
 
+      console.log("Session found, user:", session.user.id);
       setUser(session.user);
 
       try {
+        console.log("Fetching profile for user:", session.user.id);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
 
-        if (error) throw error;
-        setProfile(data as Profile);
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Aucun profil trouvé, on en crée un
+            console.log("No profile found, creating one...");
+            
+            const { data: newProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.email?.split('@')[0] || 'Utilisateur',
+                is_verified: session.user.email_confirmed_at !== null
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error("Error creating profile:", createError);
+              throw createError;
+            }
+
+            console.log("Profile created successfully:", newProfile);
+            setProfile(newProfile as Profile);
+          } else {
+            console.error("Error fetching profile:", error);
+            throw error;
+          }
+        } else {
+          console.log("Profile found:", data);
+          setProfile(data as Profile);
+        }
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
         toast.error("Impossible de charger les informations du profil.");
