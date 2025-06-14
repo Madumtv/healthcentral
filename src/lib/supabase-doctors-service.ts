@@ -176,24 +176,31 @@ export const supabaseDoctorsService = {
   },
 
   create: async (doctor: Omit<Doctor, "id" | "created_at" | "updated_at">): Promise<Doctor> => {
+    console.log("Creating doctor with data:", doctor);
+    
     const { data, error } = await supabase
       .from('doctors')
       .insert({
-        inami_number: doctor.inami_number,
+        inami_number: doctor.inami_number || null,
         first_name: doctor.first_name,
         last_name: doctor.last_name,
-        specialty: doctor.specialty,
-        address: doctor.address,
-        city: doctor.city,
-        postal_code: doctor.postal_code,
-        phone: doctor.phone,
-        email: doctor.email,
+        specialty: doctor.specialty || null,
+        address: doctor.address || null,
+        city: doctor.city || null,
+        postal_code: doctor.postal_code || null,
+        phone: doctor.phone || null,
+        email: doctor.email || null,
         is_active: doctor.is_active,
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating doctor:", error);
+      throw error;
+    }
+
+    console.log("Doctor created successfully:", data);
 
     return {
       id: data.id,

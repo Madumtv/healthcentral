@@ -71,9 +71,9 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
     setIsSubmitting(true);
     
     try {
-      console.log("Création du médecin avec les données:", formData);
+      console.log("Submitting doctor form with data:", formData);
       
-      const newDoctor = await supabaseDoctorsService.create({
+      const doctorData = {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
         specialty: formData.specialty.trim() || undefined,
@@ -84,18 +84,23 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
         email: formData.email.trim() || undefined,
         inami_number: formData.inamiNumber.trim() || undefined,
         is_active: true
-      });
+      };
 
-      console.log("Médecin créé avec succès:", newDoctor);
+      console.log("Creating doctor with processed data:", doctorData);
+      
+      const newDoctor = await supabaseDoctorsService.create(doctorData);
+      
+      console.log("Doctor created successfully:", newDoctor);
 
       toast({
         title: "Succès",
         description: `Dr ${newDoctor.first_name} ${newDoctor.last_name} a été ajouté avec succès.`,
       });
 
+      // Call the callback with the new doctor
       onDoctorAdded(newDoctor);
     } catch (error: any) {
-      console.error("Erreur lors de l'ajout du médecin:", error);
+      console.error("Error creating doctor:", error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'ajouter le médecin. Veuillez réessayer.",
