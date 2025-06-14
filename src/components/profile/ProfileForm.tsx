@@ -36,25 +36,23 @@ interface ProfileFormProps {
 export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  console.log("📋 ProfileForm rendering with:", { 
-    initialValues, 
-    hasUser: !!user 
-  });
-  
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: initialValues,
+    values: initialValues,
   });
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) {
-      console.error("❌ No user available for profile update");
+      console.error("Aucun utilisateur connecté");
+      toast.error("Aucun utilisateur connecté");
       return;
     }
 
-    console.log("💾 Saving profile with values:", values);
+    console.log("Tentative de sauvegarde du profil:", values);
+    console.log("ID utilisateur:", user.id);
+
     setIsSubmitting(true);
-    
     try {
       const updateData = { 
         name: values.name, 
@@ -64,23 +62,24 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
         updated_at: new Date().toISOString() 
       };
 
-      console.log("💾 Update data:", updateData);
+      console.log("Données à sauvegarder:", updateData);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (error) {
-        console.error("❌ Profile update error:", error);
+        console.error("Erreur Supabase:", error);
         throw error;
       }
       
-      console.log("✅ Profile updated successfully");
+      console.log("Profil sauvegardé avec succès:", data);
       onSuccess(values);
       toast.success("Profil mis à jour avec succès !");
     } catch (error) {
-      console.error("💥 Error updating profile:", error);
+      console.error("Erreur lors de la mise à jour du profil:", error);
       toast.error("La mise à jour du profil a échoué.");
     } finally {
       setIsSubmitting(false);
@@ -88,115 +87,113 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   };
 
   return (
-    <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prénom</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Votre prénom" {...field} value={field.value || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom de famille</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Votre nom de famille" {...field} value={field.value || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
-            name="name"
+            name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom d'affichage</FormLabel>
+                <FormLabel>Prénom</FormLabel>
                 <FormControl>
-                  <Input placeholder="Votre nom d'affichage" {...field} />
+                  <Input placeholder="Votre prénom" {...field} value={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
-            name="birthDate"
+            name="lastName"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date de naissance</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "P", { locale: fr })
-                        ) : (
-                          <span>Sélectionnez une date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              <FormItem>
+                <FormLabel>Nom de famille</FormLabel>
+                <FormControl>
+                  <Input placeholder="Votre nom de famille" {...field} value={field.value || ""} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        </div>
 
-          {user && (
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Input 
-                type="email" 
-                value={user.email || ""} 
-                disabled 
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                L'email est associé à votre compte et ne peut pas être modifié ici.
-              </p>
+              <FormLabel>Nom d'affichage</FormLabel>
+              <FormControl>
+                <Input placeholder="Votre nom d'affichage" {...field} />
+              </FormControl>
+              <FormMessage />
             </FormItem>
           )}
+        />
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
-          </Button>
-        </form>
-      </Form>
-    </div>
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date de naissance</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "P", { locale: fr })
+                      ) : (
+                        <span>Sélectionnez une date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {user && (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <Input 
+              type="email" 
+              value={user.email || ""} 
+              disabled 
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              L'email est associé à votre compte et ne peut pas être modifié ici.
+            </p>
+          </FormItem>
+        )}
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement..." : "Enregistrer les modifications"}
+        </Button>
+      </form>
+    </Form>
   );
 }

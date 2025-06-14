@@ -15,33 +15,8 @@ interface ProfileInfoTabProps {
 }
 
 export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTabProps) {
-  console.log("📝 ProfileInfoTab rendering with:", { 
-    hasUser: !!user, 
-    hasProfile: !!profile,
-    profileData: profile 
-  });
-
-  if (!user || !profile) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-gray-500">Aucune donnée de profil disponible</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Convertir la date de naissance de string en Date si elle existe
-  const birthDate = profile.birth_date ? new Date(profile.birth_date) : undefined;
-
-  const initialValues = {
-    name: profile.name || "",
-    firstName: profile.first_name || "",
-    lastName: profile.last_name || "",
-    birthDate: birthDate
-  };
-
-  console.log("📝 ProfileInfoTab initial values:", initialValues);
+  const birthDate = profile?.birth_date ? new Date(profile.birth_date) : undefined;
 
   return (
     <Card>
@@ -53,7 +28,12 @@ export function ProfileInfoTab({ user, profile, onProfileUpdate }: ProfileInfoTa
       </CardHeader>
       <CardContent>
         <ProfileForm 
-          initialValues={initialValues}
+          initialValues={{ 
+            name: profile?.name || "",
+            firstName: profile?.first_name || "",
+            lastName: profile?.last_name || "",
+            birthDate: birthDate
+          }}
           user={user}
           onSuccess={onProfileUpdate}
         />

@@ -29,160 +29,129 @@ const ProfilePage = () => {
   const { refreshProfile } = useAuth();
 
   useEffect(() => {
-    const initializeProfile = async () => {
-      console.log("🔄 Initializing profile page...");
+    const checkUser = async () => {
+      console.log("Début du chargement du profil...");
       
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session récupérée:", session);
+      
+      if (!session) {
+        console.log("Aucune session trouvée, redirection vers /auth");
+        navigate("/auth");
+        return;
+      }
+
+      console.log("Utilisateur connecté:", session.user.id);
+      setUser(session.user);
+
       try {
-        // Vérifier la session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log("Tentative de récupération du profil pour l'utilisateur:", session.user.id);
         
-        if (sessionError) {
-          console.error("❌ Session error:", sessionError);
-          navigate("/auth");
-          return;
-        }
-
-        if (!session?.user) {
-          console.log("❌ No session found, redirecting to auth");
-          navigate("/auth");
-          return;
-        }
-
-        console.log("✅ Session found for user:", session.user.id);
-        setUser(session.user);
-
-        // Récupérer ou créer le profil
-        const { data: existingProfile, error: fetchError } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .maybeSingle();
+          .single();
 
-        if (fetchError) {
-          console.error("❌ Error fetching profile:", fetchError);
-          throw fetchError;
-        }
+        console.log("Réponse Supabase:", { data, error });
 
-        if (existingProfile) {
-          console.log("✅ Profile found:", existingProfile);
-          setProfile(existingProfile as Profile);
-        } else {
-          console.log("ℹ️ No profile found, creating one...");
+        if (error) {
+          console.error("Erreur lors de la récupération du profil:", error);
           
-          const newProfileData = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.email?.split('@')[0] || 'Utilisateur',
-            is_verified: session.user.email_confirmed_at !== null
-          };
+          // Si le profil n'existe pas, on le crée
+          if (error.code === 'PGRST116') {
+            console.log("Profil non trouvé, création d'un nouveau profil...");
+            
+            const newProfile = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.email?.split('@')[0] || 'Utilisateur',
+              first_name: null,
+              last_name: null,
+              birth_date: null,
+              avatar_url: null
+            };
 
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert(newProfileData)
-            .select()
-            .single();
+            const { data: createdProfile, error: createError } = await supabase
+              .from('profiles')
+              .insert(newProfile)
+              .select()
+              .single();
 
-          if (createError) {
-            console.error("❌ Error creating profile:", createError);
-            throw createError;
+            if (createError) {
+              console.error("Erreur lors de la création du profil:", createError);
+              throw createError;
+            }
+
+            console.log("Profil créé avec succès:", createdProfile);
+            setProfile(createdProfile as Profile);
+          } else {
+            throw error;
           }
-
-          console.log("✅ Profile created successfully:", newProfile);
-          setProfile(newProfile as Profile);
+        } else {
+          console.log("Profil récupéré avec succès:", data);
+          setProfile(data as Profile);
         }
-
       } catch (error) {
-        console.error("💥 Profile initialization error:", error);
-        toast.error("Impossible de charger le profil. Veuillez réessayer.");
+        console.error("Erreur fatale lors du chargement du profil:", error);
+        toast.error("Impossible de charger les informations du profil.");
       } finally {
+        console.log("Fin du chargement du profil");
         setLoading(false);
-        console.log("🏁 Profile initialization completed");
       }
     };
 
-    initializeProfile();
+    checkUser();
   }, [navigate]);
 
   const handleProfileUpdate = async (values: ProfileFormValues) => {
-    if (!profile) return;
-    
-    console.log("🔄 Updating profile with values:", values);
-    
-    const updatedProfile = { 
-      ...profile, 
+    console.log("Mise à jour du profil local:", values);
+    setProfile(prev => prev ? { 
+      ...prev, 
       name: values.name,
       first_name: values.firstName || undefined,
       last_name: values.lastName || undefined,
       birth_date: values.birthDate ? values.birthDate.toISOString() : undefined
-    };
+    } : null);
     
-    setProfile(updatedProfile);
+    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
     await refreshProfile();
-    
-    console.log("✅ Profile updated successfully");
   };
 
   const handleAvatarUpdate = async (avatarUrl: string) => {
-    if (!profile) return;
-    
-    console.log("🔄 Updating avatar URL:", avatarUrl);
-    
+    console.log("Mise à jour de l'avatar:", avatarUrl);
     setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
-    await refreshProfile();
     
-    console.log("✅ Avatar updated successfully");
+    // Rafraîchir le profil dans le hook useAuth pour mettre à jour la navbar
+    await refreshProfile();
   };
 
   if (loading) {
-    console.log("⏳ Profile page is loading...");
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement du profil...</p>
+            <p className="text-lg">Chargement du profil...</p>
+            <p className="text-sm text-gray-500 mt-2">Vérifiez la console pour plus d'informations</p>
           </div>
         </div>
         <Footer />
       </div>
     );
   }
-
-  if (!user || !profile) {
-    console.log("❌ No user or profile data available");
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600">Erreur lors du chargement du profil.</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Réessayer
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  console.log("✅ Rendering profile page with data:", { user: user.id, profile: profile.name });
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="container mx-auto flex-grow py-8 px-4">
+      <div className="container flex-grow py-10">
         <ProfileHeader 
           user={user}
-          name={profile.name} 
-          firstName={profile.first_name}
-          lastName={profile.last_name}
-          email={user.email || null}
-          avatarUrl={profile.avatar_url}
+          name={profile?.name} 
+          firstName={profile?.first_name}
+          lastName={profile?.last_name}
+          email={user?.email || null}
+          avatarUrl={profile?.avatar_url}
           onAvatarUpdate={handleAvatarUpdate}
         />
         

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
@@ -9,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardGreeting } from "@/components/dashboard/DashboardGreeting";
 import { TodayMedicationsList } from "@/components/dashboard/TodayMedicationsList";
-import { useAuth } from "@/hooks/useAuth";
 
 const DashboardPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -17,67 +15,43 @@ const DashboardPage = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    console.log("🔍 Dashboard - Auth state:", { user: !!user, authLoading });
-    
-    if (authLoading) {
-      console.log("⏳ Still loading auth...");
-      return;
-    }
-
-    if (!user) {
-      console.log("❌ No user found, redirecting to auth");
-      navigate('/auth');
-      return;
-    }
-
-    console.log("✅ User found in dashboard:", user.email);
-    
     const checkAuth = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('name, first_name, last_name')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error("❌ Error fetching profile in dashboard:", error);
-          setUserName(user.email?.split('@')[0] || 'utilisateur');
-          return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('name, first_name, last_name')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          // Construire le nom d'affichage en utilisant la même logique que useAuth
+          const displayName = data?.name || 
+                             (data?.first_name && data?.last_name ? `${data.first_name} ${data.last_name}` : 
+                             data?.first_name || data?.last_name || session.user.email?.split('@')[0] || 'utilisateur');
+          
+          setUserName(displayName);
+        } catch (error) {
+          console.error("Erreur lors de la récupération du profil:", error);
+          setUserName(session.user.email?.split('@')[0] || 'utilisateur');
         }
-        
-        // Construire le nom d'affichage en utilisant la même logique que useAuth
-        const displayName = data?.name || 
-                           (data?.first_name && data?.last_name ? `${data.first_name} ${data.last_name}` : 
-                           data?.first_name || data?.last_name || user.email?.split('@')[0] || 'utilisateur');
-        
-        console.log("✅ Profile data in dashboard:", displayName);
-        setUserName(displayName);
-      } catch (error) {
-        console.error("💥 Error in dashboard profile fetch:", error);
-        setUserName(user.email?.split('@')[0] || 'utilisateur');
+      } else {
+        navigate('/auth');
       }
     };
 
     checkAuth();
-  }, [user, authLoading, navigate]);
+  }, [navigate]);
 
   const fetchMedications = async () => {
-    if (!user) {
-      console.log("❌ No user, skipping medication fetch");
-      return;
-    }
-
     try {
-      console.log("🔍 Fetching medications for user:", user.id);
       const data = await supabaseMedicationService.getAll();
-      console.log("✅ Medications fetched:", data.length);
       setMedications(data);
     } catch (error) {
-      console.error("❌ Error fetching medications:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger vos médicaments.",
@@ -89,10 +63,8 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
-    if (user && !authLoading) {
-      fetchMedications();
-    }
-  }, [user, authLoading, toast]);
+    fetchMedications();
+  }, [toast]);
 
   const handleEditMedication = (id: string) => {
     navigate(`/medications/edit/${id}`);
@@ -115,21 +87,6 @@ const DashboardPage = () => {
       });
     }
   };
-
-  // Afficher un loading pendant que l'auth se charge
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Pill className="h-8 w-8 animate-spin text-medBlue mx-auto mb-4" />
-            <p className="text-gray-600">Chargement...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   // Créer des groupes par moment de prise
   const todayMedications = medications.filter(med => {
