@@ -1,32 +1,24 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { User } from "lucide-react";
-import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
-import { useDoctorSearch } from "./doctor-selector/useDoctorSearch";
-import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
-import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
-import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
 import { DoctorSearchInput } from "./doctor-selector/DoctorSearchInput";
+import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
 import { DoctorSuggestions } from "./doctor-selector/DoctorSuggestions";
+import { OfficialSearch } from "./doctor-selector/OfficialSearch";
+import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
+import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
+import { useDoctorSearch } from "./doctor-selector/useDoctorSearch";
+import { Doctor } from "@/lib/supabase-doctors-service";
 
 interface DoctorSelectorProps {
-  selectedDoctorId?: string;
-  prescribingDoctorText?: string;
-  onDoctorSelect: (doctorId: string | null, doctorText: string) => void;
-  className?: string;
+  selectedDoctorId?: string | null;
+  selectedDoctorText?: string;
+  onDoctorChange: (doctorId: string | null, doctorText: string) => void;
 }
 
-export const DoctorSelector = ({ 
-  selectedDoctorId, 
-  prescribingDoctorText,
-  onDoctorSelect, 
-  className = "" 
+export const DoctorSelector = ({
+  selectedDoctorId,
+  selectedDoctorText,
+  onDoctorChange
 }: DoctorSelectorProps) => {
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-  const [showManualInput, setShowManualInput] = useState(false);
-  
   const {
     searchQuery,
     setSearchQuery,
@@ -37,105 +29,73 @@ export const DoctorSelector = ({
     addSuggestedDoctor
   } = useDoctorSearch();
 
-  // Load selected doctor on mount
-  useEffect(() => {
-    if (selectedDoctorId) {
-      supabaseDoctorsService.getById(selectedDoctorId)
-        .then(doctor => {
-          if (doctor) {
-            setSelectedDoctor(doctor);
-          }
-        })
-        .catch(console.error);
-    }
-  }, [selectedDoctorId]);
-
-  const handleSelectDoctor = (doctor: Doctor) => {
-    setSelectedDoctor(doctor);
-    const doctorText = `Dr ${doctor.first_name} ${doctor.last_name}${doctor.specialty ? ` (${doctor.specialty})` : ''}`;
-    onDoctorSelect(doctor.id, doctorText);
+  const handleDoctorSelect = (doctor: Doctor) => {
+    const doctorName = `Dr ${doctor.first_name} ${doctor.last_name}`;
+    onDoctorChange(doctor.id, doctorName);
     clearSearch();
-    setShowManualInput(false);
   };
 
-  const handleAddSuggestedDoctor = async (doctor: Doctor) => {
+  const handleSuggestionAdd = async (doctor: Doctor) => {
     const addedDoctor = await addSuggestedDoctor(doctor);
     if (addedDoctor) {
-      // Sélectionner automatiquement le médecin ajouté
-      handleSelectDoctor(addedDoctor);
+      handleDoctorSelect(addedDoctor);
     }
   };
 
-  const handleManualInput = (doctorText: string) => {
-    setSelectedDoctor(null);
-    onDoctorSelect(null, doctorText);
-    setShowManualInput(false);
+  const handleManualDoctorSubmit = (doctorName: string) => {
+    onDoctorChange(null, doctorName);
+    clearSearch();
   };
 
   const handleClearSelection = () => {
-    setSelectedDoctor(null);
-    onDoctorSelect(null, "");
+    onDoctorChange(null, "");
   };
 
-  const toggleInputMode = () => {
-    setShowManualInput(!showManualInput);
-    clearSearch();
-  };
+  // Si un médecin est sélectionné, afficher la carte
+  if (selectedDoctorText) {
+    return (
+      <SelectedDoctorCard
+        doctorText={selectedDoctorText}
+        doctorId={selectedDoctorId}
+        onClear={handleClearSelection}
+      />
+    );
+  }
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-1.5">
-          <User className="h-4 w-4 text-medBlue" />
-          Médecin prescripteur
-        </Label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={toggleInputMode}
-          className="text-sm"
-        >
-          {showManualInput ? "Recherche officielle" : "Saisie manuelle"}
-        </Button>
-      </div>
-
-      {selectedDoctor && (
-        <SelectedDoctorCard 
-          doctor={selectedDoctor} 
-          onClear={handleClearSelection} 
-        />
-      )}
-
-      {showManualInput && !selectedDoctor && (
-        <ManualDoctorInput
-          initialValue={prescribingDoctorText}
-          onConfirm={handleManualInput}
-        />
-      )}
-
-      {!showManualInput && !selectedDoctor && (
-        <DoctorSearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
-      )}
-
-      <DoctorSearchResults
-        doctors={searchResults}
-        onSelectDoctor={handleSelectDoctor}
+    <div className="space-y-4">
+      <DoctorSearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
       />
 
+      {/* Résultats de recherche locale */}
+      {searchResults.length > 0 && (
+        <DoctorSearchResults
+          doctors={searchResults}
+          isSearching={isSearching}
+          onSelectDoctor={handleDoctorSelect}
+        />
+      )}
+
+      {/* Suggestions de médecins externes */}
       {suggestions.length > 0 && (
         <DoctorSuggestions
           suggestions={suggestions}
-          onAddDoctor={handleAddSuggestedDoctor}
+          onAddDoctor={handleSuggestionAdd}
         />
       )}
 
-      {isSearching && (
-        <p className="text-sm text-gray-500">Recherche en cours...</p>
+      {/* Recherche officielle étendue */}
+      {searchQuery.length >= 3 && searchResults.length === 0 && suggestions.length === 0 && (
+        <OfficialSearch
+          query={searchQuery}
+          onAddDoctor={handleSuggestionAdd}
+        />
       )}
+
+      {/* Saisie manuelle */}
+      <ManualDoctorInput onSubmit={handleManualDoctorSubmit} />
     </div>
   );
 };
