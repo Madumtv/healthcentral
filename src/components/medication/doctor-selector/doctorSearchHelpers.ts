@@ -1,4 +1,3 @@
-
 import { Doctor } from "@/lib/supabase-doctors-service";
 
 const isValidDoctorName = (query: string): boolean => {
@@ -8,7 +7,7 @@ const isValidDoctorName = (query: string): boolean => {
   if (cleanQuery.length < 2) return false;
   
   // Rejeter les requêtes avec trop de caractères répétés
-  const charCount = {};
+  const charCount: { [key: string]: number } = {};
   for (const char of cleanQuery) {
     charCount[char] = (charCount[char] || 0) + 1;
   }

@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Globe, Database, ExternalLink, Plus, MapPin, Phone, User } from "lucide-react";
+import { Search, Globe, Database, ExternalLink, Plus, MapPin, Phone, User, link } from "lucide-react";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
 interface UnifiedSearchResultsProps {
@@ -47,7 +46,7 @@ export const UnifiedSearchResults = ({
           )}
         </div>
         
-        <div className="flex items-center gap-4 text-xs text-gray-600">
+        <div className="flex items-center gap-4 text-xs text-gray-600 mb-1">
           {doctor.city && (
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
@@ -61,11 +60,59 @@ export const UnifiedSearchResults = ({
             </div>
           )}
         </div>
+
+        {/* Affichage de l'adresse complète si disponible */}
+        {doctor.address && (
+          <div className="flex items-start gap-1 text-xs text-gray-600 mb-1">
+            <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
+            <span className="text-gray-700">{doctor.address}</span>
+            {doctor.postal_code && doctor.city && (
+              <span>, {doctor.postal_code} {doctor.city}</span>
+            )}
+          </div>
+        )}
         
-        <div className="mt-1">
+        <div className="flex items-center gap-2 mt-1">
           <Badge variant="outline" className="text-xs">
             {doctor.source || 'Base locale'}
           </Badge>
+
+          {/* Lien externe si le docteur provient d'une source externe */}
+          {doctor.source && doctor.source.includes('ordomedic.be') && (
+            <a
+              href={`https://www.ordomedic.be/fr/medecins/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Voir sur ordomedic.be
+            </a>
+          )}
+
+          {doctor.source && doctor.source.includes('Doctoralia') && (
+            <a
+              href={`https://www.doctoralia.be/medecin/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Voir sur Doctoralia
+            </a>
+          )}
+
+          {doctor.source && doctor.source.includes('DoctorAnytime') && (
+            <a
+              href={`https://www.doctoranytime.be/fr/medecin/${doctor.first_name.toLowerCase()}-${doctor.last_name.toLowerCase()}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Voir sur DoctorAnytime
+            </a>
+          )}
         </div>
       </div>
       
