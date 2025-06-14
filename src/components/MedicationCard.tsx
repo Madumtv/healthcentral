@@ -17,10 +17,16 @@ interface MedicationCardProps {
 export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardProps) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+  console.log("MedicationCard rendering with timeOfDay:", medication.timeOfDay);
+
   // Vérifier si le lien est valide (non vide et commence par http)
   const hasValidLink = medication.infoLink && 
     medication.infoLink.trim() !== "" && 
     (medication.infoLink.startsWith("http://") || medication.infoLink.startsWith("https://"));
+
+  // Dédoublonner les périodes de temps pour éviter les doublons
+  const uniqueTimeOfDay = medication.timeOfDay ? [...new Set(medication.timeOfDay)] : [];
+  console.log("Unique timeOfDay:", uniqueTimeOfDay);
 
   return (
     <>
@@ -47,11 +53,11 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
             <p className="text-sm text-gray-600">{medication.description}</p>
           )}
           
-          {medication.timeOfDay && medication.timeOfDay.length > 0 && (
+          {uniqueTimeOfDay.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-900">Quand prendre</h4>
               <div className="flex flex-wrap gap-2">
-                {medication.timeOfDay.map((time) => (
+                {uniqueTimeOfDay.map((time) => (
                   <Badge key={time} variant="outline" className="bg-blue-50 text-medBlue border-blue-200 px-2 py-1">
                     {timeOfDayLabels[time] || time}
                   </Badge>

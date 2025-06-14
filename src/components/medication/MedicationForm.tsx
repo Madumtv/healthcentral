@@ -27,14 +27,21 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
 
   // Initialiser les périodes personnalisées à partir du médicament
   useEffect(() => {
+    console.log("Initializing medication data:", initialMedication);
+    
     if (initialMedication.timeOfDay && initialMedication.timeOfDay.length > 0) {
       // Filtrer pour enlever les périodes standard qui sont déjà dans les checkboxes
       const standardPeriods = ['morning', 'noon', 'evening', 'night'];
       const custom = initialMedication.timeOfDay.filter(
         period => !standardPeriods.includes(period)
       ) as TimeOfDay[];
+      
+      console.log("Custom periods extracted:", custom);
       setCustomTimePeriods(custom);
     }
+    
+    // S'assurer que medication est bien synchronisé avec initialMedication
+    setMedication(initialMedication);
   }, [initialMedication]);
 
   const handleInputChange = (
@@ -64,33 +71,45 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
   };
   
   const handleTimeChange = (time: string, checked: boolean) => {
+    console.log("Time change:", time, checked);
+    
     setMedication((prev) => {
       // Récupérer seulement les périodes standard du timeOfDay actuel
       const standardPeriods = ['morning', 'noon', 'evening', 'night'];
-      const standardTimeOfDay = (prev.timeOfDay || [])
-        .filter(period => standardPeriods.includes(period));
+      const currentTimeOfDay = prev.timeOfDay || [];
+      
+      // Séparer les périodes standard des périodes personnalisées
+      const standardSelected = currentTimeOfDay.filter(period => standardPeriods.includes(period));
+      const customSelected = currentTimeOfDay.filter(period => !standardPeriods.includes(period));
+      
+      let newStandardSelected = [...standardSelected];
       
       if (checked) {
-        if (!standardTimeOfDay.includes(time as any)) {
-          standardTimeOfDay.push(time as any);
+        if (!newStandardSelected.includes(time as any)) {
+          newStandardSelected.push(time as any);
         }
       } else {
-        const index = standardTimeOfDay.indexOf(time as any);
+        const index = newStandardSelected.indexOf(time as any);
         if (index > -1) {
-          standardTimeOfDay.splice(index, 1);
+          newStandardSelected.splice(index, 1);
         }
       }
       
       // Combiner les périodes standard avec les périodes personnalisées
+      const newTimeOfDay = [...newStandardSelected, ...customSelected] as TimeOfDay[];
+      
+      console.log("New timeOfDay:", newTimeOfDay);
+      
       return { 
         ...prev, 
-        timeOfDay: [...standardTimeOfDay, ...customTimePeriods] as TimeOfDay[] 
+        timeOfDay: newTimeOfDay
       };
     });
   };
   
   // Gérer les changements dans les périodes personnalisées
   const handleCustomPeriodsChange = (periods: TimeOfDay[]) => {
+    console.log("Custom periods change:", periods);
     setCustomTimePeriods(periods);
     
     // Mettre à jour timeOfDay dans medication
@@ -100,9 +119,12 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
       const standardSelected = (prev.timeOfDay || [])
         .filter(period => standardPeriods.includes(period));
       
+      const newTimeOfDay = [...standardSelected, ...periods] as TimeOfDay[];
+      console.log("Updated timeOfDay with custom periods:", newTimeOfDay);
+      
       return {
         ...prev,
-        timeOfDay: [...standardSelected, ...periods] as TimeOfDay[]
+        timeOfDay: newTimeOfDay
       };
     });
   };
@@ -112,6 +134,8 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
     setIsSaving(true);
     
     try {
+      console.log("Submitting medication:", medication);
+      
       if (!medication.name || !medication.dosage || 
           !medication.timeOfDay?.length || !medication.daysOfWeek?.length) {
         throw new Error("Veuillez remplir tous les champs obligatoires.");
@@ -133,6 +157,7 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
       
       navigate("/medications");
     } catch (error: any) {
+      console.error("Error saving medication:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur s'est produite.",
