@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Search, Plus, Flag } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { HybridMedicationSearch } from "../HybridMedicationSearch";
 import { MedicamentInfo } from "@/lib/medicaments-api";
 
@@ -71,7 +71,7 @@ export const BasicInfoFields = ({
             onClick={() => handleSearchToggle('belgium')}
             className="text-sm"
           >
-            <Flag className="mr-2 h-4 w-4 text-yellow-500" />
+            <span className="mr-2 text-lg">🇧🇪</span>
             Recherche Belgique
           </Button>
           <Button
@@ -81,7 +81,7 @@ export const BasicInfoFields = ({
             onClick={() => handleSearchToggle('france')}
             className="text-sm"
           >
-            <Flag className="mr-2 h-4 w-4 text-blue-500" />
+            <span className="mr-2 text-lg">🇫🇷</span>
             Recherche France (Vidal)
           </Button>
           {showMedicamentSearch && (
@@ -109,7 +109,7 @@ export const BasicInfoFields = ({
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-blue-700">
-                  <Flag className="h-4 w-4 text-blue-500" />
+                  <span className="text-lg">🇫🇷</span>
                   <span className="font-medium">Recherche Vidal.fr (France)</span>
                 </div>
                 <p className="text-sm text-blue-600">
