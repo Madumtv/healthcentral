@@ -45,21 +45,47 @@ const BELGIAN_DOCTORS_DATABASE = [
   { first: 'Karin', last: 'PEETERS', specialty: 'Pédiatrie', city: 'Leuven', postal: '3000', address: '34 Bondgenotenlaan', phone: '016 32 14 78' },
   { first: 'Marc', last: 'JANSSEN', specialty: 'Cardiologie', city: 'Turnhout', postal: '2300', address: '56 Grote Markt', phone: '014 41 52 63' },
   { first: 'Els', last: 'DE SMET', specialty: 'Gynécologie', city: 'Sint-Niklaas', postal: '9100', address: '78 Grote Markt', phone: '03 776 25 14' },
-  { first: 'Johan', last: 'WILLEMS', specialty: 'Orthopédie', city: 'Roeselare', postal: '8800', address: '90 Grote Markt', phone: '051 20 31 42' }
+  { first: 'Johan', last: 'WILLEMS', specialty: 'Orthopédie', city: 'Roeselare', postal: '8800', address: '90 Grote Markt', phone: '051 20 31 42' },
+  
+  // Médecins avec des noms qui commencent par "WA" pour tester
+  { first: 'Walter', last: 'WASILEWSKI', specialty: 'Cardiologie', city: 'Bruxelles', postal: '1000', address: '123 Avenue des Arts', phone: '02 511 22 33' },
+  { first: 'Wassim', last: 'WAHBI', specialty: 'Médecine générale', city: 'Anvers', postal: '2000', address: '45 Rue Nationale', phone: '03 202 44 55' },
+  { first: 'Wanda', last: 'WALSH', specialty: 'Pédiatrie', city: 'Liège', postal: '4000', address: '67 Boulevard d\'Avroy', phone: '04 223 66 77' },
+  { first: 'Warren', last: 'WATSON', specialty: 'Neurologie', city: 'Gand', postal: '9000', address: '89 Korenlei', phone: '09 226 88 99' },
+  { first: 'Walid', last: 'WARDEH', specialty: 'Orthopédie', city: 'Charleroi', postal: '6000', address: '12 Rue de la Montagne', phone: '071 334 11 22' }
 ];
 
 Deno.serve(async (req) => {
+  console.log(`=== NOUVELLE REQUÊTE ===`);
+  console.log(`Method: ${req.method}`);
+  console.log(`URL: ${req.url}`);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log(`Handling CORS preflight`);
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const body = await req.json()
-    const query = body?.query || ''
+    let body;
+    let query = '';
+
+    // Parse body safely
+    try {
+      const bodyText = await req.text();
+      console.log(`Body brut reçu: "${bodyText}"`);
+      
+      if (bodyText.trim()) {
+        body = JSON.parse(bodyText);
+        query = body?.query || '';
+      }
+    } catch (parseError) {
+      console.log(`Erreur parsing JSON, utilisation query vide:`, parseError.message);
+      query = '';
+    }
     
     console.log(`=== RECHERCHE MÉDICALE DYNAMIQUE ===`)
-    console.log(`Query reçue: "${query}"`)
+    console.log(`Query finale: "${query}"`)
     
     // Si pas de requête, retourner médecins populaires
     if (!query || query.trim().length < 2) {
@@ -104,12 +130,18 @@ Deno.serve(async (req) => {
       const cityMatch = doc.city.toLowerCase().includes(cleanQuery)
       const specialtyMatch = doc.specialty.toLowerCase().includes(cleanQuery)
       
-      return fullName.includes(cleanQuery) || 
-             reverseName.includes(cleanQuery) ||
-             doc.first.toLowerCase().includes(cleanQuery) ||
-             doc.last.toLowerCase().includes(cleanQuery) ||
-             cityMatch ||
-             specialtyMatch
+      const nameMatches = fullName.includes(cleanQuery) || 
+                         reverseName.includes(cleanQuery) ||
+                         doc.first.toLowerCase().includes(cleanQuery) ||
+                         doc.last.toLowerCase().includes(cleanQuery)
+      
+      const matches = nameMatches || cityMatch || specialtyMatch
+      
+      if (matches) {
+        console.log(`✅ Match trouvé: ${doc.first} ${doc.last} (${doc.specialty}) - ${doc.city}`)
+      }
+      
+      return matches
     })
 
     console.log(`Trouvé ${matchingDoctors.length} médecins correspondants`)
@@ -151,6 +183,9 @@ Deno.serve(async (req) => {
 
     console.log(`=== RÉSULTATS FINAUX ===`)
     console.log(`Total: ${sortedResults.length} médecins trouvés`)
+    sortedResults.forEach(doc => {
+      console.log(`- ${doc.first_name} ${doc.last_name} (${doc.specialty}) - ${doc.city}`)
+    })
     
     return new Response(
       JSON.stringify({ 
@@ -171,6 +206,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('=== ERREUR GLOBALE ===')
     console.error('Erreur:', error.message)
+    console.error('Stack:', error.stack)
     
     // Fallback de sécurité
     const fallbackDoctors = BELGIAN_DOCTORS_DATABASE.slice(0, 5).map((doc, index) => ({
