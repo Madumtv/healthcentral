@@ -9,12 +9,35 @@ import { MobileMenu } from "./navbar/MobileMenu";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, handleLogout, getInitials } = useAuth();
+  const { user, profile, isLoading, handleLogout, getInitials } = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Afficher un état de chargement minimal pendant l'initialisation
+  if (isLoading) {
+    return (
+      <nav className="bg-white shadow-sm border-b w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <Pill className="h-8 w-auto text-medBlue" />
+                <span className="ml-2 text-xl font-semibold text-medBlue">
+                  PilulePal
+                </span>
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b w-full">
