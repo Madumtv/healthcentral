@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 
 interface ManualDoctorInputProps {
   initialValue?: string;
-  onConfirm: (doctorText: string) => void;
+  onSubmit: (doctorText: string) => void;
 }
 
-export const ManualDoctorInput = ({ initialValue = "", onConfirm }: ManualDoctorInputProps) => {
+export const ManualDoctorInput = ({ initialValue = "", onSubmit }: ManualDoctorInputProps) => {
   const [manualDoctorText, setManualDoctorText] = useState(initialValue);
 
-  const handleConfirm = () => {
-    onConfirm(manualDoctorText);
+  const handleSubmit = () => {
+    onSubmit(manualDoctorText);
   };
 
   return (
@@ -25,7 +25,7 @@ export const ManualDoctorInput = ({ initialValue = "", onConfirm }: ManualDoctor
       <Button
         type="button"
         size="sm"
-        onClick={handleConfirm}
+        onClick={handleSubmit}
         disabled={!manualDoctorText.trim()}
       >
         Confirmer

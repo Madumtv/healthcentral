@@ -73,7 +73,6 @@ export const DoctorSelector = ({
       {searchResults.length > 0 && (
         <DoctorSearchResults
           doctors={searchResults}
-          isSearching={isSearching}
           onSelectDoctor={handleDoctorSelect}
         />
       )}

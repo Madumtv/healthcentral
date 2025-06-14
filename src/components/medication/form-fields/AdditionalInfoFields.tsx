@@ -26,8 +26,8 @@ export const AdditionalInfoFields = ({
     <div className="space-y-6">
       <DoctorSelector
         selectedDoctorId={doctorId}
-        prescribingDoctorText={prescribingDoctor}
-        onDoctorSelect={onDoctorChange}
+        selectedDoctorText={prescribingDoctor}
+        onDoctorChange={onDoctorChange}
       />
       
       <div className="space-y-2">
