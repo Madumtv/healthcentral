@@ -1,7 +1,7 @@
 
 import { Medication } from "@/types";
-import MedicationCard from "@/components/MedicationCard";
 import { EmptyMedicationState } from "./EmptyMedicationState";
+import { MedicationsListTable } from "./MedicationsListTable";
 
 interface AllMedicationsListProps {
   medications: Medication[];
@@ -20,15 +20,17 @@ export const AllMedicationsList = ({ medications, onEdit, onDelete }: AllMedicat
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {medications.map(medication => (
-        <MedicationCard
-          key={medication.id}
-          medication={medication}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Liste complète de vos médicaments ({medications.length})
+        </h2>
+      </div>
+      <MedicationsListTable 
+        medications={medications} 
+        onEdit={onEdit} 
+        onDelete={onDelete} 
+      />
     </div>
   );
 };
