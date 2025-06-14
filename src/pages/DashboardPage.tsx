@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
@@ -106,11 +105,11 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex col">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-grow py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <DashboardGreeting userName={userName} />
           
           <DashboardTabs
