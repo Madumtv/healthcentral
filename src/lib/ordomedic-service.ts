@@ -2,41 +2,100 @@
 import { Doctor } from "@/lib/supabase-doctors-service";
 import { supabase } from "@/integrations/supabase/client";
 
+interface SearchResponse {
+  doctors: Doctor[];
+  suggestions: Doctor[];
+  metadata: {
+    query: string;
+    total_local?: number;
+    total_suggestions?: number;
+    sources: string[];
+    external_sources?: string[];
+    search_type: string;
+    timestamp: string;
+  };
+}
+
 class OrdomedicService {
   /**
-   * Recherche dynamique de médecins dans une base étendue
+   * Recherche hybride de médecins avec suggestions d'ajout
    */
-  async searchDoctors(query: string): Promise<Doctor[]> {
+  async searchDoctors(query: string): Promise<{ doctors: Doctor[], suggestions: Doctor[] }> {
     try {
-      console.log(`OrdomedicService: recherche dynamique pour "${query}"`);
+      console.log(`OrdomedicService: recherche hybride pour "${query}"`);
       
       // Appel à l'Edge Function améliorée
-      console.log("🔍 Lancement de la recherche dynamique via Edge Function...");
+      console.log("🔍 Lancement de la recherche hybride via Edge Function...");
       const searchResults = await this.callSearchEdgeFunction(query);
       
-      if (searchResults.length > 0) {
-        console.log(`✅ Trouvé ${searchResults.length} médecins via recherche dynamique`);
-        return searchResults;
-      }
+      return searchResults;
 
-      // Fallback local si échec complet
-      console.log("⚠️ Échec recherche, utilisation de fallback local...");
-      const fallbackResults = this.getLocalFallback(query);
-      console.log(`📋 Retour de ${fallbackResults.length} médecins fallback`);
-      
-      return fallbackResults;
     } catch (error) {
       console.error('❌ Erreur lors de la recherche:', error);
-      return this.getLocalFallback(query);
+      return {
+        doctors: this.getLocalFallback(query),
+        suggestions: []
+      };
+    }
+  }
+
+  /**
+   * Ajouter un médecin suggéré à la base de données
+   */
+  async addSuggestedDoctor(doctor: Doctor): Promise<Doctor | null> {
+    try {
+      console.log(`📝 Ajout du médecin suggéré: ${doctor.first_name} ${doctor.last_name}`);
+      
+      const { data, error } = await supabase
+        .from('doctors')
+        .insert({
+          first_name: doctor.first_name,
+          last_name: doctor.last_name,
+          specialty: doctor.specialty,
+          address: doctor.address,
+          city: doctor.city,
+          postal_code: doctor.postal_code,
+          phone: doctor.phone,
+          email: doctor.email,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur lors de l\'ajout:', error);
+        return null;
+      }
+
+      console.log(`✅ Médecin ajouté avec succès: ${data.id}`);
+      
+      return {
+        id: data.id,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        specialty: data.specialty,
+        address: data.address,
+        city: data.city,
+        postal_code: data.postal_code,
+        phone: data.phone,
+        email: data.email,
+        is_active: data.is_active,
+        created_at: new Date(data.created_at),
+        updated_at: new Date(data.updated_at)
+      };
+
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'ajout du médecin:', error);
+      return null;
     }
   }
 
   /**
    * Appel à l'Edge Function de recherche
    */
-  private async callSearchEdgeFunction(query: string): Promise<Doctor[]> {
+  private async callSearchEdgeFunction(query: string): Promise<{ doctors: Doctor[], suggestions: Doctor[] }> {
     try {
-      console.log(`🌐 Recherche dynamique pour: "${query}"`);
+      console.log(`🌐 Recherche hybride pour: "${query}"`);
       
       const { data, error } = await supabase.functions.invoke('scrape-ordomedic', {
         body: { query },
@@ -47,25 +106,28 @@ class OrdomedicService {
 
       if (error) {
         console.error('❌ Erreur Edge Function:', error);
-        return [];
+        return { doctors: [], suggestions: [] };
       }
 
-      if (!data || !data.doctors || !Array.isArray(data.doctors)) {
-        console.warn('⚠️ Format de données invalide retourné de l\'Edge Function');
-        return [];
+      if (!data) {
+        console.warn('⚠️ Aucune données retournées de l\'Edge Function');
+        return { doctors: [], suggestions: [] };
       }
+
+      const searchResponse = data as SearchResponse;
 
       // Log des métadonnées pour debugging
-      if (data.metadata) {
+      if (searchResponse.metadata) {
         console.log(`📊 Métadonnées recherche:`, {
-          total: data.metadata.total,
-          sources: data.metadata.sources,
-          query: data.metadata.query
+          total_local: searchResponse.metadata.total_local,
+          total_suggestions: searchResponse.metadata.total_suggestions,
+          sources: searchResponse.metadata.sources,
+          external_sources: searchResponse.metadata.external_sources
         });
       }
 
       // Convertir les résultats au format Doctor
-      const doctors: Doctor[] = data.doctors.map((scraped: any, index: number) => ({
+      const doctors: Doctor[] = (searchResponse.doctors || []).map((scraped: any, index: number) => ({
         id: scraped.id || `dynamic_${Date.now()}_${index}`,
         first_name: scraped.first_name,
         last_name: scraped.last_name,
@@ -75,18 +137,35 @@ class OrdomedicService {
         postal_code: scraped.postal_code,
         phone: scraped.phone,
         email: scraped.email,
+        source: scraped.source,
         is_active: true,
         created_at: new Date(),
         updated_at: new Date()
       }));
 
-      console.log(`✅ Conversion réussie: ${doctors.length} médecins trouvés via recherche dynamique`);
+      const suggestions: Doctor[] = (searchResponse.suggestions || []).map((scraped: any, index: number) => ({
+        id: scraped.id || `suggestion_${Date.now()}_${index}`,
+        first_name: scraped.first_name,
+        last_name: scraped.last_name,
+        specialty: scraped.specialty,
+        address: scraped.address,
+        city: scraped.city,
+        postal_code: scraped.postal_code,
+        phone: scraped.phone,
+        email: scraped.email,
+        source: scraped.source,
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      }));
+
+      console.log(`✅ Conversion réussie: ${doctors.length} médecins locaux, ${suggestions.length} suggestions`);
       
-      return doctors;
+      return { doctors, suggestions };
 
     } catch (error) {
       console.error('❌ Erreur lors de l\'appel Edge Function:', error);
-      return [];
+      return { doctors: [], suggestions: [] };
     }
   }
 

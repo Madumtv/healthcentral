@@ -9,6 +9,7 @@ import { SelectedDoctorCard } from "./doctor-selector/SelectedDoctorCard";
 import { DoctorSearchResults } from "./doctor-selector/DoctorSearchResults";
 import { ManualDoctorInput } from "./doctor-selector/ManualDoctorInput";
 import { DoctorSearchInput } from "./doctor-selector/DoctorSearchInput";
+import { DoctorSuggestions } from "./doctor-selector/DoctorSuggestions";
 
 interface DoctorSelectorProps {
   selectedDoctorId?: string;
@@ -30,8 +31,10 @@ export const DoctorSelector = ({
     searchQuery,
     setSearchQuery,
     searchResults,
+    suggestions,
     isSearching,
-    clearSearch
+    clearSearch,
+    addSuggestedDoctor
   } = useDoctorSearch();
 
   // Load selected doctor on mount
@@ -53,6 +56,14 @@ export const DoctorSelector = ({
     onDoctorSelect(doctor.id, doctorText);
     clearSearch();
     setShowManualInput(false);
+  };
+
+  const handleAddSuggestedDoctor = async (doctor: Doctor) => {
+    const addedDoctor = await addSuggestedDoctor(doctor);
+    if (addedDoctor) {
+      // Sélectionner automatiquement le médecin ajouté
+      handleSelectDoctor(addedDoctor);
+    }
   };
 
   const handleManualInput = (doctorText: string) => {
@@ -114,6 +125,13 @@ export const DoctorSelector = ({
         doctors={searchResults}
         onSelectDoctor={handleSelectDoctor}
       />
+
+      {suggestions.length > 0 && (
+        <DoctorSuggestions
+          suggestions={suggestions}
+          onAddDoctor={handleAddSuggestedDoctor}
+        />
+      )}
 
       {isSearching && (
         <p className="text-sm text-gray-500">Recherche en cours...</p>

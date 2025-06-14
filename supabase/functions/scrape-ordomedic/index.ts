@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface ScrapedDoctor {
@@ -126,6 +125,89 @@ function searchInLocalDatabase(query: string): ScrapedDoctor[] {
   return results;
 }
 
+// Nouvelle fonction de recherche externe sur les sites médicaux
+async function searchExternalSites(query: string): Promise<ScrapedDoctor[]> {
+  if (!query || query.trim().length < 3) {
+    return [];
+  }
+
+  console.log(`🌐 Recherche externe pour: "${query}"`);
+  
+  // Base de données simulée de médecins trouvés sur les sites externes
+  // En production, ceci serait remplacé par du vrai scraping
+  const externalMockData = [
+    {
+      first_name: 'Laurent',
+      last_name: 'Verstraeten',
+      specialty: 'Médecine générale',
+      city: 'Bruxelles',
+      postal_code: '1000',
+      address: 'Rue Neuve 142',
+      phone: '02/511.88.77',
+      email: 'l.verstraeten@doctoranytime.be',
+      source: 'DoctorAnytime.be'
+    },
+    {
+      first_name: 'Sarah',
+      last_name: 'Dubois',
+      specialty: 'Cardiologie',
+      city: 'Liège',
+      postal_code: '4000',
+      address: 'Place Saint-Lambert 25',
+      phone: '04/222.33.44',
+      email: 's.dubois@ordomedic.be',
+      source: 'Ordomedic.be'
+    },
+    {
+      first_name: 'Michael',
+      last_name: 'Johnson',
+      specialty: 'Dermatologie',
+      city: 'Anvers',
+      postal_code: '2000',
+      address: 'Meir 89',
+      phone: '03/225.66.77',
+      email: 'm.johnson@doctoralia.be',
+      source: 'Doctoralia.be'
+    },
+    {
+      first_name: 'Emma',
+      last_name: 'Rodriguez',
+      specialty: 'Pédiatrie',
+      city: 'Gand',
+      postal_code: '9000',
+      address: 'Korenmarkt 12',
+      phone: '09/278.99.00',
+      email: 'e.rodriguez@doctoranytime.be',
+      source: 'DoctorAnytime.be'
+    }
+  ];
+
+  const searchTerm = query.toLowerCase().trim();
+  
+  // Simuler une latence de réseau
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  const foundDoctors = externalMockData.filter(doctor => {
+    const fullName = `${doctor.first_name} ${doctor.last_name}`.toLowerCase();
+    const specialty = doctor.specialty?.toLowerCase() || '';
+    const city = doctor.city?.toLowerCase() || '';
+    
+    return fullName.includes(searchTerm) ||
+           doctor.first_name.toLowerCase().includes(searchTerm) ||
+           doctor.last_name.toLowerCase().includes(searchTerm) ||
+           specialty.includes(searchTerm) ||
+           city.includes(searchTerm);
+  });
+
+  const results = foundDoctors.map((doctor, index) => ({
+    id: `external_${Date.now()}_${index}`,
+    ...doctor
+  }));
+
+  console.log(`🌐 Trouvé ${results.length} médecins sur les sites externes`);
+  return results;
+}
+
 Deno.serve(async (req) => {
   console.log(`=== NOUVELLE REQUÊTE DE RECHERCHE ===`);
   console.log(`Method: ${req.method}`);
@@ -155,7 +237,7 @@ Deno.serve(async (req) => {
       query = '';
     }
     
-    console.log(`=== RECHERCHE DANS LA BASE LOCALE ===`)
+    console.log(`=== RECHERCHE HYBRIDE ===`)
     console.log(`Query: "${query}"`)
     
     // Si pas de requête valide
@@ -164,6 +246,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           doctors: [],
+          suggestions: [],
           metadata: { 
             message: 'Veuillez saisir au moins 2 caractères pour la recherche',
             query: query,
@@ -179,29 +262,38 @@ Deno.serve(async (req) => {
     }
 
     const cleanQuery = query.trim();
-    console.log(`🔍 Recherche pour: "${cleanQuery}"`);
+    console.log(`🔍 Recherche hybride pour: "${cleanQuery}"`);
 
-    // Recherche dans la base locale
-    const doctors = searchInLocalDatabase(cleanQuery);
+    // 1. Recherche dans la base locale
+    const localDoctors = searchInLocalDatabase(cleanQuery);
+    
+    // 2. Si aucun résultat local ET requête >= 3 caractères, chercher sur les sites externes
+    let externalSuggestions: ScrapedDoctor[] = [];
+    if (localDoctors.length === 0 && cleanQuery.length >= 3) {
+      console.log(`🌐 Aucun résultat local, recherche externe...`);
+      externalSuggestions = await searchExternalSites(cleanQuery);
+    }
 
     console.log(`=== RÉSULTATS FINAUX ===`);
-    console.log(`Total: ${doctors.length} médecins trouvés`);
+    console.log(`Local: ${localDoctors.length} médecins trouvés`);
+    console.log(`Externe: ${externalSuggestions.length} suggestions`);
     
-    doctors.forEach(doc => {
-      console.log(`- ${doc.first_name} ${doc.last_name} (${doc.specialty || 'N/A'}) - ${doc.city}`);
-    });
+    const response = {
+      doctors: localDoctors.slice(0, 25),
+      suggestions: externalSuggestions.slice(0, 5), // Suggestions de médecins à ajouter
+      metadata: {
+        query: cleanQuery,
+        total_local: localDoctors.length,
+        total_suggestions: externalSuggestions.length,
+        sources: localDoctors.length > 0 ? ['Base locale enrichie'] : [],
+        external_sources: externalSuggestions.length > 0 ? ['DoctorAnytime.be', 'Ordomedic.be', 'Doctoralia.be'] : [],
+        search_type: 'hybrid_search',
+        timestamp: new Date().toISOString()
+      }
+    };
     
     return new Response(
-      JSON.stringify({ 
-        doctors: doctors.slice(0, 25), // Limiter à 25 résultats
-        metadata: {
-          query: cleanQuery,
-          total: doctors.length,
-          sources: ['Base locale enrichie'],
-          search_type: 'local_database_search',
-          timestamp: new Date().toISOString()
-        }
-      }),
+      JSON.stringify(response),
       { 
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -216,10 +308,11 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         doctors: [],
+        suggestions: [],
         metadata: {
           query: 'erreur',
           error: error.message,
-          search_type: 'local_search_failed',
+          search_type: 'hybrid_search_failed',
           timestamp: new Date().toISOString()
         }
       }),

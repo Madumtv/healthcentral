@@ -1,11 +1,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
+import { ordomedicService } from "@/lib/ordomedic-service";
 import { useToast } from "@/hooks/use-toast";
 
 export const useDoctorSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Doctor[]>([]);
+  const [suggestions, setSuggestions] = useState<Doctor[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [lastSearchQuery, setLastSearchQuery] = useState("");
   const { toast } = useToast();
@@ -16,6 +18,7 @@ export const useDoctorSearch = () => {
     
     if (!trimmedQuery || trimmedQuery.length < 2) {
       setSearchResults([]);
+      setSuggestions([]);
       setIsSearching(false);
       return;
     }
@@ -29,14 +32,17 @@ export const useDoctorSearch = () => {
     setLastSearchQuery(trimmedQuery);
     
     try {
-      console.log(`🔍 Recherche pour: "${trimmedQuery}"`);
-      const results = await supabaseDoctorsService.search(trimmedQuery);
-      console.log(`📋 Résultats reçus: ${results.length} médecins`);
+      console.log(`🔍 Recherche hybride pour: "${trimmedQuery}"`);
       
-      // Vérifier que le composant est toujours monté avant de mettre à jour l'état
-      setSearchResults(results);
+      // Utiliser le service hybride qui gère local + suggestions
+      const { doctors, suggestions: newSuggestions } = await ordomedicService.searchDoctors(trimmedQuery);
       
-      if (results.length === 0) {
+      console.log(`📋 Résultats reçus: ${doctors.length} médecins, ${newSuggestions.length} suggestions`);
+      
+      setSearchResults(doctors);
+      setSuggestions(newSuggestions);
+      
+      if (doctors.length === 0 && newSuggestions.length === 0) {
         console.log(`⚠️ Aucun résultat pour "${trimmedQuery}"`);
       }
     } catch (error) {
@@ -47,10 +53,43 @@ export const useDoctorSearch = () => {
         variant: "destructive",
       });
       setSearchResults([]);
+      setSuggestions([]);
     } finally {
       setIsSearching(false);
     }
   }, [lastSearchQuery, searchResults.length, toast]);
+
+  // Fonction pour ajouter un médecin suggéré
+  const addSuggestedDoctor = useCallback(async (doctor: Doctor): Promise<Doctor | null> => {
+    try {
+      const addedDoctor = await ordomedicService.addSuggestedDoctor(doctor);
+      
+      if (addedDoctor) {
+        toast({
+          title: "Médecin ajouté",
+          description: `Dr ${doctor.first_name} ${doctor.last_name} a été ajouté à la base de données.`,
+        });
+        
+        // Retirer de la liste des suggestions
+        setSuggestions(prev => prev.filter(s => s.id !== doctor.id));
+        
+        // Ajouter aux résultats de recherche
+        setSearchResults(prev => [addedDoctor, ...prev]);
+        
+        return addedDoctor;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'ajout:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter le médecin. Veuillez réessayer.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  }, [toast]);
 
   // Recherche avec debounce - plus réactif
   useEffect(() => {
@@ -59,10 +98,11 @@ export const useDoctorSearch = () => {
         performSearch(searchQuery);
       } else if (searchQuery.length < 2) {
         setSearchResults([]);
+        setSuggestions([]);
         setIsSearching(false);
         setLastSearchQuery("");
       }
-    }, 100); // Encore plus réactif
+    }, 300); // Délai un peu plus long pour les suggestions
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, lastSearchQuery, performSearch]);
@@ -70,6 +110,7 @@ export const useDoctorSearch = () => {
   const clearSearch = useCallback(() => {
     setSearchQuery("");
     setSearchResults([]);
+    setSuggestions([]);
     setLastSearchQuery("");
     setIsSearching(false);
   }, []);
@@ -78,7 +119,9 @@ export const useDoctorSearch = () => {
     searchQuery,
     setSearchQuery,
     searchResults,
+    suggestions,
     isSearching,
-    clearSearch
+    clearSearch,
+    addSuggestedDoctor
   };
 };
