@@ -40,23 +40,33 @@ export function PasswordChangeForm({ user }: PasswordChangeFormProps) {
   const onSubmit = async (values: PasswordChangeValues) => {
     if (!user) return;
 
+    console.log("🔐 Changing password for user:", user.id);
     setIsSubmitting(true);
+    
     try {
       const { error } = await supabase.auth.updateUser({
         password: values.newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Password change error:", error);
+        throw error;
+      }
       
       form.reset();
+      console.log("✅ Password changed successfully");
       toast.success("Mot de passe mis à jour avec succès !");
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du mot de passe:", error);
+      console.error("💥 Error changing password:", error);
       toast.error("La mise à jour du mot de passe a échoué.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!user) {
+    return <p className="text-gray-500">Utilisateur non connecté</p>;
+  }
 
   return (
     <Form {...form}>
@@ -89,7 +99,7 @@ export function PasswordChangeForm({ user }: PasswordChangeFormProps) {
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Mise à jour..." : "Changer le mot de passe"}
         </Button>
       </form>

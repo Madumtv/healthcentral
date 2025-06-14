@@ -13,6 +13,7 @@ interface Profile {
   last_name?: string;
   birth_date?: string;
   email: string;
+  avatar_url?: string;
 }
 
 interface ProfileTabsProps {
@@ -22,29 +23,45 @@ interface ProfileTabsProps {
 }
 
 export function ProfileTabs({ user, profile, onProfileUpdate }: ProfileTabsProps) {
+  console.log("🎯 ProfileTabs rendering with:", { 
+    hasUser: !!user, 
+    hasProfile: !!profile,
+    profileName: profile?.name 
+  });
+
+  if (!user || !profile) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Données du profil non disponibles</p>
+      </div>
+    );
+  }
+
   return (
-    <Tabs defaultValue="profile">
-      <TabsList className="mb-4">
-        <TabsTrigger value="profile">Profil</TabsTrigger>
-        <TabsTrigger value="medications">Mes médicaments</TabsTrigger>
-        <TabsTrigger value="settings">Paramètres</TabsTrigger>
-      </TabsList>
+    <div className="w-full">
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="medications">Mes médicaments</TabsTrigger>
+          <TabsTrigger value="settings">Paramètres</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="profile">
-        <ProfileInfoTab 
-          user={user} 
-          profile={profile} 
-          onProfileUpdate={onProfileUpdate} 
-        />
-      </TabsContent>
+        <TabsContent value="profile" className="space-y-6">
+          <ProfileInfoTab 
+            user={user} 
+            profile={profile} 
+            onProfileUpdate={onProfileUpdate} 
+          />
+        </TabsContent>
 
-      <TabsContent value="medications">
-        <MedicationsTab />
-      </TabsContent>
+        <TabsContent value="medications" className="space-y-6">
+          <MedicationsTab />
+        </TabsContent>
 
-      <TabsContent value="settings">
-        <SettingsTab user={user} />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="settings" className="space-y-6">
+          <SettingsTab user={user} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
