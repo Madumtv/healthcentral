@@ -56,6 +56,20 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      specialty: "",
+      address: "",
+      city: "",
+      postalCode: "",
+      phone: "",
+      email: "",
+      inamiNumber: ""
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -97,7 +111,10 @@ export const AddDoctorForm = ({ onDoctorAdded, onCancel, initialSearchQuery }: A
         description: `Dr ${newDoctor.first_name} ${newDoctor.last_name} a été ajouté avec succès.`,
       });
 
-      // Call the callback with the new doctor
+      // Réinitialiser le formulaire
+      resetForm();
+      
+      // Appeler le callback avec le nouveau médecin
       onDoctorAdded(newDoctor);
     } catch (error: any) {
       console.error("Error creating doctor:", error);
