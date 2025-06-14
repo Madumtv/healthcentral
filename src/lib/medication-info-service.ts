@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { medicamentsApi, MedicamentInfo, MedicamentComposition } from "@/lib/medicaments-api";
 
@@ -153,7 +154,7 @@ class MedicationInfoService {
         name: med.name,
         company: med.company,
         category: med.category,
-        atc_code: med.atcCode,
+        atc_code: med.atcCode || '',
         delivery_status: med.deliveryStatus,
         prescription_type: med.prescriptionType,
         pack_size: med.packSize,

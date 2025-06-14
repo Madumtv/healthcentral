@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Doctor } from "@/lib/supabase-doctors-service";
 
@@ -61,7 +62,21 @@ class OrdomedicService {
       return [];
     }
 
-    return data as Doctor[];
+    return (data || []).map(doctor => ({
+      id: doctor.id,
+      inami_number: doctor.inami_number,
+      first_name: doctor.first_name,
+      last_name: doctor.last_name,
+      specialty: doctor.specialty,
+      address: doctor.address,
+      city: doctor.city,
+      postal_code: doctor.postal_code,
+      phone: doctor.phone,
+      email: doctor.email,
+      is_active: doctor.is_active,
+      created_at: new Date(doctor.created_at),
+      updated_at: new Date(doctor.updated_at),
+    }));
   }
 
   /**
@@ -69,9 +84,23 @@ class OrdomedicService {
    */
   private async saveDoctorsToLocal(doctors: Doctor[]): Promise<void> {
     try {
+      const dataToInsert = doctors.map(doctor => ({
+        id: doctor.id,
+        inami_number: doctor.inami_number,
+        first_name: doctor.first_name,
+        last_name: doctor.last_name,
+        specialty: doctor.specialty,
+        address: doctor.address,
+        city: doctor.city,
+        postal_code: doctor.postal_code,
+        phone: doctor.phone,
+        email: doctor.email,
+        is_active: doctor.is_active,
+      }));
+
       const { error } = await supabase
         .from('doctors')
-        .insert(doctors);
+        .insert(dataToInsert);
 
       if (error) {
         throw error;
