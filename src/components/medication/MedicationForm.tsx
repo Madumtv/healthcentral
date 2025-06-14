@@ -25,7 +25,8 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
     handleInputChange,
     handleDayChange,
     handleTimeChange,
-    handleCustomPeriodsChange
+    handleCustomPeriodsChange,
+    handleDoctorChange
   } = useMedicationHandlers({
     medication,
     setMedication,
@@ -52,6 +53,7 @@ const MedicationForm = ({ medication: initialMedication, isEditing, id }: Medica
           onDayChange={handleDayChange}
           onTimeChange={handleTimeChange}
           onCustomPeriodsChange={handleCustomPeriodsChange}
+          onDoctorChange={handleDoctorChange}
           onSubmit={handleSubmit}
         />
       </CardContent>

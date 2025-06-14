@@ -16,6 +16,7 @@ interface MedicationFormContentProps {
   onDayChange: (day: string, checked: boolean) => void;
   onTimeChange: (time: string, checked: boolean) => void;
   onCustomPeriodsChange: (periods: TimeOfDay[]) => void;
+  onDoctorChange: (doctorId: string | null, doctorText: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -27,6 +28,7 @@ export const MedicationFormContent = ({
   onDayChange,
   onTimeChange,
   onCustomPeriodsChange,
+  onDoctorChange,
   onSubmit
 }: MedicationFormContentProps) => {
   return (
@@ -56,8 +58,10 @@ export const MedicationFormContent = ({
       <AdditionalInfoFields
         notes={medication.notes}
         prescribingDoctor={medication.prescribingDoctor}
+        doctorId={medication.doctorId}
         infoLink={medication.infoLink}
         onChange={onInputChange}
+        onDoctorChange={onDoctorChange}
       />
       
       <SubmitButton isSaving={isSaving} />

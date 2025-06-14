@@ -100,10 +100,20 @@ export const useMedicationHandlers = ({
     });
   };
 
+  // Gérer les changements de médecin
+  const handleDoctorChange = (doctorId: string | null, doctorText: string) => {
+    setMedication((prev: any) => ({
+      ...prev,
+      doctorId,
+      prescribingDoctor: doctorText
+    }));
+  };
+
   return {
     handleInputChange,
     handleDayChange,
     handleTimeChange,
-    handleCustomPeriodsChange
+    handleCustomPeriodsChange,
+    handleDoctorChange
   };
 };

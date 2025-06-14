@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      doctors: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          inami_number: string | null
+          is_active: boolean | null
+          last_name: string
+          phone: string | null
+          postal_code: string | null
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          inami_number?: string | null
+          is_active?: boolean | null
+          last_name: string
+          phone?: string | null
+          postal_code?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          inami_number?: string | null
+          is_active?: boolean | null
+          last_name?: string
+          phone?: string | null
+          postal_code?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medication_doses: {
         Row: {
           created_at: string
@@ -58,6 +106,7 @@ export type Database = {
           created_at: string
           days_of_week: string[]
           description: string | null
+          doctor_id: string | null
           dosage: string
           id: string
           info_link: string | null
@@ -72,6 +121,7 @@ export type Database = {
           created_at?: string
           days_of_week: string[]
           description?: string | null
+          doctor_id?: string | null
           dosage: string
           id?: string
           info_link?: string | null
@@ -86,6 +136,7 @@ export type Database = {
           created_at?: string
           days_of_week?: string[]
           description?: string | null
+          doctor_id?: string | null
           dosage?: string
           id?: string
           info_link?: string | null
@@ -96,7 +147,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "medications_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

@@ -4,7 +4,7 @@ import { Medication } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Edit, Trash2, Info, FileText } from "lucide-react";
+import { ExternalLink, Edit, Trash2, Info, FileText, User, Phone, MapPin } from "lucide-react";
 import { daysOfWeekLabels, timeOfDayLabels } from "@/lib/constants";
 import { MedicamentDetailsModal } from "./medication/MedicamentDetailsModal";
 
@@ -78,18 +78,54 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
               </div>
             </div>
           )}
+
+          {/* Doctor information */}
+          {(medication.doctor || medication.prescribingDoctor) && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                <User className="h-4 w-4" />
+                Médecin prescripteur
+              </h4>
+              {medication.doctor ? (
+                <div className="bg-blue-50 p-3 rounded-lg space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-medBlue">
+                      Dr {medication.doctor.firstName} {medication.doctor.lastName}
+                    </span>
+                    {medication.doctor.specialty && (
+                      <Badge variant="outline" className="text-xs">
+                        {medication.doctor.specialty}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-600">
+                    {medication.doctor.city && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {medication.doctor.city}
+                      </div>
+                    )}
+                    {medication.doctor.phone && (
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {medication.doctor.phone}
+                      </div>
+                    )}
+                  </div>
+                  {medication.doctor.inamiNumber && (
+                    <p className="text-xs text-gray-500">INAMI: {medication.doctor.inamiNumber}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">{medication.prescribingDoctor}</p>
+              )}
+            </div>
+          )}
           
           {medication.notes && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-900">Notes</h4>
               <p className="text-sm text-gray-600">{medication.notes}</p>
-            </div>
-          )}
-          
-          {medication.prescribingDoctor && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-900">Médecin prescripteur</h4>
-              <p className="text-sm text-gray-600">{medication.prescribingDoctor}</p>
             </div>
           )}
         </CardContent>

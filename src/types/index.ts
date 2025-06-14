@@ -3,6 +3,17 @@ export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'frida
 
 export type TimeOfDay = 'morning' | 'noon' | 'evening' | 'night' | 'custom' | 'repas' | 'avant_repas' | 'apres_repas' | string;
 
+export interface Doctor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  specialty?: string;
+  phone?: string;
+  email?: string;
+  city?: string;
+  inamiNumber?: string;
+}
+
 export interface Medication {
   id: string;
   name: string;
@@ -12,6 +23,8 @@ export interface Medication {
   daysOfWeek: DayOfWeek[];
   notes?: string;
   prescribingDoctor?: string;
+  doctorId?: string;
+  doctor?: Doctor;
   infoLink?: string;
   createdAt: Date;
   updatedAt: Date;
