@@ -79,7 +79,11 @@ export const useAddDoctorForm = ({ onDoctorAdded, initialSearchQuery }: UseAddDo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("=== DEBUG: Form submission started ===");
+    console.log("Form data:", formData);
+    
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      console.log("ERROR: Missing required fields");
       toast({
         title: "Erreur",
         description: "Le prénom et le nom sont obligatoires.",
@@ -91,7 +95,7 @@ export const useAddDoctorForm = ({ onDoctorAdded, initialSearchQuery }: UseAddDo
     setIsSubmitting(true);
     
     try {
-      console.log("Submitting doctor form with data:", formData);
+      console.log("Creating doctor with form data:", formData);
       
       const doctorData = {
         first_name: formData.firstName.trim(),
@@ -106,7 +110,7 @@ export const useAddDoctorForm = ({ onDoctorAdded, initialSearchQuery }: UseAddDo
         is_active: true
       };
 
-      console.log("Creating doctor with processed data:", doctorData);
+      console.log("Processed doctor data for API:", doctorData);
       
       const newDoctor = await supabaseDoctorsService.create(doctorData);
       
@@ -122,8 +126,11 @@ export const useAddDoctorForm = ({ onDoctorAdded, initialSearchQuery }: UseAddDo
       
       // Appeler le callback avec le nouveau médecin
       onDoctorAdded(newDoctor);
+      
+      console.log("=== DEBUG: Form submission completed successfully ===");
     } catch (error: any) {
-      console.error("Error creating doctor:", error);
+      console.error("=== ERROR: Doctor creation failed ===", error);
+      console.error("Error details:", error.message, error.stack);
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'ajouter le médecin. Veuillez réessayer.",

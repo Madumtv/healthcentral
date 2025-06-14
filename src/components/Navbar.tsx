@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Pill, User, LogIn } from "lucide-react";
+import { Menu, X, Pill, User, LogIn, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -68,6 +68,10 @@ export function Navbar() {
                 </Link>
                 <Link to="/medications" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
                   Mes médicaments
+                </Link>
+                <Link to="/doctors" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center">
+                  <Users className="h-4 w-4 mr-1" />
+                  Médecins
                 </Link>
                 <Link 
                   to="/profile" 
@@ -146,6 +150,14 @@ export function Navbar() {
                   onClick={toggleMenu}
                 >
                   Mes médicaments
+                </Link>
+                <Link
+                  to="/doctors"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
+                  onClick={toggleMenu}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Médecins
                 </Link>
                 <Link
                   to="/profile"
