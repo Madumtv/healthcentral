@@ -52,20 +52,27 @@ const AuthPage = () => {
   });
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
+    console.log("🔐 Attempting login with:", values.email);
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
 
       if (error) {
+        console.error("❌ Login error:", error);
         throw error;
       }
 
+      console.log("✅ Login successful, user:", data.user?.id);
       toast.success("Connexion réussie !");
-      navigate("/dashboard");
+      
+      // Redirection vers le dashboard
+      console.log("🔄 Redirecting to dashboard...");
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
+      console.error("💥 Login failed:", error);
       toast.error(error.message || "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
@@ -73,12 +80,14 @@ const AuthPage = () => {
   };
 
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
+    console.log("📝 Attempting signup with:", values.email);
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             name: values.name,
             first_name: values.firstName || null,
@@ -88,15 +97,20 @@ const AuthPage = () => {
       });
 
       if (error) {
+        console.error("❌ Signup error:", error);
         throw error;
       }
 
+      console.log("✅ Signup successful:", data.user?.id);
       toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+      
+      // Pré-remplir le formulaire de connexion
       loginForm.reset({
         email: values.email,
         password: values.password,
       });
     } catch (error: any) {
+      console.error("💥 Signup failed:", error);
       toast.error(error.message || "Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
@@ -163,7 +177,7 @@ const AuthPage = () => {
                         disabled={isLoading}
                       >
                         <LogIn className="mr-2 h-4 w-4" />
-                        Se connecter
+                        {isLoading ? "Connexion..." : "Se connecter"}
                       </Button>
                     </form>
                   </Form>
@@ -265,7 +279,7 @@ const AuthPage = () => {
                         disabled={isLoading}
                       >
                         <UserPlus className="mr-2 h-4 w-4" />
-                        S'inscrire
+                        {isLoading ? "Inscription..." : "S'inscrire"}
                       </Button>
                     </form>
                   </Form>
