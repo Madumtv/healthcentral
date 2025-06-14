@@ -20,11 +20,17 @@ export function useAuth() {
   const fetchProfile = async (userId: string) => {
     try {
       console.log("📝 Fetching profile for user:", userId);
-      const { data: profileData } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('avatar_url, name, first_name, last_name')
         .eq('id', userId)
         .single();
+      
+      if (error) {
+        console.error("❌ Error fetching profile:", error);
+        setProfile(null);
+        return;
+      }
       
       if (profileData) {
         console.log("✅ Profile fetched:", profileData);
@@ -62,6 +68,7 @@ export function useAuth() {
         if (mounted) {
           if (session?.user) {
             console.log("✅ User session found:", session.user.id);
+            console.log("🔍 Setting user state:", session.user.email);
             setUser(session.user);
             await fetchProfile(session.user.id);
           } else {
@@ -70,6 +77,7 @@ export function useAuth() {
             setProfile(null);
           }
           setLoading(false);
+          console.log("🔄 Auth initialization complete, loading:", false);
         }
       } catch (error) {
         console.error("💥 Auth initialization error:", error);
@@ -81,18 +89,19 @@ export function useAuth() {
       }
     };
 
-    initializeAuth();
-
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 Auth state changed:", event, session?.user?.id);
+        console.log("🔍 Session details:", session?.user?.email);
         
         if (mounted) {
           if (session?.user) {
+            console.log("✅ Setting user from auth change:", session.user.email);
             setUser(session.user);
             await fetchProfile(session.user.id);
           } else {
+            console.log("❌ Clearing user from auth change");
             setUser(null);
             setProfile(null);
           }
@@ -101,11 +110,22 @@ export function useAuth() {
       }
     );
 
+    // Then initialize
+    initializeAuth();
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  // Add debug logging for state changes
+  useEffect(() => {
+    console.log("🎯 Auth state updated - User:", !!user, "Loading:", loading, "Profile:", !!profile);
+    if (user) {
+      console.log("👤 Current user email:", user.email);
+    }
+  }, [user, loading, profile]);
 
   const handleLogout = async () => {
     console.log("🚪 Logging out...");
