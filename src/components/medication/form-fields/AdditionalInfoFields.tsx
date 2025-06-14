@@ -3,7 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DoctorSelector } from "../DoctorSelector";
+import { SimpleDoctorSelector } from "../SimpleDoctorSelector";
 
 interface AdditionalInfoFieldsProps {
   notes?: string;
@@ -24,7 +24,7 @@ export const AdditionalInfoFields = ({
 }: AdditionalInfoFieldsProps) => {
   return (
     <div className="space-y-6">
-      <DoctorSelector
+      <SimpleDoctorSelector
         selectedDoctorId={doctorId}
         selectedDoctorText={prescribingDoctor}
         onDoctorChange={onDoctorChange}
