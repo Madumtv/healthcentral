@@ -2,7 +2,7 @@
 import { searchLocalDoctors, filterLocalDoctors } from "./doctors/local-search";
 import { searchExternalDoctors } from "./doctors/external-search";
 import { removeDuplicateDoctors, sortDoctors } from "./doctors/doctor-utils";
-import { getDoctorById, createDoctor } from "./doctors/doctor-crud";
+import { getDoctorById, createDoctor, updateDoctor, deleteDoctor } from "./doctors/doctor-crud";
 import { Doctor, DoctorCreateData } from "./doctors/types";
 
 // Re-export types for backward compatibility
@@ -41,5 +41,7 @@ export const supabaseDoctorsService = {
   },
 
   getById: getDoctorById,
-  create: createDoctor
+  create: createDoctor,
+  update: updateDoctor,
+  delete: deleteDoctor
 };

@@ -6,16 +6,30 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Edit, Trash2, Users } from "lucide-react";
 import { supabaseDoctorsService, Doctor } from "@/lib/supabase-doctors-service";
 import { AddDoctorForm } from "@/components/medication/doctor-selector/AddDoctorForm";
+import { EditDoctorModal } from "@/components/doctors/EditDoctorModal";
 
 const DoctorsPage = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+  const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -45,12 +59,74 @@ const DoctorsPage = () => {
   const handleDoctorAdded = (doctor: Doctor) => {
     console.log("Doctor added, refreshing list:", doctor);
     setShowAddForm(false);
-    // Actualiser la liste des médecins
     loadDoctors();
     toast({
       title: "Succès",
       description: `Dr ${doctor.first_name} ${doctor.last_name} a été ajouté avec succès.`,
     });
+  };
+
+  const handleDoctorUpdated = async (updatedDoctor: Doctor) => {
+    try {
+      if (updatedDoctor.source !== 'Base locale') {
+        toast({
+          title: "Erreur",
+          description: "Seuls les médecins de votre base locale peuvent être modifiés.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await supabaseDoctorsService.update(updatedDoctor.id, updatedDoctor);
+      await loadDoctors();
+      setEditingDoctor(null);
+      
+      toast({
+        title: "Succès",
+        description: `Dr ${updatedDoctor.first_name} ${updatedDoctor.last_name} a été modifié avec succès.`,
+      });
+    } catch (error) {
+      console.error("Error updating doctor:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le médecin.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteDoctor = async () => {
+    if (!doctorToDelete) return;
+
+    try {
+      if (doctorToDelete.source !== 'Base locale') {
+        toast({
+          title: "Erreur",
+          description: "Seuls les médecins de votre base locale peuvent être supprimés.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsDeleting(true);
+      await supabaseDoctorsService.delete(doctorToDelete.id);
+      await loadDoctors();
+      setDoctorToDelete(null);
+      
+      toast({
+        title: "Succès",
+        description: `Dr ${doctorToDelete.first_name} ${doctorToDelete.last_name} a été supprimé avec succès.`,
+      });
+    } catch (error) {
+      console.error("Error deleting doctor:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le médecin.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCancelAddForm = () => {
@@ -165,10 +241,23 @@ const DoctorsPage = () => {
                             </div>
                           </div>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" title="Modifier">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              title="Modifier"
+                              onClick={() => setEditingDoctor(doctor)}
+                              disabled={doctor.source !== 'Base locale'}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm" className="text-destructive" title="Supprimer">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-destructive" 
+                              title="Supprimer"
+                              onClick={() => setDoctorToDelete(doctor)}
+                              disabled={doctor.source !== 'Base locale'}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -204,6 +293,37 @@ const DoctorsPage = () => {
       </main>
       
       <Footer />
+
+      {/* Modal d'édition */}
+      <EditDoctorModal
+        doctor={editingDoctor}
+        isOpen={!!editingDoctor}
+        onClose={() => setEditingDoctor(null)}
+        onSave={handleDoctorUpdated}
+      />
+
+      {/* Dialog de confirmation de suppression */}
+      <AlertDialog open={!!doctorToDelete} onOpenChange={() => setDoctorToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer Dr {doctorToDelete?.first_name} {doctorToDelete?.last_name} ?
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteDoctor}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
