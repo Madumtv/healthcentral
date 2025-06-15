@@ -1,8 +1,9 @@
 
 import { Link } from "react-router-dom";
-import { Home, Calendar, Pill, Users, User } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { UserAvatar } from "./UserAvatar";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Settings } from "lucide-react";
 
 interface Profile {
   avatar_url?: string;
@@ -13,56 +14,50 @@ interface Profile {
 
 interface NavLinksProps {
   user: SupabaseUser | null;
-  profile: Profile | null;
+  profile: Profile;
   getInitials: () => string;
-  className?: string;
 }
 
-export function NavLinks({ user, profile, getInitials, className = "" }: NavLinksProps) {
-  const baseClassName = "px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue flex items-center";
-  const linkClassName = `${baseClassName} ${className}`;
+export const NavLinks = ({ user, profile, getInitials }: NavLinksProps) => {
+  const { isAdmin } = useUserRole();
+
+  if (!user) {
+    return (
+      <>
+        <Link to="/about" className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium">
+          À propos
+        </Link>
+      </>
+    );
+  }
 
   return (
     <>
-      <Link to="/" className={linkClassName}>
-        <Home className="h-4 w-4 mr-1" />
-        Accueil
+      <Link to="/dashboard" className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium">
+        Tableau de bord
+      </Link>
+      <Link to="/medications" className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium">
+        Médicaments
+      </Link>
+      <Link to="/doctors" className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium">
+        Médecins
+      </Link>
+      <Link to="/calendar" className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium">
+        Calendrier
       </Link>
       
-      {user ? (
-        <>
-          <Link to="/dashboard" className={linkClassName}>
-            <Calendar className="h-4 w-4 mr-1" />
-            Aujourd'hui
-          </Link>
-          <Link to="/medications" className={linkClassName}>
-            <Pill className="h-4 w-4 mr-1" />
-            Mes médicaments
-          </Link>
-          <Link to="/doctors" className={linkClassName}>
-            <Users className="h-4 w-4 mr-1" />
-            Médecins
-          </Link>
-          <Link to="/about" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
-            À propos
-          </Link>
-          <Link to="/profile" className={linkClassName}>
-            {profile?.avatar_url ? (
-              <UserAvatar 
-                avatarUrl={profile.avatar_url} 
-                initials={getInitials()} 
-              />
-            ) : (
-              <User className="h-4 w-4 mr-2" />
-            )}
-            Profil
-          </Link>
-        </>
-      ) : (
-        <Link to="/about" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-medBlue">
-          À propos
+      {isAdmin && (
+        <Link 
+          to="/admin" 
+          className="text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium flex items-center"
+          title="Administration"
+        >
+          <Settings className="h-4 w-4 mr-1" />
+          Admin
         </Link>
       )}
+      
+      <UserAvatar user={user} profile={profile} getInitials={getInitials} />
     </>
   );
-}
+};

@@ -1,9 +1,10 @@
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Calendar, Pill, Users, User, LogIn } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { UserAvatar } from "./UserAvatar";
+import { LogIn, Settings } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface Profile {
   avatar_url?: string;
@@ -14,110 +15,100 @@ interface Profile {
 
 interface MobileMenuProps {
   user: SupabaseUser | null;
-  profile: Profile | null;
+  profile: Profile;
   getInitials: () => string;
   onLogout: () => void;
   onToggleMenu: () => void;
 }
 
-export function MobileMenu({ user, profile, getInitials, onLogout, onToggleMenu }: MobileMenuProps) {
+export const MobileMenu = ({ user, profile, getInitials, onLogout, onToggleMenu }: MobileMenuProps) => {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
-  const handleLogout = () => {
-    onLogout();
+  const handleNavigation = (path: string) => {
+    navigate(path);
     onToggleMenu();
   };
 
+  if (!user) {
+    return (
+      <div className="sm:hidden">
+        <div className="px-2 pt-2 pb-3 space-y-1">
+          <button
+            onClick={() => handleNavigation("/about")}
+            className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+          >
+            À propos
+          </button>
+          <Button 
+            onClick={() => handleNavigation("/auth")} 
+            className="w-full bg-medBlue hover:bg-blue-600 mt-4"
+          >
+            <LogIn className="h-4 w-4 mr-2" />
+            Connexion
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="sm:hidden">
-      <div className="pt-2 pb-3 space-y-1">
-        <Link
-          to="/"
-          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
-          onClick={onToggleMenu}
+      <div className="px-2 pt-2 pb-3 space-y-1">
+        <button
+          onClick={() => handleNavigation("/dashboard")}
+          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
         >
-          <Home className="h-4 w-4 mr-2" />
-          Accueil
-        </Link>
-
-        {user ? (
-          <>
-            <Link
-              to="/dashboard"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
-              onClick={onToggleMenu}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Aujourd'hui
-            </Link>
-            <Link
-              to="/medications"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
-              onClick={onToggleMenu}
-            >
-              <Pill className="h-4 w-4 mr-2" />
-              Mes médicaments
-            </Link>
-            <Link
-              to="/doctors"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
-              onClick={onToggleMenu}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Médecins
-            </Link>
-            <Link
-              to="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
-              onClick={onToggleMenu}
-            >
-              À propos
-            </Link>
-            <Link
-              to="/profile"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 flex items-center"
-              onClick={onToggleMenu}
-            >
-              {profile?.avatar_url ? (
-                <UserAvatar 
-                  avatarUrl={profile.avatar_url} 
-                  initials={getInitials()} 
-                />
-              ) : (
-                <User className="h-4 w-4 mr-2" />
-              )}
-              Profil
-            </Link>
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="w-full justify-start px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
-            >
-              Déconnexion
-            </Button>
-          </>
-        ) : (
-          <>
-            <Link
-              to="/about"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50"
-              onClick={onToggleMenu}
-            >
-              À propos
-            </Link>
-            <Button
-              onClick={() => {
-                navigate("/auth");
-                onToggleMenu();
-              }}
-              className="w-full mt-2 flex items-center justify-center bg-medBlue hover:bg-blue-600"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Connexion
-            </Button>
-          </>
+          Tableau de bord
+        </button>
+        <button
+          onClick={() => handleNavigation("/medications")}
+          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+        >
+          Médicaments
+        </button>
+        <button
+          onClick={() => handleNavigation("/doctors")}
+          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+        >
+          Médecins
+        </button>
+        <button
+          onClick={() => handleNavigation("/calendar")}
+          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+        >
+          Calendrier
+        </button>
+        
+        {isAdmin && (
+          <button
+            onClick={() => handleNavigation("/admin")}
+            className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Administration
+          </button>
         )}
+        
+        <button
+          onClick={() => handleNavigation("/profile")}
+          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+        >
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-medBlue text-white rounded-full flex items-center justify-center text-sm font-medium mr-2">
+              {getInitials()}
+            </div>
+            Profil
+          </div>
+        </button>
+        <Button 
+          variant="ghost" 
+          onClick={onLogout}
+          className="w-full text-left justify-start text-gray-700 hover:text-medBlue mt-4"
+        >
+          Déconnexion
+        </Button>
       </div>
     </div>
   );
-}
+};
