@@ -37,6 +37,7 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   console.log("🔧 ProfileForm - Valeurs initiales reçues:", initialValues);
+  console.log("🔧 ProfileForm - User ID:", user?.id);
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -46,7 +47,6 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   // Mettre à jour le formulaire quand les valeurs initiales changent
   useEffect(() => {
     console.log("🔄 Mise à jour du formulaire avec les nouvelles valeurs:", initialValues);
-    // Vérifier si les valeurs ont vraiment changé avant de reset
     const currentValues = form.getValues();
     const hasChanged = 
       currentValues.name !== initialValues.name ||
@@ -61,28 +61,75 @@ export function ProfileForm({ initialValues, user, onSuccess }: ProfileFormProps
   }, [initialValues, form]);
 
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.error("❌ Pas d'utilisateur connecté");
+      toast.error("Utilisateur non connecté");
+      return;
+    }
 
     setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          name: values.name, 
-          first_name: values.firstName || null,
-          last_name: values.lastName || null,
-          birth_date: values.birthDate ? values.birthDate.toISOString() : null,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', user.id);
+    console.log("🔄 Début de la sauvegarde du profil:", values);
+    console.log("👤 ID utilisateur:", user.id);
 
-      if (error) throw error;
+    try {
+      // Vérifier que l'utilisateur existe dans la table profiles
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error("❌ Erreur lors de la vérification du profil:", checkError);
+        throw new Error(`Erreur de vérification: ${checkError.message}`);
+      }
+
+      const updateData = {
+        name: values.name,
+        first_name: values.firstName || null,
+        last_name: values.lastName || null,
+        birth_date: values.birthDate ? values.birthDate.toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log("💾 Données à sauvegarder:", updateData);
+
+      let result;
+      if (!existingProfile) {
+        // Créer un nouveau profil si il n'existe pas
+        console.log("➕ Création d'un nouveau profil");
+        result = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            ...updateData
+          })
+          .select();
+      } else {
+        // Mettre à jour le profil existant
+        console.log("🔄 Mise à jour du profil existant");
+        result = await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', user.id)
+          .select();
+      }
+
+      const { data, error } = result;
+
+      if (error) {
+        console.error("❌ Erreur lors de la sauvegarde:", error);
+        throw new Error(`Erreur de sauvegarde: ${error.message}`);
+      }
+
+      console.log("✅ Profil sauvegardé avec succès:", data);
       
       onSuccess(values);
       toast.success("Profil mis à jour avec succès !");
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error);
-      toast.error("La mise à jour du profil a échoué.");
+      console.error("❌ Erreur lors de la mise à jour du profil:", error);
+      toast.error(error instanceof Error ? error.message : "La mise à jour du profil a échoué.");
     } finally {
       setIsSubmitting(false);
     }

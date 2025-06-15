@@ -39,6 +39,7 @@ export function AvatarUpload({
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
+      console.log("🔄 Début de l'upload d'avatar...");
 
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('Vous devez sélectionner une image à télécharger.');
@@ -49,6 +50,7 @@ export function AvatarUpload({
       }
 
       const file = event.target.files[0];
+      console.log("📁 Fichier sélectionné:", file.name, "Taille:", file.size);
       
       // Vérifier la taille du fichier (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -64,21 +66,42 @@ export function AvatarUpload({
       const fileName = `avatar-${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      console.log("📤 Upload du fichier:", filePath);
+      console.log("📤 Upload du fichier vers:", filePath);
+
+      // Vérifier que le bucket existe
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      console.log("🪣 Buckets disponibles:", buckets);
+      
+      if (bucketsError) {
+        console.error("❌ Erreur lors de la récupération des buckets:", bucketsError);
+        throw new Error("Erreur de configuration du stockage");
+      }
+
+      const avatarBucket = buckets?.find(bucket => bucket.id === 'avatars');
+      if (!avatarBucket) {
+        console.error("❌ Bucket 'avatars' non trouvé");
+        throw new Error("Le stockage d'avatars n'est pas configuré");
+      }
 
       // Supprimer l'ancien avatar s'il existe
       if (currentAvatarUrl) {
         try {
           const oldPath = currentAvatarUrl.split('/').slice(-2).join('/');
           console.log("🗑️ Suppression de l'ancien avatar:", oldPath);
-          await supabase.storage.from('avatars').remove([oldPath]);
+          const { error: deleteError } = await supabase.storage
+            .from('avatars')
+            .remove([oldPath]);
+          
+          if (deleteError) {
+            console.warn("⚠️ Impossible de supprimer l'ancien avatar:", deleteError);
+          }
         } catch (error) {
-          console.warn("⚠️ Impossible de supprimer l'ancien avatar:", error);
+          console.warn("⚠️ Erreur lors de la suppression de l'ancien avatar:", error);
         }
       }
 
       // Upload du nouveau fichier
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
           upsert: true,
@@ -87,35 +110,36 @@ export function AvatarUpload({
 
       if (uploadError) {
         console.error("❌ Erreur upload:", uploadError);
-        throw uploadError;
+        throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
       }
 
-      console.log("✅ Fichier uploadé avec succès");
+      console.log("✅ Fichier uploadé avec succès:", uploadData);
 
       // Obtenir l'URL publique
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const avatarUrl = data.publicUrl;
+      const avatarUrl = urlData.publicUrl;
       console.log("🔗 URL publique générée:", avatarUrl);
 
       // Mettre à jour le profil dans la base de données
       console.log("💾 Mise à jour du profil en base...");
-      const { error: updateError } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from('profiles')
         .update({ 
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString() 
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (updateError) {
         console.error("❌ Erreur mise à jour profil:", updateError);
-        throw updateError;
+        throw new Error(`Erreur lors de la mise à jour du profil: ${updateError.message}`);
       }
 
-      console.log("✅ Profil mis à jour en base");
+      console.log("✅ Profil mis à jour en base:", updateData);
 
       // Notifier le composant parent
       onAvatarUpdate(avatarUrl);
