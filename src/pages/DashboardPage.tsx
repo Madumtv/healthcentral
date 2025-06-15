@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Pill } from "lucide-react";
@@ -7,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardGreeting } from "@/components/dashboard/DashboardGreeting";
-import { TodayMedicationsList } from "@/components/dashboard/TodayMedicationsList";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 
 const DashboardPage = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -119,7 +120,8 @@ const DashboardPage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <DashboardGreeting userName={userName} />
           
-          <TodayMedicationsList
+          <DashboardTabs
+            medications={medications}
             medicationsByTime={medicationsByTime}
             isLoading={isLoading}
             onEdit={handleEditMedication}
