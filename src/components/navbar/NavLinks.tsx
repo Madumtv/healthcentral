@@ -57,7 +57,11 @@ export const NavLinks = ({ user, profile, getInitials }: NavLinksProps) => {
         </Link>
       )}
       
-      <UserAvatar user={user} profile={profile} getInitials={getInitials} />
+      <UserAvatar 
+        avatarUrl={profile.avatar_url} 
+        initials={getInitials()} 
+        showFallbackIcon={false} 
+      />
     </>
   );
 };
