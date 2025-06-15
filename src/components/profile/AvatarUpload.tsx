@@ -178,7 +178,7 @@ export function AvatarUpload({
         </div>
       </div>
       <p className="text-xs text-muted-foreground text-center">
-        {uploading ? 'Téléchargement en cours...' : 'Cliquez sur l'icône pour changer votre avatar'}
+        {uploading ? 'Téléchargement en cours...' : 'Cliquez sur l\'icône pour changer votre avatar'}
       </p>
     </div>
   );
