@@ -28,6 +28,7 @@ export function AvatarUpload({
   onAvatarUpdate 
 }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState(currentAvatarUrl);
 
   const getInitials = () => {
     if (firstName && lastName) {
@@ -68,21 +69,6 @@ export function AvatarUpload({
 
       console.log("📤 Upload du fichier vers:", filePath);
 
-      // Vérifier que le bucket existe
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      console.log("🪣 Buckets disponibles:", buckets);
-      
-      if (bucketsError) {
-        console.error("❌ Erreur lors de la récupération des buckets:", bucketsError);
-        throw new Error("Erreur de configuration du stockage");
-      }
-
-      const avatarBucket = buckets?.find(bucket => bucket.id === 'avatars');
-      if (!avatarBucket) {
-        console.error("❌ Bucket 'avatars' non trouvé");
-        throw new Error("Le stockage d'avatars n'est pas configuré");
-      }
-
       // Supprimer l'ancien avatar s'il existe
       if (currentAvatarUrl) {
         try {
@@ -115,12 +101,12 @@ export function AvatarUpload({
 
       console.log("✅ Fichier uploadé avec succès:", uploadData);
 
-      // Obtenir l'URL publique
+      // Obtenir l'URL publique avec un timestamp pour éviter le cache
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const avatarUrl = urlData.publicUrl;
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       console.log("🔗 URL publique générée:", avatarUrl);
 
       // Mettre à jour le profil dans la base de données
@@ -141,6 +127,9 @@ export function AvatarUpload({
 
       console.log("✅ Profil mis à jour en base:", updateData);
 
+      // Mettre à jour l'état local immédiatement
+      setLocalAvatarUrl(avatarUrl);
+      
       // Notifier le composant parent
       onAvatarUpdate(avatarUrl);
       toast.success('Avatar mis à jour avec succès !');
@@ -156,16 +145,19 @@ export function AvatarUpload({
     }
   };
 
+  // Utiliser l'URL locale si elle existe, sinon l'URL passée en props
+  const displayAvatarUrl = localAvatarUrl || currentAvatarUrl;
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="relative">
         <Avatar className="h-24 w-24">
-          {currentAvatarUrl ? (
+          {displayAvatarUrl ? (
             <AvatarImage 
-              src={currentAvatarUrl} 
+              src={displayAvatarUrl} 
               alt="Avatar" 
               onError={(e) => {
-                console.error("❌ Erreur chargement image:", currentAvatarUrl);
+                console.error("❌ Erreur chargement image:", displayAvatarUrl);
                 e.currentTarget.style.display = 'none';
               }}
             />
