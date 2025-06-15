@@ -56,24 +56,34 @@ export function useAuth() {
     
     let mounted = true;
 
+    // Fonction pour traiter un changement d'utilisateur
+    const handleUserChange = async (newUser: SupabaseUser | null) => {
+      if (!mounted) return;
+      
+      console.log("👤 Processing user change:", newUser?.email || 'No user');
+      setUser(newUser);
+      
+      if (newUser) {
+        // Charger le profil de manière asynchrone
+        setTimeout(async () => {
+          if (mounted) {
+            await fetchProfile(newUser.id);
+            setIsLoading(false);
+          }
+        }, 0);
+      } else {
+        setProfile({});
+        setIsLoading(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
         
         if (!mounted) return;
         
-        if (session?.user) {
-          console.log("👤 Setting user from auth change");
-          setUser(session.user);
-          // Charger le profil de manière asynchrone
-          await fetchProfile(session.user.id);
-        } else {
-          console.log("🚫 No user, clearing state");
-          setUser(null);
-          setProfile({});
-        }
-        
-        setIsLoading(false);
+        await handleUserChange(session?.user || null);
       }
     );
 
@@ -86,29 +96,16 @@ export function useAuth() {
         
         if (error) {
           console.error("❌ Session error:", error);
-          setUser(null);
-          setProfile({});
-          setIsLoading(false);
+          await handleUserChange(null);
           return;
         }
 
-        if (session?.user) {
-          console.log("✅ Current session found:", session.user.email);
-          setUser(session.user);
-          // Charger le profil de manière asynchrone
-          await fetchProfile(session.user.id);
-        } else {
-          console.log("ℹ️ No current session");
-          setUser(null);
-          setProfile({});
-        }
-        
-        setIsLoading(false);
+        await handleUserChange(session?.user || null);
       } catch (error) {
         console.error("❌ Error checking session:", error);
-        setUser(null);
-        setProfile({});
-        setIsLoading(false);
+        if (mounted) {
+          await handleUserChange(null);
+        }
       }
     };
 
