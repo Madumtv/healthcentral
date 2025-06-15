@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { LogIn, Settings } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { UserAvatar } from "./UserAvatar";
 
 interface Profile {
   avatar_url?: string;
@@ -90,17 +91,19 @@ export const MobileMenu = ({ user, profile, getInitials, onLogout, onToggleMenu 
           </button>
         )}
         
-        <button
-          onClick={() => handleNavigation("/profile")}
-          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full text-left"
+        <Link
+          to="/profile"
+          onClick={onToggleMenu}
+          className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-medBlue hover:bg-gray-50 w-full"
         >
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-medBlue text-white rounded-full flex items-center justify-center text-sm font-medium mr-2">
-              {getInitials()}
-            </div>
-            Profil
-          </div>
-        </button>
+          <UserAvatar 
+            avatarUrl={profile.avatar_url} 
+            initials={getInitials()} 
+            showFallbackIcon={false} 
+          />
+          <span className="ml-2">Profil</span>
+        </Link>
+        
         <Button 
           variant="ghost" 
           onClick={onLogout}

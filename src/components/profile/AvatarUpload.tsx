@@ -44,44 +44,89 @@ export function AvatarUpload({
         throw new Error('Vous devez sélectionner une image à télécharger.');
       }
 
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}/avatar.${fileExt}`;
+      if (!user?.id) {
+        throw new Error('Utilisateur non connecté.');
+      }
 
-      // Upload file to Supabase Storage
+      const file = event.target.files[0];
+      
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('La taille du fichier ne doit pas dépasser 5MB.');
+      }
+
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Veuillez sélectionner un fichier image.');
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log("📤 Upload du fichier:", filePath);
+
+      // Supprimer l'ancien avatar s'il existe
+      if (currentAvatarUrl) {
+        try {
+          const oldPath = currentAvatarUrl.split('/').slice(-2).join('/');
+          console.log("🗑️ Suppression de l'ancien avatar:", oldPath);
+          await supabase.storage.from('avatars').remove([oldPath]);
+        } catch (error) {
+          console.warn("⚠️ Impossible de supprimer l'ancien avatar:", error);
+        }
+      }
+
+      // Upload du nouveau fichier
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
       if (uploadError) {
+        console.error("❌ Erreur upload:", uploadError);
         throw uploadError;
       }
 
-      // Get public URL
+      console.log("✅ Fichier uploadé avec succès");
+
+      // Obtenir l'URL publique
       const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
       const avatarUrl = data.publicUrl;
+      console.log("🔗 URL publique générée:", avatarUrl);
 
-      // Update profile with new avatar URL
+      // Mettre à jour le profil dans la base de données
+      console.log("💾 Mise à jour du profil en base...");
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString() 
         })
-        .eq('id', user?.id);
+        .eq('id', user.id);
 
       if (updateError) {
+        console.error("❌ Erreur mise à jour profil:", updateError);
         throw updateError;
       }
 
+      console.log("✅ Profil mis à jour en base");
+
+      // Notifier le composant parent
       onAvatarUpdate(avatarUrl);
       toast.success('Avatar mis à jour avec succès !');
+
+      // Vider le champ de fichier pour permettre de re-uploader le même fichier
+      event.target.value = '';
+
     } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
-      toast.error('Erreur lors du téléchargement de l\'avatar.');
+      console.error('❌ Erreur complète lors du téléchargement:', error);
+      toast.error(error instanceof Error ? error.message : 'Erreur lors du téléchargement de l\'avatar.');
     } finally {
       setUploading(false);
     }
@@ -92,7 +137,14 @@ export function AvatarUpload({
       <div className="relative">
         <Avatar className="h-24 w-24">
           {currentAvatarUrl ? (
-            <AvatarImage src={currentAvatarUrl} alt="Avatar" />
+            <AvatarImage 
+              src={currentAvatarUrl} 
+              alt="Avatar" 
+              onError={(e) => {
+                console.error("❌ Erreur chargement image:", currentAvatarUrl);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           ) : (
             <AvatarFallback className="text-lg">{getInitials()}</AvatarFallback>
           )}
@@ -126,7 +178,7 @@ export function AvatarUpload({
         </div>
       </div>
       <p className="text-xs text-muted-foreground text-center">
-        Cliquez sur l'icône pour changer votre avatar
+        {uploading ? 'Téléchargement en cours...' : 'Cliquez sur l'icône pour changer votre avatar'}
       </p>
     </div>
   );

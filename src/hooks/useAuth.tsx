@@ -34,7 +34,12 @@ export function useAuth() {
 
       if (profileData) {
         console.log("✅ Profile fetched:", profileData);
-        setProfile(profileData);
+        // S'assurer que l'avatar_url est une chaîne ou undefined
+        const cleanProfile = {
+          ...profileData,
+          avatar_url: profileData.avatar_url || undefined
+        };
+        setProfile(cleanProfile);
       } else {
         console.log("ℹ️ No profile data found, setting empty profile");
         setProfile({});
@@ -47,6 +52,7 @@ export function useAuth() {
 
   const refreshProfile = async () => {
     if (user?.id) {
+      console.log("🔄 Refreshing profile...");
       await fetchProfile(user.id);
     }
   };
