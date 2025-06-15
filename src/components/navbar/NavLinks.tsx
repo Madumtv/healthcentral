@@ -57,11 +57,18 @@ export const NavLinks = ({ user, profile, getInitials }: NavLinksProps) => {
         </Link>
       )}
       
-      <UserAvatar 
-        avatarUrl={profile.avatar_url} 
-        initials={getInitials()} 
-        showFallbackIcon={false} 
-      />
+      <Link 
+        to="/profile" 
+        className="flex items-center text-gray-700 hover:text-medBlue px-3 py-2 text-sm font-medium"
+        title="Profil"
+      >
+        <UserAvatar 
+          avatarUrl={profile.avatar_url} 
+          initials={getInitials()} 
+          showFallbackIcon={false} 
+        />
+        <span className="ml-2">Profil</span>
+      </Link>
     </>
   );
 };
