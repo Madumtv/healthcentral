@@ -1,5 +1,7 @@
 # HealthCentral
 
+*Une version en français est disponible dans [README.fr.md](README.fr.md).* 
+
 HealthCentral is a medication management application built with React, Vite and Supabase. It helps you keep track of your treatments, reminds you when to take them and stores your medical contacts in one secure place.
 
 ## Features
