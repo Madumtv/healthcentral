@@ -1,42 +1,32 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pill, Calendar, Bell, Users, Shield, ArrowRight, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-
 const Index = () => {
-  const features = [
-    {
-      icon: Pill,
-      title: "Pilulier numérique",
-      description: "Organisez tous vos médicaments dans un interface claire et moderne"
-    },
-    {
-      icon: Bell,
-      title: "Rappels intelligents",
-      description: "Ne manquez plus jamais une prise grâce à nos notifications personnalisées"
-    },
-    {
-      icon: Calendar,
-      title: "Planification avancée",
-      description: "Planifiez vos prises selon vos horaires et vos besoins spécifiques"
-    },
-    {
-      icon: Users,
-      title: "Suivi médical",
-      description: "Gardez le contact avec vos professionnels de santé et partagez vos données"
-    },
-    {
-      icon: Shield,
-      title: "Sécurité maximale",
-      description: "Vos données médicales sont protégées avec les plus hauts standards de sécurité"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  const features = [{
+    icon: Pill,
+    title: "Pilulier numérique",
+    description: "Organisez tous vos médicaments dans un interface claire et moderne"
+  }, {
+    icon: Bell,
+    title: "Rappels intelligents",
+    description: "Ne manquez plus jamais une prise grâce à nos notifications personnalisées"
+  }, {
+    icon: Calendar,
+    title: "Planification avancée",
+    description: "Planifiez vos prises selon vos horaires et vos besoins spécifiques"
+  }, {
+    icon: Users,
+    title: "Suivi médical",
+    description: "Gardez le contact avec vos professionnels de santé et partagez vos données"
+  }, {
+    icon: Shield,
+    title: "Sécurité maximale",
+    description: "Vos données médicales sont protégées avec les plus hauts standards de sécurité"
+  }];
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
@@ -45,11 +35,9 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex items-center justify-center mb-6">
               <Pill className="h-16 w-16 text-white mr-4" />
-              <h1 className="text-5xl font-bold">PilulePal</h1>
+              <h1 className="text-5xl font-bold">HealthCentral</h1>
             </div>
-            <p className="text-xl mb-8 text-blue-100">
-              Votre compagnon numérique pour une gestion simple et efficace de vos traitements médicamenteux
-            </p>
+            <p className="text-xl mb-8 text-blue-100">Toute votre santé, organisée simplement : traitements, contacts et piluliers réunis</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-white text-medBlue hover:bg-gray-100 font-semibold px-8">
@@ -82,8 +70,7 @@ const Index = () => {
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
+              {features.map((feature, index) => <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
                   <CardHeader>
                     <div className="w-12 h-12 bg-medBlue rounded-lg flex items-center justify-center mb-4">
                       <feature.icon className="h-6 w-6 text-white" />
@@ -95,8 +82,7 @@ const Index = () => {
                       {feature.description}
                     </CardDescription>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </div>
@@ -148,8 +134,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
