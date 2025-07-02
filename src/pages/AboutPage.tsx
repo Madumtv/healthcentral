@@ -1,11 +1,8 @@
-
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pill, Shield, Users, Clock, Heart } from "lucide-react";
-
 const AboutPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-grow py-10">
@@ -15,7 +12,7 @@ const AboutPage = () => {
             <div className="text-center mb-12">
               <div className="flex items-center justify-center mb-4">
                 <Pill className="h-12 w-12 text-medBlue mr-3" />
-                <h1 className="text-4xl font-bold text-medBlue">PilulePal</h1>
+                <h1 className="text-4xl font-bold text-medBlue">HealthCentral</h1>
               </div>
               <p className="text-xl text-gray-600">
                 Votre compagnon numérique pour une gestion simple et efficace de vos traitements
@@ -31,11 +28,7 @@ const AboutPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4">
-                  PilulePal révolutionne la gestion de vos médicaments en transformant votre smartphone 
-                  en un pilulier intelligent. Fini les oublis, les confusions ou les inquiétudes liées 
-                  à votre traitement médical.
-                </p>
+                <p className="text-gray-700 mb-4">HealthCentralrévolutionne la gestion de vos médicaments en transformant votre smartphone en un pilulier intelligent. Fini les oublis, les confusions ou les inquiétudes liées à votre traitement médical.</p>
                 <p className="text-gray-700">
                   Notre application centralise toutes les informations importantes de vos médicaments, 
                   vous accompagne au quotidien avec des rappels personnalisés et vous permet de 
@@ -183,12 +176,7 @@ const AboutPage = () => {
 
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Propriété intellectuelle</h4>
-                  <p className="text-gray-700 text-sm">
-                    L'ensemble des contenus présents sur le site PilulePal (textes, images, logos, 
-                    graphismes, etc.) sont protégés par le droit d'auteur et appartiennent à PilulePal SAS 
-                    ou à leurs auteurs respectifs. Toute reproduction, même partielle, est interdite sans 
-                    autorisation préalable.
-                  </p>
+                  <p className="text-gray-700 text-sm">L'ensemble des contenus présents sur le site HealthCentral (textes, images, logos, graphismes, etc.) sont protégés par le droit d'auteur et appartiennent à HealthCentral SAS ou à leurs auteurs respectifs. Toute reproduction, même partielle, est interdite sans autorisation préalable.</p>
                 </div>
 
                 <div>
@@ -202,19 +190,12 @@ const AboutPage = () => {
 
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Responsabilité</h4>
-                  <p className="text-gray-700 text-sm">
-                    PilulePal est un outil d'aide à la gestion des médicaments et ne remplace en aucun cas 
-                    l'avis d'un professionnel de santé. En cas de doute sur votre traitement, consultez 
-                    immédiatement votre médecin ou pharmacien.
-                  </p>
+                  <p className="text-gray-700 text-sm">HealthCentral est un outil d'aide à la gestion des médicaments et ne remplace en aucun cas l'avis d'un professionnel de santé. En cas de doute sur votre traitement, consultez immédiatement votre médecin ou pharmacien.</p>
                 </div>
 
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Droit applicable</h4>
-                  <p className="text-gray-700 text-sm">
-                    Les présentes mentions légales sont régies par le droit français. En cas de litige, 
-                    les tribunaux français seront seuls compétents.
-                  </p>
+                  <p className="text-gray-700 text-sm">Les présentes mentions légales sont régies par le droit belge. En cas de litige, les tribunaux belgesseront seuls compétents.</p>
                 </div>
               </CardContent>
             </Card>
@@ -262,8 +243,6 @@ const AboutPage = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default AboutPage;
