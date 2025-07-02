@@ -1,73 +1,49 @@
-# Welcome to your Lovable project
+# HealthCentral
 
-## Project info
+*An English version is available in [README.en.md](README.en.md).*
 
-**URL**: https://lovable.dev/projects/0f0135a6-5b0a-4e43-8874-ae78c2cf2fda
+HealthCentral est une application de gestion de médicaments construite avec React, Vite et Supabase. Elle vous aide à suivre vos traitements, vous rappelle quand prendre vos doses et conserve vos contacts médicaux en un lieu sécurisé.
 
-## How can I edit this code?
+## Fonctionnalités
 
-There are several ways of editing your application.
+- **Pilulier numérique** – organisez vos médicaments avec une planification détaillée
+- **Vue calendrier** – marquez les prises effectuées jour après jour
+- **Rappels intelligents** – recevez des notifications pour les doses à venir
+- **Gestion des médecins** – gardez la liste de vos professionnels de santé
+- **Tableau de bord** – gérez vos informations personnelles
+- **Zone d'administration** – outils pour gérer les médecins et les futurs paramètres du système
+- **Backend Supabase** – authentification et stockage de toutes les données de l'application
 
-**Use Lovable**
+## Mise en place
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0f0135a6-5b0a-4e43-8874-ae78c2cf2fda) and start prompting.
+1. Installez Node.js (version 18 ou supérieure).
+2. Clonez ce dépôt puis installez les dépendances :
+   ```sh
+   git clone <repo_url>
+   cd healthcentral
+   npm install
+   ```
+3. Créez un fichier `.env` et renseignez vos identifiants Supabase :
+   ```
+   VITE_SUPABASE_URL=<votre-url-supabase>
+   VITE_SUPABASE_ANON_KEY=<votre-anon-key>
+   SUPABASE_URL=<votre-url-supabase>
+   SUPABASE_SERVICE_ROLE_KEY=<votre-service-role-key>
+   ```
+   La clé de rôle de service est uniquement utilisée par les fonctions Supabase côté serveur.
+4. Démarrez le serveur de développement :
+   ```sh
+   npm run dev
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Commandes de développement
 
-**Use your preferred IDE**
+- `npm run dev` – démarre le serveur Vite
+- `npm run build` – génère la version de production
+- `npm run build:dev` – build avec les paramètres de développement
+- `npm run lint` – exécute ESLint
+- `npm run preview` – prévisualise la build de production localement
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Licence
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0f0135a6-5b0a-4e43-8874-ae78c2cf2fda) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+HealthCentral est distribué sous licence MIT.
