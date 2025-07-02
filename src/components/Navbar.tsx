@@ -6,6 +6,7 @@ import { Menu, X, Pill, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { NavLinks } from "./navbar/NavLinks";
 import { MobileMenu } from "./navbar/MobileMenu";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,6 +37,7 @@ export function Navbar() {
             ) : (
               <>
                 <NavLinks user={user} profile={profile} getInitials={getInitials} />
+                <ThemeToggle />
                 
                 {user ? (
                   <Button 

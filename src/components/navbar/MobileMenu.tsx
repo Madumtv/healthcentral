@@ -6,6 +6,7 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import { LogIn, Settings } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { UserAvatar } from "./UserAvatar";
+import { ThemeToggle } from "../ThemeToggle";
 
 interface Profile {
   avatar_url?: string;
@@ -41,6 +42,11 @@ export const MobileMenu = ({ user, profile, getInitials, onLogout, onToggleMenu 
           >
             À propos
           </button>
+          
+          <div className="px-3 py-2">
+            <ThemeToggle />
+          </div>
+          
           <Button 
             onClick={() => handleNavigation("/auth")} 
             className="w-full bg-medBlue hover:bg-blue-600 mt-4"
@@ -103,6 +109,13 @@ export const MobileMenu = ({ user, profile, getInitials, onLogout, onToggleMenu 
           />
           <span className="ml-2">Profil</span>
         </Link>
+        
+        <div className="px-3 py-2 border-t border-gray-200 mt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Thème</span>
+            <ThemeToggle />
+          </div>
+        </div>
         
         <Button 
           variant="ghost" 
