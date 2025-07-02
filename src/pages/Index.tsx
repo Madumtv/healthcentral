@@ -93,9 +93,7 @@ const Index = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Prêt à simplifier la gestion de vos médicaments ?
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Rejoignez des milliers d'utilisateurs qui font déjà confiance à PilulePal pour leur santé
-            </p>
+            <p className="text-lg text-gray-600 mb-8">Rejoignez des milliers d'utilisateurs qui font déjà confiance à HealthCentralpour leur santé</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-medBlue hover:bg-blue-600 font-semibold px-8">
@@ -116,7 +114,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
               <Pill className="h-6 w-6 text-white mr-2" />
-              <span className="text-lg font-semibold">PilulePal</span>
+              <span className="text-lg font-semibold">HealthCentral</span>
             </div>
             <div className="flex items-center space-x-6">
               <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
