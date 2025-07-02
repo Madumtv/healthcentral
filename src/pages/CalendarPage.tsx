@@ -6,6 +6,7 @@ import { DateNavigation } from "@/components/calendar/DateNavigation";
 import { MedicationsDisplay } from "@/components/calendar/MedicationsDisplay";
 import { NotificationSettings } from "@/components/calendar/NotificationSettings";
 import { ActiveReminders } from "@/components/calendar/ActiveReminders";
+import { MedicationAlertsButton } from "@/components/calendar/MedicationAlertsButton";
 import { useMedicationDoses } from "@/hooks/use-medication-doses";
 
 const CalendarPage = () => {
@@ -43,6 +44,11 @@ const CalendarPage = () => {
             </div>
 
             <div className="md:w-2/3">
+              <MedicationAlertsButton 
+                medicationDoses={medicationDoses}
+                selectedDate={selectedDate}
+              />
+              
               <ActiveReminders 
                 medicationDoses={medicationDoses}
                 selectedDate={selectedDate}
