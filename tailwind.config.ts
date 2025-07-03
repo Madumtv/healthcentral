@@ -53,8 +53,8 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				medBlue: '210 79% 57%',
-				medGreen: '142 69% 49%',
+				medBlue: '#4F92D4',
+				medGreen: '#4CAF50',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
