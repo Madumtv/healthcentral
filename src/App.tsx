@@ -21,7 +21,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="pilulepal-theme">
+    <ThemeProvider defaultTheme="system" storageKey="healthcentral-theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />

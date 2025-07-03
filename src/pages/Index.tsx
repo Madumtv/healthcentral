@@ -93,7 +93,7 @@ const Index = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Prêt à simplifier la gestion de vos médicaments ?
             </h2>
-            <p className="text-lg text-gray-600 mb-8">Rejoignez des milliers d'utilisateurs qui font déjà confiance à HealthCentralpour leur santé</p>
+            <p className="text-lg text-gray-600 mb-8">Rejoignez des milliers d'utilisateurs qui font déjà confiance à HealthCentral pour leur santé</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-medBlue hover:bg-blue-600 font-semibold px-8">
@@ -124,7 +124,7 @@ const Index = () => {
                 Mentions légales
               </Link>
               <span className="text-gray-400 text-sm">
-                © {new Date().getFullYear()} PilulePal. Tous droits réservés.
+                © {new Date().getFullYear()} HealthCentral. Tous droits réservés.
               </span>
             </div>
           </div>
