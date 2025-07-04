@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DoctorsManagement } from "@/components/admin/DoctorsManagement";
+import { UsersManagement } from "@/components/admin/UsersManagement";
 import { AdminProtection } from "@/components/admin/AdminProtection";
 import { Users, Stethoscope, Settings, Database, AlertTriangle } from "lucide-react";
 
@@ -49,24 +50,7 @@ const AdminPage = () => {
               </TabsContent>
 
               <TabsContent value="users">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gestion des utilisateurs</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500">
-                      Interface de gestion des utilisateurs - à venir...
-                      <br />
-                      Fonctionnalités prévues :
-                    </p>
-                    <ul className="list-disc list-inside mt-3 text-sm text-gray-600 space-y-1">
-                      <li>Liste des utilisateurs inscrits</li>
-                      <li>Gestion des rôles et permissions</li>
-                      <li>Désactivation/activation de comptes</li>
-                      <li>Statistiques d'utilisation</li>
-                    </ul>
-                  </CardContent>
-                </Card>
+                <UsersManagement />
               </TabsContent>
 
               <TabsContent value="system">
