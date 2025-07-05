@@ -37,7 +37,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
                 alt="HealthCentral Logo" 
-                className="h-16 w-auto mr-4"
+                className="h-24 w-auto mr-6"
               />
               <h1 className="text-5xl font-bold">HealthCentral</h1>
             </div>
@@ -122,7 +122,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
                 alt="HealthCentral Logo" 
-                className="h-6 w-auto mr-2"
+                className="h-10 w-auto mr-3"
               />
               <span className="text-lg font-semibold">HealthCentral</span>
             </div>
