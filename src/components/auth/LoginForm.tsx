@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { loginSchema, LoginFormData } from "./schemas";
 import { GoogleAuthButton } from "./GoogleAuthButton";
+import { sanitizeInput, validateEmail, logSecurityEvent, rateLimiter } from "@/lib/security-utils";
 
 interface LoginFormProps {
   isLoading: boolean;
@@ -29,21 +31,61 @@ export const LoginForm = ({ isLoading, onLoadingChange }: LoginFormProps) => {
   });
 
   const handleLogin = async (values: LoginFormData) => {
+    // Sanitize inputs
+    const sanitizedEmail = sanitizeInput(values.email.toLowerCase().trim());
+    const password = values.password;
+
+    // Validate email format
+    if (!validateEmail(sanitizedEmail)) {
+      toast.error("Format d'email invalide.");
+      return;
+    }
+
+    // Check rate limiting
+    const rateLimitKey = `login_${sanitizedEmail}`;
+    if (rateLimiter.isRateLimited(rateLimitKey, 5, 15 * 60 * 1000)) {
+      toast.error("Trop de tentatives de connexion. Veuillez attendre 15 minutes.");
+      await logSecurityEvent('login_rate_limited', { email: sanitizedEmail });
+      return;
+    }
+
     onLoadingChange(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: sanitizedEmail,
+        password: password,
       });
 
       if (error) {
+        // Log failed login attempt
+        await logSecurityEvent('login_failed', { 
+          email: sanitizedEmail, 
+          error: error.message 
+        });
+        
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error("Email ou mot de passe incorrect.");
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error("Veuillez confirmer votre email avant de vous connecter.");
+        } else {
+          toast.error("Erreur lors de la connexion. Veuillez réessayer.");
+        }
         throw error;
       }
+
+      // Clear rate limiting on successful login
+      rateLimiter.clear(rateLimitKey);
+      
+      // Log successful login
+      await logSecurityEvent('login_successful', { 
+        user_id: data.user?.id,
+        email: sanitizedEmail 
+      });
 
       toast.success("Connexion réussie !");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de la connexion");
+      console.error("Erreur lors de la connexion:", error);
     } finally {
       onLoadingChange(false);
     }
@@ -67,7 +109,12 @@ export const LoginForm = ({ isLoading, onLoadingChange }: LoginFormProps) => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="votre@email.com" {...field} />
+                    <Input 
+                      placeholder="votre@email.com" 
+                      {...field} 
+                      autoComplete="email"
+                      type="email"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -81,7 +128,12 @@ export const LoginForm = ({ isLoading, onLoadingChange }: LoginFormProps) => {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="••••••" 
+                      {...field} 
+                      autoComplete="current-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,7 +146,7 @@ export const LoginForm = ({ isLoading, onLoadingChange }: LoginFormProps) => {
               disabled={isLoading}
             >
               <LogIn className="mr-2 h-4 w-4" />
-              Se connecter
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
         </Form>
