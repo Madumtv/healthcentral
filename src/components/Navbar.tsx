@@ -32,9 +32,8 @@ export function Navbar() {
               <img 
                 src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
                 alt="HealthCentral Logo" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
-              <span className="ml-3 text-xl font-semibold text-medBlue">HealthCentral</span>
             </Link>
           </div>
 

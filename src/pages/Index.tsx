@@ -37,9 +37,8 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
                 alt="HealthCentral Logo" 
-                className="h-24 w-auto mr-6"
+                className="h-32 w-auto"
               />
-              <h1 className="text-5xl font-bold">HealthCentral</h1>
             </div>
             <p className="text-xl mb-8 text-blue-100">Toute votre santé, organisée simplement : traitements, contacts et piluliers réunis</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
