@@ -1,15 +1,13 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pill, Calendar, Bell, Users, Shield, ArrowRight, Info } from "lucide-react";
+import { Calendar, Bell, Users, Shield, ArrowRight, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+
 const Index = () => {
   const features = [{
-    icon: Pill,
-    title: "Pilulier numérique",
-    description: "Organisez tous vos médicaments dans un interface claire et moderne"
-  }, {
     icon: Bell,
     title: "Rappels intelligents",
     description: "Ne manquez plus jamais une prise grâce à nos notifications personnalisées"
@@ -26,7 +24,9 @@ const Index = () => {
     title: "Sécurité maximale",
     description: "Vos données médicales sont protégées avec les plus hauts standards de sécurité"
   }];
-  return <div className="min-h-screen flex flex-col">
+
+  return (
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
@@ -34,10 +34,14 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex items-center justify-center mb-6">
-              <Pill className="h-16 w-16 text-white mr-4" />
+              <img 
+                src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
+                alt="HealthCentral Logo" 
+                className="h-16 w-auto mr-4"
+              />
               <h1 className="text-5xl font-bold">HealthCentral</h1>
             </div>
-            <p className="text-xl mb-8 text-blue-100">Toute votre santé, organisée simplement : traitements, contacts et piluliers réunis</p>
+            <p className="text-xl mb-8 text-blue-100">Toute votre santé, organisée simplement : traitements, contacts et piluliers réunis</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-white text-medBlue hover:bg-gray-100 font-semibold px-8">
@@ -67,8 +71,9 @@ const Index = () => {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {features.map((feature, index) => (
+                <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
                   <CardHeader>
                     <div className="w-12 h-12 bg-medBlue rounded-lg flex items-center justify-center mb-4">
                       <feature.icon className="h-6 w-6 text-white" />
@@ -80,7 +85,8 @@ const Index = () => {
                       {feature.description}
                     </CardDescription>
                   </CardContent>
-                </Card>)}
+                </Card>
+              ))}
             </div>
           </div>
         </div>
@@ -93,7 +99,7 @@ const Index = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Prêt à simplifier la gestion de vos médicaments ?
             </h2>
-            <p className="text-lg text-gray-600 mb-8">Rejoignez des milliers d'utilisateurs qui font déjà confiance à HealthCentralpour leur santé</p>
+            <p className="text-lg text-gray-600 mb-8">Rejoignez des milliers d'utilisateurs qui font déjà confiance à HealthCentral pour leur santé</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-medBlue hover:bg-blue-600 font-semibold px-8">
@@ -113,7 +119,11 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <Pill className="h-6 w-6 text-white mr-2" />
+              <img 
+                src="/lovable-uploads/fe2341f8-92af-4f6f-8d00-0dea0a89b65f.png" 
+                alt="HealthCentral Logo" 
+                className="h-6 w-auto mr-2"
+              />
               <span className="text-lg font-semibold">HealthCentral</span>
             </div>
             <div className="flex items-center space-x-6">
@@ -124,12 +134,14 @@ const Index = () => {
                 Mentions légales
               </Link>
               <span className="text-gray-400 text-sm">
-                © {new Date().getFullYear()} PilulePal. Tous droits réservés.
+                © {new Date().getFullYear()} HealthCentral. Tous droits réservés.
               </span>
             </div>
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
