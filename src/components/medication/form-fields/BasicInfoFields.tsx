@@ -1,12 +1,12 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Search, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { HybridMedicationSearch } from "../HybridMedicationSearch";
+import { VidalSearch } from "../VidalSearch";
 import { MedicamentInfo } from "@/lib/medicaments-api";
 
 interface BasicInfoFieldsProps {
@@ -42,7 +42,7 @@ export const BasicInfoFields = ({
           medicament.category,
           medicament.company ? `Laboratoire: ${medicament.company}` : '',
           searchRegion === 'belgium' ? `CNK: ${medicament.cnk}` : `Vidal ID: ${medicament.cnk}`,
-          medicament.publicPrice ? `Prix: ${medicament.publicPrice}€` : ''
+          medicament.publicPrice ? `Prix: ${medicament.publicPrice}` : ''
         ].filter(Boolean).join(' • ')
       }
     } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -107,22 +107,7 @@ export const BasicInfoFields = ({
                 className=""
               />
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-blue-700">
-                  <span className="text-lg">🇫🇷</span>
-                  <span className="font-medium">Recherche Vidal.fr (France)</span>
-                </div>
-                <p className="text-sm text-blue-600">
-                  Recherche dans la base de données française Vidal - médicaments disponibles en France
-                </p>
-                <div className="bg-orange-100 border border-orange-200 rounded-lg p-3">
-                  <p className="text-sm text-orange-700">
-                    <strong>Fonctionnalité en développement</strong> - La recherche Vidal.fr sera bientôt disponible. 
-                    Pour l'instant, vous pouvez consulter directement <a href="https://www.vidal.fr/" target="_blank" rel="noopener noreferrer" className="underline">vidal.fr</a> 
-                    et saisir manuellement les informations ci-dessous.
-                  </p>
-                </div>
-              </div>
+              <VidalSearch onMedicamentSelect={handleMedicamentSelect} />
             )}
           </div>
           
