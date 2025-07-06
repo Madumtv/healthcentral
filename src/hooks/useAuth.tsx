@@ -34,7 +34,6 @@ export function useAuth() {
 
       if (profileData) {
         console.log("✅ Profile fetched:", profileData);
-        // S'assurer que l'avatar_url est une chaîne ou undefined
         const cleanProfile = {
           ...profileData,
           avatar_url: profileData.avatar_url || undefined
@@ -62,7 +61,6 @@ export function useAuth() {
     
     let mounted = true;
 
-    // Fonction pour traiter un changement d'utilisateur
     const handleUserChange = async (newUser: SupabaseUser | null) => {
       if (!mounted) return;
       
@@ -70,19 +68,22 @@ export function useAuth() {
       setUser(newUser);
       
       if (newUser) {
-        // Charger le profil de manière asynchrone
-        setTimeout(async () => {
-          if (mounted) {
-            await fetchProfile(newUser.id);
-            setIsLoading(false);
-          }
-        }, 0);
+        // Fetch profile without causing infinite loops
+        try {
+          await fetchProfile(newUser.id);
+        } catch (error) {
+          console.error("❌ Error fetching profile during user change:", error);
+        }
       } else {
         setProfile({});
+      }
+      
+      if (mounted) {
         setIsLoading(false);
       }
     };
 
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 Auth state changed:", event, session?.user?.email || 'No user');
@@ -93,7 +94,8 @@ export function useAuth() {
       }
     );
 
-    const checkSession = async () => {
+    // Check initial session
+    const checkInitialSession = async () => {
       try {
         console.log("🔍 Checking current session...");
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -115,7 +117,7 @@ export function useAuth() {
       }
     };
 
-    checkSession();
+    checkInitialSession();
 
     return () => {
       console.log("🧹 Cleaning up auth subscription");
@@ -146,7 +148,7 @@ export function useAuth() {
     return user?.email?.charAt(0) || "U";
   };
 
-  console.log("🎯 Auth state - User:", !!user, "Profile:", !!profile, "Loading:", isLoading);
+  console.log("🎯 Auth state - User:", !!user, "Profile:", Object.keys(profile).length > 0, "Loading:", isLoading);
 
   return {
     user,

@@ -43,7 +43,7 @@ export function ProfileTabs({ user, profile, onProfileUpdate }: ProfileTabsProps
       </TabsContent>
 
       <TabsContent value="settings">
-        <SettingsTab user={user} />
+        <SettingsTab />
       </TabsContent>
     </Tabs>
   );
