@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,7 +99,7 @@ export const BasicInfoFields = ({
         </div>
       </div>
 
-      {showMedicamentSearch ? (
+      {showMedicamentSearch && (
         <div className="space-y-4">
           <div className="p-4 border rounded-lg bg-blue-50">
             {searchRegion === 'belgium' ? (
@@ -118,7 +119,7 @@ export const BasicInfoFields = ({
             Ou continuez avec la saisie manuelle ci-dessous
           </p>
         </div>
-      ) : null}
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
