@@ -32,6 +32,8 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
   });
 
   const handleSignup = async (values: SignupFormData) => {
+    console.log("🚀 Starting signup process...");
+    
     // Sanitize inputs
     const sanitizedEmail = sanitizeInput(values.email.toLowerCase().trim());
     const sanitizedName = sanitizeInput(values.name.trim());
@@ -62,6 +64,8 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
 
     onLoadingChange(true);
     try {
+      console.log("📝 Attempting to sign up user:", sanitizedEmail);
+      
       const { error, data } = await supabase.auth.signUp({
         email: sanitizedEmail,
         password: password,
@@ -76,6 +80,8 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
       });
 
       if (error) {
+        console.error("❌ Signup error:", error);
+        
         // Log failed signup attempt
         await logSecurityEvent('signup_failed', { 
           email: sanitizedEmail, 
@@ -86,28 +92,38 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
           toast.error("Un compte existe déjà avec cette adresse email.");
         } else if (error.message.includes('Password should be at least')) {
           toast.error("Le mot de passe doit respecter les critères de sécurité.");
+        } else if (error.message.includes('Invalid email')) {
+          toast.error("Adresse email invalide.");
         } else {
-          toast.error("Erreur lors de l'inscription. Veuillez réessayer.");
+          toast.error(`Erreur lors de l'inscription: ${error.message}`);
         }
-        throw error;
+        return;
       }
 
+      console.log("✅ Signup successful:", data);
+      
       // Clear rate limiting on successful signup
       rateLimiter.clear(rateLimitKey);
       
       // Log successful signup
-      await logSecurityEvent('signup_successful', { 
-        user_id: data.user?.id,
-        email: sanitizedEmail 
-      });
+      if (data.user) {
+        await logSecurityEvent('signup_successful', { 
+          user_id: data.user.id,
+          email: sanitizedEmail 
+        });
+      }
 
       toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+      
+      // Auto-switch to login tab after successful signup
       onSignupSuccess({
         email: sanitizedEmail,
         password: password,
       });
+      
     } catch (error: any) {
-      console.error("Erreur lors de l'inscription:", error);
+      console.error("❌ Unexpected error during signup:", error);
+      toast.error("Une erreur inattendue s'est produite. Veuillez réessayer.");
     } finally {
       onLoadingChange(false);
     }
@@ -118,7 +134,7 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
       <CardHeader>
         <CardTitle>Inscription</CardTitle>
         <CardDescription>
-          Créez votre compte PilulePal pour commencer à gérer vos médicaments
+          Créez votre compte HealthCentral pour commencer à gérer vos médicaments
         </CardDescription>
       </CardHeader>
       <CardContent>
