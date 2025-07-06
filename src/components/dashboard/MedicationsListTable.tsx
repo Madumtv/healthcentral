@@ -3,10 +3,11 @@ import { Medication } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ExternalLink, FileText, User } from "lucide-react";
+import { Edit, Trash2, ExternalLink, FileText, User, Info } from "lucide-react";
 import { daysOfWeekLabels, timeOfDayLabels } from "@/lib/constants";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MedicamentDetailsModal } from "../medication/MedicamentDetailsModal";
+import { DeleteMedicationDialog } from "../medication/DeleteMedicationDialog";
 
 interface MedicationsListTableProps {
   medications: Medication[];
@@ -17,15 +18,49 @@ interface MedicationsListTableProps {
 export const MedicationsListTable = ({ medications, onEdit, onDelete }: MedicationsListTableProps) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedMedicament, setSelectedMedicament] = useState<string>("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [medicationToDelete, setMedicationToDelete] = useState<Medication | null>(null);
+  const [defaultAction, setDefaultAction] = useState<'details' | 'edit'>('edit');
+
+  useEffect(() => {
+    // Charger l'action par défaut depuis les paramètres
+    const savedAction = localStorage.getItem('medicationDefaultAction') as 'details' | 'edit';
+    if (savedAction) {
+      setDefaultAction(savedAction);
+    }
+  }, []);
 
   const handleShowDetails = (medicamentName: string) => {
     setSelectedMedicament(medicamentName);
     setShowDetailsModal(true);
   };
 
-  const handleEdit = (id: string) => {
+  const handleRowClick = (medication: Medication) => {
+    if (defaultAction === 'details') {
+      handleShowDetails(medication.name);
+    } else {
+      onEdit(medication.id);
+    }
+  };
+
+  const handleEdit = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     console.log("Editing medication:", id);
     onEdit(id);
+  };
+
+  const handleDeleteClick = (medication: Medication, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMedicationToDelete(medication);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (medicationToDelete) {
+      onDelete(medicationToDelete.id);
+      setShowDeleteDialog(false);
+      setMedicationToDelete(null);
+    }
   };
 
   return (
@@ -52,7 +87,11 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
               console.log("Rendering medication:", medication.name, "Doctor:", medication.doctor, "DoctorId:", medication.doctorId);
 
               return (
-                <TableRow key={`${medication.id}-${medication.updatedAt}`}>
+                <TableRow 
+                  key={`${medication.id}-${medication.updatedAt}`}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleRowClick(medication)}
+                >
                   <TableCell className="font-medium">
                     <div>
                       <div className="font-semibold text-medBlue">{medication.name}</div>
@@ -107,6 +146,7 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
                           variant="ghost"
                           size="sm"
                           asChild
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <a
                             href={medication.infoLink}
@@ -121,23 +161,40 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleShowDetails(medication.name)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShowDetails(medication.name);
+                        }}  
                         className="text-medBlue"
                       >
                         <FileText className="h-4 w-4" />
                       </Button>
+                      {defaultAction === 'details' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleEdit(medication.id, e)}
+                          className="text-medBlue"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShowDetails(medication.name);
+                          }}
+                          className="text-medBlue"
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(medication.id)}
-                        className="text-medBlue"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(medication.id)}
+                        onClick={(e) => handleDeleteClick(medication, e)}
                         className="text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -155,6 +212,13 @@ export const MedicationsListTable = ({ medications, onEdit, onDelete }: Medicati
         medicamentName={selectedMedicament}
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
+      />
+
+      <DeleteMedicationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleConfirmDelete}
+        medicationName={medicationToDelete?.name || ""}
       />
     </>
   );

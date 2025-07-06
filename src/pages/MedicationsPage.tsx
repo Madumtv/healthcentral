@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -18,8 +17,17 @@ const MedicationsPage = () => {
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [defaultAction, setDefaultAction] = useState<'details' | 'edit'>('edit');
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Charger l'action par défaut depuis les paramètres
+  useEffect(() => {
+    const savedAction = localStorage.getItem('medicationDefaultAction') as 'details' | 'edit';
+    if (savedAction) {
+      setDefaultAction(savedAction);
+    }
+  }, []);
 
   const fetchMedications = async () => {
     try {

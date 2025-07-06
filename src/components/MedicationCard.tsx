@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Medication } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Edit, Trash2, Info, FileText, User, Phone, MapPin } from "lucide-react";
 import { daysOfWeekLabels, timeOfDayLabels } from "@/lib/constants";
 import { MedicamentDetailsModal } from "./medication/MedicamentDetailsModal";
+import { DeleteMedicationDialog } from "./medication/DeleteMedicationDialog";
 
 interface MedicationCardProps {
   medication: Medication;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  defaultAction?: 'details' | 'edit';
 }
 
-export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardProps) {
+export function MedicationCard({ medication, onEdit, onDelete, defaultAction = 'edit' }: MedicationCardProps) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   console.log("MedicationCard rendering with timeOfDay:", medication.timeOfDay);
 
@@ -28,9 +30,40 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
   const uniqueTimeOfDay = medication.timeOfDay ? [...new Set(medication.timeOfDay)] : [];
   console.log("Unique timeOfDay:", uniqueTimeOfDay);
 
+  const handleCardClick = () => {
+    if (defaultAction === 'details') {
+      setShowDetailsModal(true);
+    } else {
+      onEdit(medication.id);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete(medication.id);
+    setShowDeleteDialog(false);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit(medication.id);
+  };
+
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDetailsModal(true);
+  };
+
   return (
     <>
-      <Card className="w-full transition-shadow duration-200 hover:shadow-md">
+      <Card 
+        className="w-full transition-shadow duration-200 hover:shadow-md cursor-pointer" 
+        onClick={handleCardClick}
+      >
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="flex-1 pr-4">
@@ -38,10 +71,16 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
               <CardDescription className="mt-1">{medication.dosage}</CardDescription>
             </div>
             <div className="flex space-x-2 flex-shrink-0">
-              <Button variant="outline" size="icon" onClick={() => onEdit(medication.id)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="text-destructive" onClick={() => onDelete(medication.id)}>
+              {defaultAction === 'details' ? (
+                <Button variant="outline" size="icon" onClick={handleEditClick}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button variant="outline" size="icon" onClick={handleDetailsClick}>
+                  <Info className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="outline" size="icon" className="text-destructive" onClick={handleDeleteClick}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -138,6 +177,7 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-medBlue hover:underline flex items-center gap-1"
+                onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLink className="h-3 w-3" /> 
                 Lien personnalisé
@@ -147,7 +187,7 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowDetailsModal(true)}
+              onClick={handleDetailsClick}
               className="text-sm text-medBlue hover:bg-blue-50 p-1 h-auto"
             >
               <FileText className="h-3 w-3 mr-1" />
@@ -168,6 +208,13 @@ export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardP
         medicamentName={medication.name}
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
+      />
+
+      <DeleteMedicationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleConfirmDelete}
+        medicationName={medication.name}
       />
     </>
   );
