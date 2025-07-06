@@ -28,7 +28,7 @@ HealthCentral is a medication management application built with React, Vite and 
    SUPABASE_URL=<your-supabase-url>
    SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
    ```
-   These values are required for signup and login to work. The service role key is only used by server-side Supabase functions.
+
 4. Start the development server:
    ```sh
    npm run dev
