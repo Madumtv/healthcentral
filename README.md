@@ -40,6 +40,7 @@ HealthCentral is a medication management application built with React, Vite and 
 - `npm run build` – create a production build
 - `npm run build:dev` – build with development settings
 - `npm run lint` – run ESLint
+- `npm run test` – run unit tests
 - `npm run preview` – preview the production build locally
 
 ## License
