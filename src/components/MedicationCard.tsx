@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Medication } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,20 @@ interface MedicationCardProps {
   medication: Medication;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  defaultAction?: 'details' | 'edit';
 }
 
-export function MedicationCard({ medication, onEdit, onDelete, defaultAction = 'edit' }: MedicationCardProps) {
+export function MedicationCard({ medication, onEdit, onDelete }: MedicationCardProps) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [defaultAction, setDefaultAction] = useState<'details' | 'edit'>('edit');
+
+  // Charger l'action par défaut depuis les paramètres
+  useEffect(() => {
+    const savedAction = localStorage.getItem('medicationDefaultAction') as 'details' | 'edit';
+    if (savedAction) {
+      setDefaultAction(savedAction);
+    }
+  }, []);
 
   console.log("MedicationCard rendering with timeOfDay:", medication.timeOfDay);
 
