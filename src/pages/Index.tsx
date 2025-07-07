@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Pill, Calendar, Bell, Users, Shield, ArrowRight, Info } from "lucide-react";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 
 const Index = () => {
   console.log('Index page rendering');
@@ -39,7 +38,24 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {/* Simple header instead of complex Navbar */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center">
+              <Pill className="h-8 w-8 text-blue-600" />
+              <span className="ml-2 text-xl font-semibold text-blue-600">HealthCentral</span>
+            </Link>
+            <div className="flex items-center space-x-4">
+              <Link to="/auth">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Connexion
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
       
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-20">
