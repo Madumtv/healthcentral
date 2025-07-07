@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TimeOfDay } from "@/types";
-import BasicInfoFields from "./form-fields/BasicInfoFields";
+import { BasicInfoFields } from "./form-fields/BasicInfoFields";
 import StandardTimePeriods from "./form-fields/StandardTimePeriods";
 import DaysOfWeekField from "./form-fields/DaysOfWeekField";
 import AdditionalInfoFields from "./form-fields/AdditionalInfoFields";

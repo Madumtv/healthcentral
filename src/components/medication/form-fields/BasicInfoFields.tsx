@@ -73,7 +73,7 @@ export const BasicInfoFields = ({
               </div>
             ) : (
               <VidalSearch 
-                onMedicationSelect={(medication) => {
+                onMedicamentSelect={(medication) => {
                   form.setValue('name', medication.name);
                   if (medication.dosage) {
                     form.setValue('dosage', medication.dosage);
