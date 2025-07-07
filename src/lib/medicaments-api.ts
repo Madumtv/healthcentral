@@ -1,4 +1,3 @@
-
 export interface MedicamentInfo {
   cnk: string;
   name: string;
@@ -11,6 +10,7 @@ export interface MedicamentInfo {
   publicPrice?: string;
   reimbursementCode?: string;
   reimbursementRate?: string;
+  description?: string;
 }
 
 export interface MedicamentComposition {
