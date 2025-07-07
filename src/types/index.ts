@@ -30,18 +30,6 @@ export interface Medication {
   updatedAt: Date;
 }
 
-export interface MedicationFormData {
-  name: string;
-  description?: string;
-  dosage: string;
-  timeOfDay: TimeOfDay[];
-  daysOfWeek: DayOfWeek[];
-  notes?: string;
-  prescribingDoctor?: string;
-  doctorId?: string;
-  infoLink?: string;
-}
-
 export interface User {
   id: string;
   email: string;
