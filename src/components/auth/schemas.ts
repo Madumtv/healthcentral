@@ -24,15 +24,12 @@ export const signupSchema = z.object({
     }),
   name: z.string()
     .min(2, { message: "Le nom doit contenir au moins 2 caractères." })
-    .max(100, { message: "Le nom est trop long." })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, { message: "Le nom contient des caractères invalides." }),
+    .max(100, { message: "Le nom est trop long." }),
   firstName: z.string()
     .max(50, { message: "Le prénom est trop long." })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]*$/, { message: "Le prénom contient des caractères invalides." })
     .optional(),
   lastName: z.string()
     .max(50, { message: "Le nom de famille est trop long." })
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]*$/, { message: "Le nom de famille contient des caractères invalides." })
     .optional(),
 });
 

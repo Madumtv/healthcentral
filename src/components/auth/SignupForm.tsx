@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { signupSchema, SignupFormData, LoginFormData } from "./schemas";
 import { GoogleAuthButton } from "./GoogleAuthButton";
-import { sanitizeInput, validateEmail, validatePassword, logSecurityEvent, rateLimiter } from "@/lib/security-utils";
 
 interface SignupFormProps {
   isLoading: boolean;
@@ -34,33 +33,10 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
   const handleSignup = async (values: SignupFormData) => {
     console.log("🚀 Starting signup process...");
     
-    // Sanitize inputs
-    const sanitizedEmail = sanitizeInput(values.email.toLowerCase().trim());
-    const sanitizedName = sanitizeInput(values.name.trim());
-    const sanitizedFirstName = values.firstName ? sanitizeInput(values.firstName.trim()) : undefined;
-    const sanitizedLastName = values.lastName ? sanitizeInput(values.lastName.trim()) : undefined;
-    const password = values.password;
-
-    // Validate email format
-    if (!validateEmail(sanitizedEmail)) {
-      toast.error("Format d'email invalide.");
-      return;
-    }
-
-    // Validate password strength
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.valid) {
-      toast.error(passwordValidation.message);
-      return;
-    }
-
-    // Check rate limiting
-    const rateLimitKey = `signup_${sanitizedEmail}`;
-    if (rateLimiter.isRateLimited(rateLimitKey, 3, 60 * 60 * 1000)) {
-      toast.error("Trop de tentatives d'inscription. Veuillez attendre 1 heure.");
-      await logSecurityEvent('signup_rate_limited', { email: sanitizedEmail });
-      return;
-    }
+    const sanitizedEmail = values.email.toLowerCase().trim();
+    const sanitizedName = values.name.trim();
+    const sanitizedFirstName = values.firstName?.trim() || "";
+    const sanitizedLastName = values.lastName?.trim() || "";
 
     onLoadingChange(true);
     try {
@@ -68,13 +44,13 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
       
       const { error, data } = await supabase.auth.signUp({
         email: sanitizedEmail,
-        password: password,
+        password: values.password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             name: sanitizedName,
-            first_name: sanitizedFirstName || null,
-            last_name: sanitizedLastName || null,
+            first_name: sanitizedFirstName,
+            last_name: sanitizedLastName,
           },
         },
       });
@@ -82,12 +58,6 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
       if (error) {
         console.error("❌ Signup error:", error);
         
-        // Log failed signup attempt
-        await logSecurityEvent('signup_failed', { 
-          email: sanitizedEmail, 
-          error: error.message 
-        });
-
         if (error.message.includes('User already registered')) {
           toast.error("Un compte existe déjà avec cette adresse email.");
         } else if (error.message.includes('Password should be at least')) {
@@ -102,23 +72,16 @@ export const SignupForm = ({ isLoading, onLoadingChange, onSignupSuccess }: Sign
 
       console.log("✅ Signup successful:", data);
       
-      // Clear rate limiting on successful signup
-      rateLimiter.clear(rateLimitKey);
-      
-      // Log successful signup
-      if (data.user) {
-        await logSecurityEvent('signup_successful', { 
-          user_id: data.user.id,
-          email: sanitizedEmail 
-        });
+      if (data.user && !data.session) {
+        toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+      } else if (data.session) {
+        toast.success("Inscription réussie ! Vous êtes maintenant connecté.");
       }
-
-      toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
       
       // Auto-switch to login tab after successful signup
       onSignupSuccess({
         email: sanitizedEmail,
-        password: password,
+        password: values.password,
       });
       
     } catch (error: any) {
