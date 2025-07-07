@@ -31,14 +31,64 @@ export const MedicationFormContent = ({
   onDoctorChange,
   onSubmit
 }: MedicationFormContentProps) => {
+  // Pour la compatibilité temporaire, on crée un form mock
+  const mockForm = {
+    control: {} as any,
+    setValue: (name: string, value: string) => {
+      // Simuler la mise à jour via onInputChange
+      const mockEvent = {
+        target: { name, value }
+      } as React.ChangeEvent<HTMLInputElement>;
+      onInputChange(mockEvent);
+    }
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <BasicInfoFields
-        name={medication.name || ""}
-        dosage={medication.dosage || ""}
-        description={medication.description}
-        onChange={onInputChange}
-      />
+      {/* Pour l'instant, on utilise les champs basiques simples */}
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nom du médicament *
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={medication.name || ""}
+            onChange={onInputChange}
+            placeholder="Ex: Doliprane, Aspirine..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Dosage *
+          </label>
+          <input
+            type="text"
+            name="dosage"
+            value={medication.dosage || ""}
+            onChange={onInputChange}
+            placeholder="Ex: 500mg, 1 comprimé..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea
+            name="description"
+            value={medication.description || ""}
+            onChange={onInputChange}
+            placeholder="Description optionnelle du médicament..."
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
       
       <StandardTimePeriods
         selectedTimes={medication.timeOfDay || []}
