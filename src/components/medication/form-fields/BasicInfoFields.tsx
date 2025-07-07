@@ -1,165 +1,127 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
-import { HybridMedicationSearch } from "../HybridMedicationSearch";
+import { Search } from "lucide-react";
+import { UseFormReturn } from "react-hook-form";
+import { MedicationFormData } from "@/types";
 import { VidalSearch } from "../VidalSearch";
-import { MedicamentInfo } from "@/lib/medicaments-api";
 
 interface BasicInfoFieldsProps {
-  name: string;
-  dosage: string;
-  description?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  form: UseFormReturn<MedicationFormData>;
+  showMedicamentSearch: boolean;
+  setShowMedicamentSearch: (show: boolean) => void;
+  selectedRegion: 'belgium' | 'france';
 }
 
 export const BasicInfoFields = ({ 
-  name, 
-  dosage, 
-  description, 
-  onChange 
+  form, 
+  showMedicamentSearch, 
+  setShowMedicamentSearch,
+  selectedRegion 
 }: BasicInfoFieldsProps) => {
-  const [showMedicamentSearch, setShowMedicamentSearch] = useState(false);
-  const [searchRegion, setSearchRegion] = useState<'belgium' | 'france'>('belgium');
-
-  const handleMedicamentSelect = (medicament: MedicamentInfo & { dosage?: string }) => {
-    // Simuler les événements onChange pour mettre à jour le formulaire parent
-    const nameEvent = {
-      target: { name: 'name', value: medicament.name }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    const dosageEvent = {
-      target: { name: 'dosage', value: medicament.dosage || medicament.category }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    const descriptionEvent = {
-      target: { 
-        name: 'description', 
-        value: [
-          medicament.category,
-          medicament.company ? `Laboratoire: ${medicament.company}` : '',
-          searchRegion === 'belgium' ? `CNK: ${medicament.cnk}` : `Vidal ID: ${medicament.cnk}`,
-          medicament.publicPrice ? `Prix: ${medicament.publicPrice}` : ''
-        ].filter(Boolean).join(' • ')
-      }
-    } as React.ChangeEvent<HTMLTextAreaElement>;
-    
-    onChange(nameEvent);
-    onChange(dosageEvent);
-    onChange(descriptionEvent);
-    
-    setShowMedicamentSearch(false);
-  };
-
-  const handleSearchToggle = (region: 'belgium' | 'france') => {
-    setSearchRegion(region);
-    setShowMedicamentSearch(true);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Informations du médicament</h3>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleSearchToggle('belgium')}
-            className="text-sm"
-          >
-            <span className="mr-2 text-lg">🇧🇪</span>
-            Recherche Belgique
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleSearchToggle('france')}
-            className="text-sm"
-          >
-            <span className="mr-2 text-lg">🇫🇷</span>
-            Recherche France (Vidal)
-          </Button>
-          {showMedicamentSearch && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMedicamentSearch(false)}
-              className="text-sm"
-            >
-              Saisie manuelle
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {showMedicamentSearch && (
-        <div className="space-y-4">
-          <div className="p-4 border rounded-lg bg-blue-50">
-            {searchRegion === 'belgium' ? (
-              <HybridMedicationSearch 
-                onMedicamentSelect={handleMedicamentSelect}
-                className=""
+    <div className="space-y-6">
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nom du médicament *</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Ex: Doliprane, Aspirine..."
+                {...field}
               />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <FormLabel>Recherche de médicament</FormLabel>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">
+              {selectedRegion === 'belgium' ? 'Base belge' : 'Vidal.fr'}
+            </span>
+            <Switch
+              checked={showMedicamentSearch}
+              onCheckedChange={setShowMedicamentSearch}
+            />
+          </div>
+        </div>
+
+        {showMedicamentSearch && (
+          <div className="border rounded-lg p-4 bg-gray-50">
+            {selectedRegion === 'belgium' ? (
+              <div className="text-center py-8">
+                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Recherche dans la base belge
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Fonctionnalité en développement - La recherche dans la base de données belge sera bientôt disponible.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Pour l'instant, vous pouvez saisir manuellement les informations ci-dessous.
+                </p>
+              </div>
             ) : (
-              <VidalSearch onMedicamentSelect={handleMedicamentSelect} />
+              <VidalSearch 
+                onMedicationSelect={(medication) => {
+                  form.setValue('name', medication.name);
+                  if (medication.dosage) {
+                    form.setValue('dosage', medication.dosage);
+                  }
+                  if (medication.description) {
+                    form.setValue('description', medication.description);
+                  }
+                  setShowMedicamentSearch(false);
+                }}
+              />
             )}
           </div>
-          
-          <Separator />
-          
-          <p className="text-sm text-gray-600 flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            Ou continuez avec la saisie manuelle ci-dessous
-          </p>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nom du médicament *</Label>
-          <Input
-            id="name"
-            name="name"
-            value={name}
-            onChange={onChange}
-            placeholder="Ex: Dafalgan"
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="dosage">Dosage unitaire *</Label>
-          <Input
-            id="dosage"
-            name="dosage"
-            value={dosage}
-            onChange={onChange}
-            placeholder="Ex: 2 comprimés, 1 gélule"
-            required
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description (optionnel)</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={description || ""}
-          onChange={onChange}
-          placeholder="Informations complémentaires sur le médicament..."
-          rows={3}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="dosage"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Dosage *</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Ex: 500mg, 1 comprimé..."
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Description optionnelle du médicament..."
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
-
-export default BasicInfoFields;
